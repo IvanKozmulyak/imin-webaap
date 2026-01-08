@@ -1,0 +1,10 @@
+export interface EventDto {
+  id: string;
+  name: string;
+  description: string | null;
+  eventDateTime: string; // ISO 8601 timestamp
+  location: string;
+  ticketUrl: string | null;
+  isActive: boolean;
+  createdAt: string; // ISO 8601 timestamp
+}

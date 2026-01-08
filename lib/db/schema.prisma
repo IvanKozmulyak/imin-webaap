@@ -1,0 +1,97 @@
+// lib/db/schema.prisma
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Event {
+  id           String   @id @default(uuid())
+  name         String   @db.VarChar(255)
+  description  String?  @db.VarChar(2000)
+  eventDateTime DateTime @map("event_date_time")
+  location     String   @db.VarChar(255)
+  ticketUrl    String?  @map("ticket_url") @db.VarChar(500)
+  isActive     Boolean  @map("is_active") @default(true)
+  createdAt    DateTime @default(now()) @map("created_at")
+  
+  registrations EventRegistration[]
+  matchingGroups MatchingGroup[]
+  
+  @@map("event")
+}
+
+model EventRegistration {
+  id        String   @id @default(uuid())
+  eventId   String   @map("event_id")
+  name      String   @db.VarChar(255)
+  email     String   @db.VarChar(255)
+  telegram  String   @unique @db.VarChar(255)
+  age       Int
+  createdAt DateTime @default(now()) @map("created_at")
+  
+  event     Event    @relation(fields: [eventId], references: [id])
+  languages EventRegistrationLanguage[]
+  matchingGroupMembers MatchingGroupMember[]
+  
+  @@index([eventId])
+  @@map("event_registration")
+}
+
+model EventRegistrationLanguage {
+  eventRegistrationId String @map("event_registration_id")
+  languageCode        String @map("language_code") @db.VarChar(10)
+  
+  eventRegistration EventRegistration @relation(fields: [eventRegistrationId], references: [id], onDelete: Cascade)
+  
+  @@id([eventRegistrationId, languageCode])
+  @@map("event_registration_language")
+}
+
+model Language {
+  id   String @id @default(uuid())
+  code String @unique @db.VarChar(10)
+  name String @db.VarChar(255)
+  
+  @@index([code])
+  @@map("language")
+}
+
+model MatchingGroup {
+  id        String   @id @default(uuid())
+  eventId   String   @map("event_id")
+  createdAt DateTime @default(now()) @map("created_at")
+  
+  event     Event    @relation(fields: [eventId], references: [id])
+  languages MatchingGroupLanguage[]
+  members   MatchingGroupMember[]
+  
+  @@index([eventId])
+  @@map("matching_group")
+}
+
+model MatchingGroupLanguage {
+  matchingGroupId String @map("matching_group_id")
+  languageCode     String @map("language_code") @db.VarChar(10)
+  
+  matchingGroup MatchingGroup @relation(fields: [matchingGroupId], references: [id], onDelete: Cascade)
+  
+  @@id([matchingGroupId, languageCode])
+  @@index([matchingGroupId])
+  @@map("matching_group_language")
+}
+
+model MatchingGroupMember {
+  matchingGroupId      String @map("matching_group_id")
+  eventRegistrationId  String @map("event_registration_id")
+  
+  matchingGroup     MatchingGroup     @relation(fields: [matchingGroupId], references: [id], onDelete: Cascade)
+  eventRegistration EventRegistration @relation(fields: [eventRegistrationId], references: [id], onDelete: Cascade)
+  
+  @@id([matchingGroupId, eventRegistrationId])
+  @@index([eventRegistrationId])
+  @@map("matching_group_member")
+}
