@@ -4,6 +4,9 @@ import { eventRegistrationRequestSchema } from '@/lib/utils/validation';
 import { EventNotFoundException, DuplicateTelegramError } from '@/lib/utils/errors';
 import { createErrorResponse, createSuccessResponse } from '@/lib/utils/apiResponse';
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 export async function POST(
   request: NextRequest,
   { params }: { params: { eventId: string } }

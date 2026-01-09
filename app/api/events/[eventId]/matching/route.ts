@@ -3,6 +3,9 @@ import { performMatching, getMatchingResults } from '@/lib/services/matchingServ
 import { EventNotFoundException } from '@/lib/utils/errors';
 import { createErrorResponse, createSuccessResponse } from '@/lib/utils/apiResponse';
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 export async function POST(
   request: NextRequest,
   { params }: { params: { eventId: string } }
@@ -27,7 +30,12 @@ export async function GET(
   try {
     const eventId = params.eventId;
     const result = await getMatchingResults(eventId);
-    return createSuccessResponse(result);
+    const response = createSuccessResponse(result);
+    // Disable caching
+    response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+    response.headers.set('Pragma', 'no-cache');
+    response.headers.set('Expires', '0');
+    return response;
   } catch (error: any) {
     if (error instanceof EventNotFoundException) {
       return createErrorResponse(error.message, 404);
