@@ -95,6 +95,19 @@ The matching algorithm groups users based on common languages:
 - `npm run lint` - Run linter
 - `npm run db:studio` - Open Prisma Studio
 
+## Deployment
+
+### Vercel Deployment
+
+The build process automatically:
+1. Generates Prisma Client (`prisma generate`)
+2. Applies database migrations (`prisma migrate deploy`)
+3. Builds the Next.js application
+
+**Important:** Make sure to set the `DATABASE_URL` environment variable in your Vercel project settings.
+
+The build script runs migrations automatically, so your database will be up-to-date on each deployment.
+
 ## Project Structure
 
 ```
