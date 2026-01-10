@@ -55,7 +55,7 @@ function SuccessContent() {
             viewBox="0 0 77 102"
             fill="none"
             xmlns="http://www.w3.org/2000/svg"
-            className="w-[35px] h-[46px] sm:w-[45px] sm:h-[60px] md:w-[55px] md:h-[73px] lg:w-[65px] lg:h-[86px] xl:w-[77px] xl:h-[102px]"
+            className="w-[45px] h-[60px] sm:w-[55px] sm:h-[73px] md:w-[65px] md:h-[86px] lg:w-[75px] lg:h-[99px] xl:w-[85px] xl:h-[113px]"
           >
             <path
               d="M20.9239 47.2449V1.24693C20.9239 0.554192 21.6817 0 22.8725 0H37.7034C38.4612 0 39.219 0.277095 39.4355 0.831288L47.5546 14.409C47.8794 14.8939 48.4207 15.4481 48.962 15.4481C49.6115 15.4481 50.0445 14.8939 50.3693 14.409L58.2719 0.831288C58.7049 0.277095 59.3544 0 60.2205 0H75.0514C76.134 0 77 0.554192 77 1.24693V47.2449C77 48.0069 76.134 48.4918 75.0514 48.4918H62.1691C61.0865 48.4918 60.2205 48.0069 60.2205 47.2449V26.2548C60.1122 25.7007 59.6792 25.6314 59.3544 26.1856L50.5858 38.7242C49.2867 40.1789 47.7711 39.3476 47.3381 38.7242L38.5695 26.1856C38.2447 25.6314 37.7034 25.7007 37.7034 26.2548V47.2449C37.7034 48.0069 36.7291 48.4918 35.7548 48.4918H22.8725C21.6817 48.4918 20.9239 48.0069 20.9239 47.2449Z"
@@ -105,14 +105,14 @@ function SuccessContent() {
             <p className="text-white text-[14px] sm:text-[15px] md:text-[16px] lg:text-[17px] xl:text-[18px] font-semibold uppercase mb-1 sm:mb-1.5 md:mb-2 leading-tight">
               Your Crew is READY!
             </p>
-            <p className="text-white text-[11px] sm:text-[12px] md:text-[13px] lg:text-[13px] xl:text-[14px] font-normal leading-normal">
+            <p className="text-white text-[11px] sm:text-[12px] md:text-[13px] lg:text-[13px] xl:text-[14px] font-normal leading-normal mb-0">
               We&apos;ll drop you into a Telegram chat soon
             </p>
           </div>
         </div>
 
         {/* Button - Bottom */}
-        <div className="w-full px-4 sm:px-6 md:px-8 pb-4 sm:pb-6 md:pb-8 flex justify-center">
+        <div className="w-full px-4 sm:px-6 md:px-8 pb-2 sm:pb-4 md:pb-6 flex justify-center -mt-8 sm:-mt-6 md:-mt-4 lg:-mt-2 xl:mt-0">
           {ticketUrl ? (
             <a
               href={ticketUrl}
