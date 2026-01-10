@@ -54,7 +54,7 @@ function SuccessContent() {
       />
 
       {/* Content */}
-      <div className="relative z-10 flex flex-col items-center pt-20 px-6">
+      <div className="relative z-10 flex flex-col items-center pt-6 px-6">
         {/* Logo */}
         <svg
           width="77"
@@ -62,7 +62,7 @@ function SuccessContent() {
           viewBox="0 0 77 102"
           fill="none"
           xmlns="http://www.w3.org/2000/svg"
-          className="mb-16"
+          className="mb-2"
         >
           <path
             d="M20.9239 47.2449V1.24693C20.9239 0.554192 21.6817 0 22.8725 0H37.7034C38.4612 0 39.219 0.277095 39.4355 0.831288L47.5546 14.409C47.8794 14.8939 48.4207 15.4481 48.962 15.4481C49.6115 15.4481 50.0445 14.8939 50.3693 14.409L58.2719 0.831288C58.7049 0.277095 59.3544 0 60.2205 0H75.0514C76.134 0 77 0.554192 77 1.24693V47.2449C77 48.0069 76.134 48.4918 75.0514 48.4918H62.1691C61.0865 48.4918 60.2205 48.0069 60.2205 47.2449V26.2548C60.1122 25.7007 59.6792 25.6314 59.3544 26.1856L50.5858 38.7242C49.2867 40.1789 47.7711 39.3476 47.3381 38.7242L38.5695 26.1856C38.2447 25.6314 37.7034 25.7007 37.7034 26.2548V47.2449C37.7034 48.0069 36.7291 48.4918 35.7548 48.4918H22.8725C21.6817 48.4918 20.9239 48.0069 20.9239 47.2449Z"
@@ -85,7 +85,7 @@ function SuccessContent() {
         {/* Success Content */}
         <div className="flex flex-col items-center w-full max-w-[358px]">
           {/* Success Icon */}
-          <div className="w-[438px] h-[420px] mb-9 flex items-center justify-center">
+          <div className="w-[438px] h-[420px] mb-2 flex items-center justify-center">
             <img
               src="/assets/success.png"
               alt="Success"
@@ -95,7 +95,7 @@ function SuccessContent() {
 
           {/* Success Text with Gradient */}
           <h1 
-            className="text-[70px] font-semibold uppercase text-center leading-none mb-[23px]"
+            className="text-[70px] font-semibold uppercase text-center leading-none mb-2"
             style={{
               background: 'linear-gradient(90deg, #B685F9 0%, #87D3FA 100%)',
               WebkitBackgroundClip: 'text',
@@ -107,7 +107,7 @@ function SuccessContent() {
           </h1>
 
           {/* Message */}
-          <p className="text-white text-center text-[15px] font-normal leading-normal mb-[50px] w-[322px]">
+          <p className="text-white text-center text-[15px] font-normal leading-normal mb-4 w-[322px]">
             Your Crew is READY! We&apos;ll drop you into a Telegram chat soon
           </p>
 

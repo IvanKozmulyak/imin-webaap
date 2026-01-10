@@ -449,7 +449,7 @@ export default function RegisterPage() {
           {/* Languages */}
           <div className="mb-[75px]">
             <label className="block mb-4 text-white text-xs font-normal">
-              Language(s) I speak
+              Language(s) I speak <span className="text-[#CC0000]">*</span>
             </label>
             <div className={`flex gap-6 w-full ${errors.languagesISpeak ? 'mb-1' : ''}`}>
               {LANGUAGES.map((language) => (
