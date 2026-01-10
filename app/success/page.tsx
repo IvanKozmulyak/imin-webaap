@@ -34,7 +34,7 @@ function SuccessContent() {
   }, [eventId]);
 
   return (
-    <div className="relative min-h-screen bg-black overflow-hidden flex flex-col">
+    <div className="relative bg-black overflow-hidden flex flex-col" style={{ minHeight: '100svh' }}>
       {/* Background Image */}
       <img
         src="/assets/background.png"
@@ -77,7 +77,7 @@ function SuccessContent() {
         </div>
 
         {/* Success Content - Center */}
-        <div className="flex flex-col items-center justify-center flex-1 w-full max-w-[90vw] sm:max-w-[400px] md:max-w-[480px] lg:max-w-[540px] xl:max-w-[358px] px-2 sm:px-3 md:px-4 py-2 sm:py-4 md:py-6">
+        <div className="flex flex-col items-center justify-center flex-1 w-full max-w-[90vw] sm:max-w-[400px] md:max-w-[480px] lg:max-w-[540px] xl:max-w-[358px] px-2 sm:px-3 md:px-4 py-2 sm:py-4 md:py-6 pb-0 sm:pb-0 md:pb-6">
           {/* Success Icon */}
           <div className="w-[140px] h-[134px] sm:w-[180px] sm:h-[173px] md:w-[240px] md:h-[230px] lg:w-[320px] lg:h-[307px] xl:w-[438px] xl:h-[420px] mb-1 sm:mb-2 md:mb-3 lg:mb-4 xl:mb-9 flex items-center justify-center">
             <img
@@ -102,7 +102,7 @@ function SuccessContent() {
 
           {/* Message */}
           <div className="flex flex-col items-center text-center w-full max-w-[280px] sm:max-w-[320px] md:max-w-[360px] lg:max-w-[380px] xl:w-[322px] px-1 sm:px-2">
-            <p className="text-white text-[14px] sm:text-[15px] md:text-[16px] lg:text-[17px] xl:text-[18px] font-semibold uppercase mb-1 sm:mb-1.5 md:mb-2 leading-tight">
+            <p className="text-white text-[14px] sm:text-[15px] md:text-[16px] lg:text-[17px] xl:text-[18px] font-semibold uppercase mb-0.5 sm:mb-1 md:mb-1.5 leading-tight">
               Your Crew is READY!
             </p>
             <p className="text-white text-[11px] sm:text-[12px] md:text-[13px] lg:text-[13px] xl:text-[14px] font-normal leading-normal mb-0">
@@ -112,7 +112,7 @@ function SuccessContent() {
         </div>
 
         {/* Button - Bottom */}
-        <div className="w-full px-4 sm:px-6 md:px-8 pb-2 sm:pb-4 md:pb-6 flex justify-center -mt-8 sm:-mt-6 md:-mt-4 lg:-mt-2 xl:mt-0">
+        <div className="w-full px-4 sm:px-6 md:px-8 pb-safe flex justify-center mt-4 sm:mt-6 md:mt-8">
           {ticketUrl ? (
             <a
               href={ticketUrl}
@@ -138,7 +138,7 @@ function SuccessContent() {
 export default function SuccessPage() {
   return (
     <Suspense fallback={
-      <div className="min-h-screen bg-black flex items-center justify-center">
+      <div className="bg-black flex items-center justify-center" style={{ minHeight: '100svh' }}>
         <div className="text-white text-lg">Loading...</div>
       </div>
     }>
