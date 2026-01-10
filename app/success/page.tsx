@@ -42,7 +42,7 @@ function SuccessContent() {
   }, [eventId]);
 
   return (
-    <div className="relative min-h-screen bg-black overflow-hidden">
+    <div className="relative min-h-screen bg-black overflow-hidden flex flex-col">
       {/* Background Image */}
       <img
         src="/assets/background.png"
@@ -54,7 +54,7 @@ function SuccessContent() {
       />
 
       {/* Content */}
-      <div className="relative z-10 flex flex-col items-center pt-6 px-6">
+      <div className="relative z-10 flex flex-col items-center justify-center flex-1 pt-2 sm:pt-4 md:pt-20 px-4 sm:px-6 pb-2 sm:pb-4 min-h-0">
         {/* Logo */}
         <svg
           width="77"
@@ -62,7 +62,7 @@ function SuccessContent() {
           viewBox="0 0 77 102"
           fill="none"
           xmlns="http://www.w3.org/2000/svg"
-          className="mb-2"
+          className="mb-1 sm:mb-2 md:mb-16 w-[40px] h-[53px] sm:w-[50px] sm:h-[66px] md:w-[77px] md:h-[102px]"
         >
           <path
             d="M20.9239 47.2449V1.24693C20.9239 0.554192 21.6817 0 22.8725 0H37.7034C38.4612 0 39.219 0.277095 39.4355 0.831288L47.5546 14.409C47.8794 14.8939 48.4207 15.4481 48.962 15.4481C49.6115 15.4481 50.0445 14.8939 50.3693 14.409L58.2719 0.831288C58.7049 0.277095 59.3544 0 60.2205 0H75.0514C76.134 0 77 0.554192 77 1.24693V47.2449C77 48.0069 76.134 48.4918 75.0514 48.4918H62.1691C61.0865 48.4918 60.2205 48.0069 60.2205 47.2449V26.2548C60.1122 25.7007 59.6792 25.6314 59.3544 26.1856L50.5858 38.7242C49.2867 40.1789 47.7711 39.3476 47.3381 38.7242L38.5695 26.1856C38.2447 25.6314 37.7034 25.7007 37.7034 26.2548V47.2449C37.7034 48.0069 36.7291 48.4918 35.7548 48.4918H22.8725C21.6817 48.4918 20.9239 48.0069 20.9239 47.2449Z"
@@ -85,7 +85,7 @@ function SuccessContent() {
         {/* Success Content */}
         <div className="flex flex-col items-center w-full max-w-[358px]">
           {/* Success Icon */}
-          <div className="w-[438px] h-[420px] mb-2 flex items-center justify-center">
+          <div className="w-[140px] h-[134px] sm:w-[200px] sm:h-[192px] md:w-[438px] md:h-[420px] mb-1 sm:mb-2 md:mb-9 flex items-center justify-center">
             <img
               src="/assets/success.png"
               alt="Success"
@@ -95,7 +95,7 @@ function SuccessContent() {
 
           {/* Success Text with Gradient */}
           <h1 
-            className="text-[70px] font-semibold uppercase text-center leading-none mb-2"
+            className="text-[28px] sm:text-[40px] md:text-[70px] font-semibold uppercase text-center leading-tight sm:leading-none mb-1 sm:mb-2 md:mb-[23px]"
             style={{
               background: 'linear-gradient(90deg, #B685F9 0%, #87D3FA 100%)',
               WebkitBackgroundClip: 'text',
@@ -107,7 +107,7 @@ function SuccessContent() {
           </h1>
 
           {/* Message */}
-          <p className="text-white text-center text-[15px] font-normal leading-normal mb-4 w-[322px]">
+          <p className="text-white text-center text-[12px] sm:text-[13px] md:text-[15px] font-normal leading-tight sm:leading-normal mb-2 sm:mb-3 md:mb-[50px] w-full max-w-[260px] sm:max-w-[280px] md:w-[322px] px-2">
             Your Crew is READY! We&apos;ll drop you into a Telegram chat soon
           </p>
 
@@ -115,7 +115,7 @@ function SuccessContent() {
           {loading ? (
             <button 
               disabled
-              className="w-full h-[45px] rounded-[30px] border border-white/30 bg-white/50 backdrop-blur-[15px] text-black/50 text-[15px] font-medium cursor-not-allowed"
+              className="w-full max-w-[280px] sm:max-w-[322px] md:max-w-full h-[40px] sm:h-[42px] md:h-[45px] rounded-[30px] border border-white/30 bg-white/50 backdrop-blur-[15px] text-black/50 text-[13px] sm:text-[14px] md:text-[15px] font-medium cursor-not-allowed"
             >
               Loading...
             </button>
@@ -124,14 +124,14 @@ function SuccessContent() {
               href={ticketUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="w-full h-[45px] rounded-[30px] border border-white/30 bg-white backdrop-blur-[15px] text-black text-[15px] font-medium hover:bg-white/90 transition-all flex items-center justify-center"
+              className="w-full max-w-[280px] sm:max-w-[322px] md:max-w-full h-[40px] sm:h-[42px] md:h-[45px] rounded-[30px] border border-white/30 bg-white backdrop-blur-[15px] text-black text-[13px] sm:text-[14px] md:text-[15px] font-medium hover:bg-white/90 transition-all flex items-center justify-center"
             >
               BUY YOUR TICKET
             </a>
           ) : (
             <button 
               disabled
-              className="w-full h-[45px] rounded-[30px] border border-white/30 bg-white/50 backdrop-blur-[15px] text-black/50 text-[15px] font-medium cursor-not-allowed"
+              className="w-full max-w-[280px] sm:max-w-[322px] md:max-w-full h-[40px] sm:h-[42px] md:h-[45px] rounded-[30px] border border-white/30 bg-white/50 backdrop-blur-[15px] text-black/50 text-[13px] sm:text-[14px] md:text-[15px] font-medium cursor-not-allowed"
             >
               BUY YOUR TICKET
             </button>
