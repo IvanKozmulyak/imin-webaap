@@ -9,8 +9,17 @@ const poppins = Poppins({
 })
 
 export const metadata: Metadata = {
-  title: 'Imin Event Matching System',
+  title: 'IM IN - Event Matching System',
   description: 'Event matching system for grouping users by common languages',
+  icons: {
+    icon: [
+      { url: '/assets/logo.svg', type: 'image/svg+xml' },
+    ],
+    apple: [
+      { url: '/assets/logo.svg', type: 'image/svg+xml' },
+    ],
+    shortcut: '/assets/logo.svg',
+  },
 }
 
 export default function RootLayout({
