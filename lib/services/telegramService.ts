@@ -295,7 +295,7 @@ export async function addBotAsAdmin(
         userId: botEntity,
         adminRights: new Api.ChatAdminRights({
           changeInfo: true,
-          postMessages: false, // For groups, this is usually false
+          postMessages: true, // For groups, this is usually false
           editMessages: false,
           deleteMessages: true,
           banUsers: true,
@@ -316,6 +316,82 @@ export async function addBotAsAdmin(
     console.error(`Error adding bot @${botUsername} as admin:`, error);
     throw new Error(`Failed to add bot as admin: ${error.message}`);
   }
+}
+
+/**
+ * Creates multiple Telegram groups for an event
+ * @param eventId The event ID to create groups for
+ * @param eventName The name of the event (used for group naming)
+ * @param numberOfGroups Number of groups to create (default: 10)
+ * @param maxMembersPerGroup Maximum members per group (default: 5)
+ * @param botUsername Bot username to add as admin (default: 'imin_squad_bot')
+ * @returns Array of created groups with their details
+ */
+export async function createTelegramGroupsForEvent(
+  eventId: string,
+  eventName: string,
+  numberOfGroups: number = 10,
+  maxMembersPerGroup: number = 5,
+  botUsername: string = 'imin_squad_bot'
+): Promise<Array<{
+  id: string;
+  chatId: string;
+  inviteLink: string;
+  groupNumber: number;
+}>> {
+  const { prisma } = await import('@/lib/db/client');
+  const createdGroups = [];
+
+  for (let i = 1; i <= numberOfGroups; i++) {
+    try {
+      const groupName = `${eventName} ${i}`;
+      
+      // Create the Telegram group
+      const { chatId, inviteLink, chatEntity } = await createTelegramGroupWithGramJS(
+        groupName,
+        maxMembersPerGroup
+      );
+
+      // Add bot as admin if chat entity is available
+      if (chatEntity) {
+        try {
+          await addBotAsAdmin(chatEntity, botUsername);
+        } catch (error: any) {
+          console.warn(`Warning: Failed to add bot as admin for group ${i}: ${error.message}`);
+          // Continue even if adding bot fails
+        }
+      }
+
+      // Save to database
+      const telegramGroup = await prisma.telegramGroup.create({
+        data: {
+          eventId,
+          telegramChatId: chatId,
+          inviteLink,
+          maxMembers: maxMembersPerGroup,
+          memberCount: 0,
+          isFull: false,
+        },
+      });
+
+      createdGroups.push({
+        id: telegramGroup.id,
+        chatId,
+        inviteLink,
+        groupNumber: i,
+      });
+
+      // Add a small delay between requests to avoid rate limiting
+      if (i < numberOfGroups) {
+        await new Promise(resolve => setTimeout(resolve, 1000)); // 1 second delay
+      }
+    } catch (error: any) {
+      console.error(`Failed to create group ${i}:`, error.message);
+      // Continue with next group even if one fails
+    }
+  }
+
+  return createdGroups;
 }
 
 /**
