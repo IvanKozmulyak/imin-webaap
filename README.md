@@ -113,11 +113,27 @@ The matching algorithm groups users based on common languages:
 ## Development
 
 - `npm run dev` - Start development server
-- `npm run build` - Build for production
+- `npm run build` - Build for production (without migrations)
+- `npm run build:deploy` - Build for production with database migrations
 - `npm run start` - Start production server
 - `npm run lint` - Run linter
 - `npm run db:studio` - Open Prisma Studio
+- `npm run db:migrate` - Run pending migrations (development)
+- `npm run db:migrate:deploy` - Apply migrations in production
+- `npm run db:seed` - Seed the database with initial data
 - `npm run create-telegram-groups` - Create 10 Telegram groups and save invite links to database
+
+## Database Migrations
+
+The project uses Prisma migrations. When deploying to production:
+
+1. **Local Development**: Use `npm run db:migrate` to create and apply migrations
+2. **Production Deployment**: The build process (`build:deploy`) automatically runs `prisma migrate deploy` to apply pending migrations
+3. **Manual Migration**: If needed, run `npm run db:migrate:deploy` manually in production
+
+### Current Migrations:
+- `20260108213425_` - Initial schema (Event, EventRegistration, Language, MatchingGroup tables)
+- `20260113135216_1` - Added TelegramGroup table and telegram_group_id to EventRegistration
 
 ## Project Structure
 
