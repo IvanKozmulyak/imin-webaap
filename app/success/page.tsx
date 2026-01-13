@@ -1,37 +1,11 @@
 'use client';
 
 import { useSearchParams } from 'next/navigation';
-import { Suspense, useEffect, useState } from 'react';
-import { EventDto } from '@/lib/types/event';
+import { Suspense } from 'react';
 
 function SuccessContent() {
   const searchParams = useSearchParams();
-  const eventId = searchParams ? searchParams.get('eventId') : null;
-  const [ticketUrl, setTicketUrl] = useState<string | null>(null);
-
-  useEffect(() => {
-    async function fetchEvent() {
-      if (!eventId) {
-        return;
-      }
-
-      try {
-        const response = await fetch(`/api/events/${eventId}`);
-        const data = await response.json();
-        
-        if (response.ok && !data.error) {
-          const event: EventDto = data;
-          if (event && event.ticketUrl) {
-            setTicketUrl(event.ticketUrl);
-          }
-        }
-      } catch (err) {
-        console.error('Error fetching event:', err);
-      }
-    }
-
-    fetchEvent();
-  }, [eventId]);
+  const telegramInviteLink = searchParams ? searchParams.get('telegramInviteLink') : null;
 
   return (
     <div className="relative bg-black overflow-hidden flex flex-col" style={{ minHeight: '100svh' }}>
@@ -113,20 +87,21 @@ function SuccessContent() {
 
         {/* Button - Bottom */}
         <div className="w-full px-4 sm:px-6 md:px-8 pb-safe flex justify-center mt-4 sm:mt-6 md:mt-8">
-          {ticketUrl ? (
+          {telegramInviteLink ? (
             <a
-              href={ticketUrl}
+              href={telegramInviteLink}
               target="_blank"
               rel="noopener noreferrer"
               className="w-full max-w-[280px] sm:max-w-[320px] md:max-w-[360px] lg:max-w-[400px] xl:max-w-[450px] h-[50px] sm:h-[54px] md:h-[58px] lg:h-[56px] xl:h-[58px] rounded-[25px] sm:rounded-[27px] md:rounded-[29px] lg:rounded-[28px] xl:rounded-[29px] bg-white text-black text-[14px] sm:text-[15px] md:text-[16px] lg:text-[15px] xl:text-[16px] font-bold uppercase hover:bg-white/90 transition-all flex items-center justify-center px-8"
             >
-              BUY YOUR TICKET
+              JOIN THE SQUAD
             </a>
           ) : (
             <button 
-              className="w-full max-w-[280px] sm:max-w-[320px] md:max-w-[360px] lg:max-w-[400px] xl:max-w-[450px] h-[50px] sm:h-[54px] md:h-[58px] lg:h-[56px] xl:h-[58px] rounded-[25px] sm:rounded-[27px] md:rounded-[29px] lg:rounded-[28px] xl:rounded-[29px] bg-white text-black text-[14px] sm:text-[15px] md:text-[16px] lg:text-[15px] xl:text-[16px] font-bold uppercase cursor-pointer flex items-center justify-center px-8"
+              disabled
+              className="w-full max-w-[280px] sm:max-w-[320px] md:max-w-[360px] lg:max-w-[400px] xl:max-w-[450px] h-[50px] sm:h-[54px] md:h-[58px] lg:h-[56px] xl:h-[58px] rounded-[25px] sm:rounded-[27px] md:rounded-[29px] lg:rounded-[28px] xl:rounded-[29px] bg-white/50 text-black/50 text-[14px] sm:text-[15px] md:text-[16px] lg:text-[15px] xl:text-[16px] font-bold uppercase cursor-not-allowed flex items-center justify-center px-8"
             >
-              BUY YOUR TICKET
+              JOIN THE SQUAD
             </button>
           )}
         </div>

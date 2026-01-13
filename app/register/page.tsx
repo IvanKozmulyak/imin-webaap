@@ -210,10 +210,22 @@ export default function RegisterPage() {
 
       // Check if response is successful (200 or 201 status) and doesn't have error field
       if (response.ok && !data.error) {
-        // Redirect to success page with eventId to fetch ticket URL
-        const eventId = formData.eventId || data.eventId;
-        const successUrl = eventId 
-          ? `/success?eventId=${encodeURIComponent(eventId)}`
+        // Extract data from response (handle both wrapped and direct responses)
+        const registrationData = data.data || data;
+        const eventId = formData.eventId || registrationData.eventId;
+        const telegramInviteLink = registrationData.telegramInviteLink;
+        
+        // Build success URL with eventId and optional invite link
+        const params = new URLSearchParams();
+        if (eventId) {
+          params.set('eventId', eventId);
+        }
+        if (telegramInviteLink) {
+          params.set('telegramInviteLink', telegramInviteLink);
+        }
+        
+        const successUrl = params.toString() 
+          ? `/success?${params.toString()}`
           : '/success';
         router.push(successUrl);
       } else {

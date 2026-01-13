@@ -25,10 +25,33 @@ A Next.js application with TypeScript that implements an event matching system. 
    ```
 
 2. **Set up environment variables:**
-   Create a `.env` file in the root directory:
-   ```
+   Create a `.env` file in the root directory with the following variables:
+   ```env
+   # Database Configuration
    DATABASE_URL="postgresql://user:password@localhost:5432/imin?schema=public"
+   
+   # Telegram API Configuration
+   # Get these from https://my.telegram.org/apps
+   TELEGRAM_API_ID=your_api_id_here
+   TELEGRAM_API_HASH=your_api_hash_here
+   
+   # Telegram Bot Token (optional but recommended)
+   # Get this from @BotFather on Telegram
+   TELEGRAM_BOT_TOKEN=your_bot_token_here
+   
+   # Telegram Session String (required for group creation)
+   # This is generated after first authentication. Leave empty for initial setup.
+   TELEGRAM_SESSION_STRING=
+   
+   # Telegram Phone Number (optional, only needed for initial authentication)
+   # Format: +1234567890 (include country code)
+   TELEGRAM_PHONE_NUMBER=
    ```
+   
+   **How to get Telegram credentials:**
+   - **API ID & API Hash**: Go to https://my.telegram.org/apps and create a new application
+   - **Bot Token**: Message @BotFather on Telegram and create a new bot
+   - **Session String**: This will be generated automatically after first authentication. For initial setup, you may need to authenticate manually.
 
 3. **Set up the database:**
    ```bash
@@ -94,19 +117,7 @@ The matching algorithm groups users based on common languages:
 - `npm run start` - Start production server
 - `npm run lint` - Run linter
 - `npm run db:studio` - Open Prisma Studio
-
-## Deployment
-
-### Vercel Deployment
-
-The build process automatically:
-1. Generates Prisma Client (`prisma generate`)
-2. Applies database migrations (`prisma migrate deploy`)
-3. Builds the Next.js application
-
-**Important:** Make sure to set the `DATABASE_URL` environment variable in your Vercel project settings.
-
-The build script runs migrations automatically, so your database will be up-to-date on each deployment.
+- `npm run create-telegram-groups` - Create 10 Telegram groups and save invite links to database
 
 ## Project Structure
 

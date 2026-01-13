@@ -1,6 +1,7 @@
 import { prisma } from '@/lib/db/client';
 import { EventRegistrationRequestDto, EventRegistrationResponseDto } from '@/lib/types/registration';
 import { EventNotFoundException, DuplicateTelegramError } from '@/lib/utils/errors';
+import { createTelegramGroupInvite } from './telegramService';
 
 export async function createEventRegistration(
   eventId: string,
@@ -22,23 +23,65 @@ export async function createEventRegistration(
     throw new DuplicateTelegramError(data.telegram);
   }
 
-  // Create registration with languages
-  const registration = await prisma.eventRegistration.create({
-    data: {
+  // Find or create a Telegram group
+  let telegramGroup = await prisma.telegramGroup.findFirst({
+    where: {
       eventId,
-      name: data.name,
-      email: data.email,
-      telegram: data.telegram,
-      age: data.age,
-      languages: {
-        create: data.languagesISpeak.map(langCode => ({
-          languageCode: langCode,
-        })),
+      isFull: false,
+      memberCount: {
+        lt: 5, // Less than 5 members
       },
     },
-    include: {
-      languages: true,
+    orderBy: {
+      createdAt: 'asc', // Use oldest available group first
     },
+  });
+
+  let inviteLink: string | null = null;
+
+  // If no available group, create a new one
+  if (!telegramGroup) {
+      console.error('Error getting invite link');
+  } else {
+    inviteLink = telegramGroup.inviteLink;
+  }
+
+  // Create registration with languages and Telegram group assignment
+  const registration = await prisma.$transaction(async (tx) => {
+    const newRegistration = await tx.eventRegistration.create({
+      data: {
+        eventId,
+        name: data.name,
+        email: data.email,
+        telegram: data.telegram,
+        age: data.age,
+        telegramGroupId: telegramGroup?.id,
+        languages: {
+          create: data.languagesISpeak.map(langCode => ({
+            languageCode: langCode,
+          })),
+        },
+      },
+      include: {
+        languages: true,
+      },
+    });
+
+    // Update Telegram group member count
+    if (telegramGroup) {
+      const newMemberCount = telegramGroup.memberCount + 1;
+      const isFull = newMemberCount >= telegramGroup.maxMembers;
+      
+      await tx.telegramGroup.update({
+        where: { id: telegramGroup.id },
+        data: {
+          memberCount: newMemberCount,
+          isFull,
+        },
+      });
+    }
+
+    return newRegistration;
   });
 
   return {
@@ -50,5 +93,6 @@ export async function createEventRegistration(
     age: registration.age,
     languagesISpeak: registration.languages.map(l => l.languageCode),
     createdAt: registration.createdAt.toISOString(),
+    telegramInviteLink: inviteLink,
   };
 }

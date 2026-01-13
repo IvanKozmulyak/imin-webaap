@@ -15,4 +15,5 @@ export interface EventRegistrationResponseDto {
   age: number;
   languagesISpeak: string[];
   createdAt: string; // ISO 8601 timestamp
+  telegramInviteLink?: string | null; // Telegram invite link for the group
 }
