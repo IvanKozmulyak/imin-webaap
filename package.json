@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "prisma generate && next build",
+    "build": "prisma migrate deploy && prisma generate && next build",
     "build:deploy": "prisma migrate deploy && prisma generate && next build",
     "start": "next start",
     "lint": "next lint",
@@ -14,6 +14,7 @@
     "db:push": "prisma db push",
     "db:studio": "prisma studio",
     "db:seed": "tsx prisma/seed.ts",
+    "db:check-migrations": "tsx scripts/check-migrations.ts",
     "create-telegram-groups": "tsx scripts/create-telegram-groups.ts",
     "postinstall": "prisma generate"
   },

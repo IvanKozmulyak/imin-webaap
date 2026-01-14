@@ -120,6 +120,7 @@ The matching algorithm groups users based on common languages:
 - `npm run db:studio` - Open Prisma Studio
 - `npm run db:migrate` - Run pending migrations (development)
 - `npm run db:migrate:deploy` - Apply migrations in production
+- `npm run db:check-migrations` - Check migration status and apply pending migrations
 - `npm run db:seed` - Seed the database with initial data
 - `npm run create-telegram-groups` - Create 10 Telegram groups and save invite links to database
 
