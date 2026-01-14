@@ -147,6 +147,14 @@ export async function createTelegramGroupWithGramJS(
     // Get the chat entity for creating invite links
     const chatEntity = await client.getEntity(chat);
     
+    // Make the user anonymous in the group
+    try {
+      await makeUserAnonymous(chatEntity as Api.Channel);
+    } catch (error: any) {
+      console.warn(`Warning: Failed to make user anonymous: ${error.message}`);
+      // Continue even if making user anonymous fails
+    }
+    
     // Create invite link using GramJS first (this works immediately after creation)
     let inviteLink: string;
     try {
@@ -267,6 +275,112 @@ export async function createTelegramGroupInvite(
 }
 
 
+
+/**
+ * Makes the current user anonymous in a Telegram group
+ * @param chatEntity The chat entity (Channel) where the user should be anonymous
+ * @returns True if successful
+ */
+export async function makeUserAnonymous(
+  chatEntity: Api.Channel
+): Promise<boolean> {
+  try {
+    const client = await getTelegramClient();
+
+    // Get the current user (the one who created the group)
+    const me = await client.getMe();
+    
+    if (!me) {
+      throw new Error('Failed to get current user');
+    }
+
+    // Get the full channel info to retrieve current admin rights
+    const fullChannel = await client.invoke(
+      new Api.channels.GetFullChannel({
+        channel: chatEntity,
+      })
+    );
+
+    // Get current admin rights from the channel participants
+    let currentAdminRights: Api.ChatAdminRights | null = null;
+    let currentRank = '';
+
+    if (fullChannel.fullChat instanceof Api.ChannelFull) {
+      // Try to get admin rights from participants
+      try {
+        const participants = await client.invoke(
+          new Api.channels.GetParticipants({
+            channel: chatEntity,
+            filter: new Api.ChannelParticipantsAdmins(),
+            offset: 0,
+            limit: 100,
+          })
+        );
+
+        if (participants instanceof Api.channels.ChannelParticipants) {
+          const meId = me instanceof Api.User ? me.id : (typeof me === 'object' && 'id' in me ? me.id : me);
+          const admin = participants.participants.find(
+            (p) => p instanceof Api.ChannelParticipantAdmin && 
+                   p.userId.toString() === meId.toString()
+          );
+          
+          if (admin instanceof Api.ChannelParticipantAdmin) {
+            currentAdminRights = admin.adminRights;
+            currentRank = admin.rank || '';
+          }
+        }
+      } catch (error) {
+        console.warn('Could not fetch admin rights from participants, using defaults');
+      }
+    }
+
+    // Use default admin rights if we couldn't find existing ones
+    // These are typical rights for a group creator
+    if (!currentAdminRights) {
+      currentAdminRights = new Api.ChatAdminRights({
+        changeInfo: true,
+        postMessages: false,
+        editMessages: false,
+        deleteMessages: true,
+        banUsers: true,
+        inviteUsers: true,
+        pinMessages: true,
+        addAdmins: true,
+        anonymous: false,
+        manageCall: true,
+        other: true,
+      });
+    }
+
+    // Edit admin rights to set anonymous: true while preserving other rights
+    await client.invoke(
+      new Api.channels.EditAdmin({
+        channel: chatEntity,
+        userId: me,
+        adminRights: new Api.ChatAdminRights({
+          changeInfo: currentAdminRights.changeInfo,
+          postMessages: currentAdminRights.postMessages,
+          editMessages: currentAdminRights.editMessages,
+          deleteMessages: currentAdminRights.deleteMessages,
+          banUsers: currentAdminRights.banUsers,
+          inviteUsers: currentAdminRights.inviteUsers,
+          pinMessages: currentAdminRights.pinMessages,
+          addAdmins: currentAdminRights.addAdmins,
+          anonymous: true, // Make user anonymous
+          manageCall: currentAdminRights.manageCall,
+          other: currentAdminRights.other,
+        }),
+        rank: currentRank,
+      })
+    );
+
+    console.log(`✓ Made user anonymous in group`);
+    return true;
+  } catch (error: any) {
+    console.error(`Error making user anonymous:`, error);
+    throw new Error(`Failed to make user anonymous: ${error.message}`);
+  }
+}
 
 /**
  * Adds a bot as admin to a Telegram group
