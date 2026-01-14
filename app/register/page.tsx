@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { EventDto } from '@/lib/types/event';
 import CustomDropdown, { DropdownOption } from '../components/CustomDropdown';
+import SplashScreen from '../components/SplashScreen';
 
 const LANGUAGES = [
   { code: 'EN', name: 'English' },
@@ -14,6 +15,7 @@ const LANGUAGES = [
 
 export default function RegisterPage() {
   const router = useRouter();
+  const [showSplash, setShowSplash] = useState(true);
   const [events, setEvents] = useState<EventDto[]>([]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
@@ -265,12 +267,15 @@ export default function RegisterPage() {
 
   return (
     <div className="relative min-h-screen bg-black overflow-hidden">
+      {/* Splash Screen */}
+      {showSplash && <SplashScreen onAgree={() => setShowSplash(false)} />}
+
       {/* Background Image */}
       <img
         src="/assets/background.png"
         alt=""
         className="absolute inset-0 w-full h-full object-cover pointer-events-none"
-        style={{ 
+        style={{
           zIndex: 0
         }}
       />
