@@ -11,9 +11,29 @@
 
 import { prisma } from '../lib/db/client';
 import { createTelegramGroupWithGramJS, addBotAsAdmin } from '../lib/services/telegramService';
+import * as path from 'path';
 
 const NUMBER_OF_GROUPS = 10;
 const MAX_MEMBERS_PER_GROUP = 5;
+
+/**
+ * Gets the list of available group images
+ * @returns Array of image file paths
+ */
+function getGroupImages(): string[] {
+  const projectRoot = process.cwd();
+  const imagesDir = path.join(projectRoot, 'public', 'assets', 'telegram');
+  
+  const images = [
+    'aditya-chinchure-ZhQCZjr9fHo-unsplash.jpg',
+    'aleksandr-popov-2XKAUkbq218-unsplash.jpg',
+    'fidel-fernando-249DzAuJTqQ-unsplash.jpg',
+    'jonas-jaeken-WY1AqSH4dUQ-unsplash.jpg',
+    'kajetan-sumila-UV3GmG_HEqI-unsplash.jpg',
+  ];
+
+  return images.map(img => path.join(imagesDir, img));
+}
 
 /**
  * Gets an event by ID (required)
@@ -35,17 +55,19 @@ async function createAndSaveGroup(
   eventId: string,
   eventName: string,
   groupNumber: number,
-  botUsername: string = 'imin_squad_bot'
+  botUsername: string = 'imin_squad_bot',
+  imagePath?: string
 ) {
-  const groupName = eventName;
+  const groupName = `${eventName} ${groupNumber}`;
   
   console.log(`Creating group ${groupNumber}/${NUMBER_OF_GROUPS}: ${groupName}...`);
   
   try {
-    // Create the Telegram group
+    // Create the Telegram group with image
     const { chatId, inviteLink, chatEntity } = await createTelegramGroupWithGramJS(
       groupName,
-      MAX_MEMBERS_PER_GROUP
+      MAX_MEMBERS_PER_GROUP,
+      imagePath
     );
 
     // Add bot as admin if chat entity is available
@@ -105,11 +127,18 @@ async function main() {
     const event = await getEvent(eventId);
     console.log(`Event: ${event.name} (${event.id})\n`);
 
+    // Get available group images
+    const groupImages = getGroupImages();
+
     // Create groups sequentially to avoid rate limits
     const createdGroups = [];
     for (let i = 1; i <= NUMBER_OF_GROUPS; i++) {
       try {
-        const group = await createAndSaveGroup(event.id, event.name, i);
+        // Cycle through available images (use modulo to wrap around)
+        const imageIndex = (i - 1) % groupImages.length;
+        const imagePath = groupImages[imageIndex];
+        
+        const group = await createAndSaveGroup(event.id, event.name, i, 'imin_squad_bot', imagePath);
         createdGroups.push(group);
         
         // Add a small delay between requests to avoid rate limiting

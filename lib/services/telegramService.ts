@@ -9,6 +9,9 @@
 import { TelegramClient } from 'telegram';
 import { StringSession } from 'telegram/sessions';
 import { Api } from 'telegram/tl';
+import { CustomFile } from 'telegram/client/uploads';
+import * as fs from 'fs';
+import * as path from 'path';
 
 const TELEGRAM_API_BASE = 'https://api.telegram.org/bot';
 
@@ -111,14 +114,88 @@ async function getTelegramClient(): Promise<TelegramClient> {
 }
 
 /**
+ * Sets a group photo for a Telegram group
+ * @param chatEntity The chat entity (Channel) to set the photo for
+ * @param imagePath Path to the image file
+ * @returns True if successful
+ */
+export async function setGroupPhoto(
+  chatEntity: Api.Channel,
+  imagePath: string
+): Promise<boolean> {
+  try {
+    const client = await getTelegramClient();
+
+    // Check if file exists
+    if (!fs.existsSync(imagePath)) {
+      throw new Error(`Image file not found: ${imagePath}`);
+    }
+
+    // Get file stats for size
+    const fileStats = fs.statSync(imagePath);
+    
+    // Create CustomFile object for upload
+    const customFile = new CustomFile(
+      path.basename(imagePath),
+      fileStats.size,
+      imagePath
+    );
+    
+    // Upload the file to Telegram
+    const file = await client.uploadFile({
+      file: customFile,
+      workers: 1,
+    });
+
+    // Set the group photo
+    await client.invoke(
+      new Api.channels.EditPhoto({
+        channel: chatEntity,
+        photo: new Api.InputChatUploadedPhoto({
+          file: file,
+        }),
+      })
+    );
+
+    console.log(`✓ Set group photo from ${path.basename(imagePath)}`);
+    return true;
+  } catch (error: any) {
+    console.error(`Error setting group photo:`, error);
+    throw new Error(`Failed to set group photo: ${error.message}`);
+  }
+}
+
+/**
+ * Gets the list of available group images
+ * @returns Array of image file paths
+ */
+function getGroupImages(): string[] {
+  // Get the project root directory (assuming this file is in lib/services)
+  const projectRoot = process.cwd();
+  const imagesDir = path.join(projectRoot, 'public', 'assets', 'telegram');
+  
+  const images = [
+    'aditya-chinchure-ZhQCZjr9fHo-unsplash.jpg',
+    'aleksandr-popov-2XKAUkbq218-unsplash.jpg',
+    'fidel-fernando-249DzAuJTqQ-unsplash.jpg',
+    'jonas-jaeken-WY1AqSH4dUQ-unsplash.jpg',
+    'kajetan-sumila-UV3GmG_HEqI-unsplash.jpg',
+  ];
+
+  return images.map(img => path.join(imagesDir, img));
+}
+
+/**
  * Creates a new Telegram group using GramJS
  * @param groupName Name of the group to create
  * @param maxMembers Maximum number of members (default: 5)
+ * @param imagePath Optional path to image file for group photo
  * @returns Chat ID and invite link
  */
 export async function createTelegramGroupWithGramJS(
   groupName: string,
-  maxMembers: number = 5
+  maxMembers: number = 5,
+  imagePath?: string
 ): Promise<CreateGroupResult> {
   try {
     const client = await getTelegramClient();
@@ -153,6 +230,16 @@ export async function createTelegramGroupWithGramJS(
     } catch (error: any) {
       console.warn(`Warning: Failed to make user anonymous: ${error.message}`);
       // Continue even if making user anonymous fails
+    }
+    
+    // Set group photo if image path is provided
+    if (imagePath) {
+      try {
+        await setGroupPhoto(chatEntity as Api.Channel, imagePath);
+      } catch (error: any) {
+        console.warn(`Warning: Failed to set group photo: ${error.message}`);
+        // Continue even if setting photo fails
+      }
     }
     
     // Create invite link using GramJS first (this works immediately after creation)
@@ -455,15 +542,23 @@ export async function createTelegramGroupsForEvent(
 }>> {
   const { prisma } = await import('@/lib/db/client');
   const createdGroups = [];
+  
+  // Get available group images
+  const groupImages = getGroupImages();
 
   for (let i = 1; i <= numberOfGroups; i++) {
     try {
       const groupName = `${eventName} ${i}`;
       
-      // Create the Telegram group
+      // Cycle through available images (use modulo to wrap around)
+      const imageIndex = (i - 1) % groupImages.length;
+      const imagePath = groupImages[imageIndex];
+      
+      // Create the Telegram group with image
       const { chatId, inviteLink, chatEntity } = await createTelegramGroupWithGramJS(
         groupName,
-        maxMembersPerGroup
+        maxMembersPerGroup,
+        imagePath
       );
 
       // Add bot as admin if chat entity is available
