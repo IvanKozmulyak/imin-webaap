@@ -188,6 +188,16 @@ function createWelcomeMessage(
 }
 
 /**
+ * Creates a message when someone leaves the group
+ * @returns Message text to reassure the group
+ */
+function createLeaveMessage(): string {
+  return `👋 **Someone left the squad.**\n\n` +
+    `Don't worry - we're on it! We'll find someone awesome to fill the spot. 🔍\n\n` +
+    `*The squad stays strong.* 💪`;
+}
+
+/**
  * Handles a Telegram webhook update
  * @param update The webhook update object from Telegram
  */
@@ -339,6 +349,16 @@ async function handleChatMemberUpdate(chatMemberUpdate: any): Promise<void> {
       return;
     }
     
+    // Send leave message to the group
+    try {
+      const leaveMessage = createLeaveMessage();
+      await sendTelegramMessage(chatId, leaveMessage, 'Markdown');
+      console.log(`Leave message sent to group ${chatId}`);
+    } catch (error: any) {
+      console.error(`Failed to send leave message:`, error);
+      // Continue with member count update even if message fails
+    }
+    
     // Update member count - this will automatically set isFull to false if count drops below maxMembers
     await updateMemberCountFromTelegram(telegramGroup.id, chatId);
     
@@ -369,6 +389,16 @@ async function handleLeftChatMember(message: any): Promise<void> {
   if (!telegramGroup) {
     console.log(`No event found for chat ${chatId}, skipping member count update`);
     return;
+  }
+  
+  // Send leave message to the group
+  try {
+    const leaveMessage = createLeaveMessage();
+    await sendTelegramMessage(chatId, leaveMessage, 'Markdown');
+    console.log(`Leave message sent to group ${chatId}`);
+  } catch (error: any) {
+    console.error(`Failed to send leave message:`, error);
+    // Continue with member count update even if message fails
   }
   
   // Update member count - this will automatically set isFull to false if count drops below maxMembers
