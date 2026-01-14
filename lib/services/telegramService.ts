@@ -290,7 +290,7 @@ export async function makeUserAnonymous(
     // Get the current user (the one who created the group)
     const me = await client.getMe();
     
-    if (!me) {
+    if (!me || !(me instanceof Api.User)) {
       throw new Error('Failed to get current user');
     }
 
@@ -318,7 +318,7 @@ export async function makeUserAnonymous(
         );
 
         if (participants instanceof Api.channels.ChannelParticipants) {
-          const meId = me instanceof Api.User ? me.id : (typeof me === 'object' && 'id' in me ? me.id : me);
+          const meId = me.id;
           const admin = participants.participants.find(
             (p) => p instanceof Api.ChannelParticipantAdmin && 
                    p.userId.toString() === meId.toString()

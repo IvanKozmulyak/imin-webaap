@@ -23,26 +23,37 @@ function getBotToken(): string {
  * @param chatId Telegram chat ID
  * @param text Message text (supports Markdown)
  * @param parseMode Parse mode for the message (default: 'Markdown')
+ * @param inlineKeyboard Optional inline keyboard buttons
  */
 async function sendTelegramMessage(
   chatId: string,
   text: string,
-  parseMode: 'Markdown' | 'HTML' = 'Markdown'
+  parseMode: 'Markdown' | 'HTML' = 'Markdown',
+  inlineKeyboard?: Array<Array<{ text: string; url?: string; callback_data?: string }>>
 ): Promise<void> {
   const token = getBotToken();
   
   try {
+    const payload: any = {
+      chat_id: chatId,
+      text,
+      parse_mode: parseMode,
+      disable_web_page_preview: false,
+    };
+
+    // Add inline keyboard if provided
+    if (inlineKeyboard && inlineKeyboard.length > 0) {
+      payload.reply_markup = {
+        inline_keyboard: inlineKeyboard,
+      };
+    }
+
     const response = await fetch(`${TELEGRAM_API_BASE}${token}/sendMessage`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({
-        chat_id: chatId,
-        text,
-        parse_mode: parseMode,
-        disable_web_page_preview: false,
-      }),
+      body: JSON.stringify(payload),
     });
 
     const data = await response.json();
@@ -69,40 +80,35 @@ async function sendTelegramMessage(
 
 /**
  * Creates a welcome message for new group members
- * @param eventName Name of the event
+ * @param firstName First name of the new member
  * @param ticketUrl Optional ticket URL
- * @param memberName Optional name of the new member
- * @returns Formatted welcome message
+ * @returns Object with message text and optional inline keyboard
  */
 function createWelcomeMessage(
-  eventName: string,
-  ticketUrl?: string | null,
-  memberName?: string
-): string {
-  const greeting = memberName 
-    ? `👋 Welcome to the group, ${memberName}!`
-    : `👋 Welcome to the group!`;
+  firstName: string,
+  ticketUrl?: string | null
+): { message: string; inlineKeyboard?: Array<Array<{ text: string; url: string }>> } {
+  const message = `⚡️ **Yo ${firstName}, you're in.**\n\n` +
+    `Don't be a ghost—drop a GIF or Voice Note to prove you're real. 👻\n\n` +
+    `*Heads up: You need a ticket to get past the bouncer.*`;
   
-  let message = `${greeting}\n\n`;
-  message += `🎉 You've joined the **${eventName}** community!\n\n`;
-  message += `💬 This is your squad - feel free to introduce yourself and start chatting with your fellow participants.\n\n`;
-  message += `✨ Here's what you can do:\n`;
-  message += `• Share your interests and hobbies\n`;
-  message += `• Plan meetups before the event\n`;
-  message += `• Get to know your squad members\n`;
-  message += `• Ask questions about the event\n\n`;
-  message += `💡 **Icebreaker ideas:**\n`;
-  message += `• What are you most excited about for this event?\n`;
-  message += `• Share a fun fact about yourself\n`;
-  message += `• What brings you here today?\n\n`;
-  
+  const result: { message: string; inlineKeyboard?: Array<Array<{ text: string; url: string }>> } = {
+    message,
+  };
+
+  // Add buy ticket button if ticket URL is available
   if (ticketUrl) {
-    message += `🎫 **Get your tickets:** [Click here](${ticketUrl})\n\n`;
+    result.inlineKeyboard = [
+      [
+        {
+          text: 'Buy Ticket',
+          url: ticketUrl,
+        },
+      ],
+    ];
   }
-  
-  message += `🚀 Let's make this event amazing together! Don't be shy - say hello! 👋`;
-  
-  return message;
+
+  return result;
 }
 
 /**
@@ -164,16 +170,15 @@ async function handleNewChatMembers(message: any): Promise<void> {
     }
     
     try {
-      const memberName = member.first_name || 'there';
-      const welcomeMessage = createWelcomeMessage(
-        event.name,
-        event.ticketUrl,
-        memberName
+      const firstName = member.first_name || 'there';
+      const { message, inlineKeyboard } = createWelcomeMessage(
+        firstName,
+        event.ticketUrl
       );
       
-      await sendTelegramMessage(chatId, welcomeMessage);
+      await sendTelegramMessage(chatId, message, 'Markdown', inlineKeyboard);
       
-      console.log(`Welcome message sent to ${memberName} in chat ${chatId}`);
+      console.log(`Welcome message sent to ${firstName} in chat ${chatId}`);
     } catch (error: any) {
       console.error(`Failed to send welcome message to new member:`, error);
       // Continue with other members even if one fails
@@ -216,16 +221,15 @@ async function handleChatMemberUpdate(chatMemberUpdate: any): Promise<void> {
     const event = telegramGroup.event;
     
     try {
-      const memberName = member.first_name || 'there';
-      const welcomeMessage = createWelcomeMessage(
-        event.name,
-        event.ticketUrl,
-        memberName
+      const firstName = member.first_name || 'there';
+      const { message, inlineKeyboard } = createWelcomeMessage(
+        firstName,
+        event.ticketUrl
       );
       
-      await sendTelegramMessage(chatId, welcomeMessage);
+      await sendTelegramMessage(chatId, message, 'Markdown', inlineKeyboard);
       
-      console.log(`Welcome message sent to ${memberName} in chat ${chatId}`);
+      console.log(`Welcome message sent to ${firstName} in chat ${chatId}`);
     } catch (error: any) {
       console.error(`Failed to send welcome message to new member:`, error);
     }
