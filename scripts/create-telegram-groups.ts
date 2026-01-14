@@ -11,6 +11,7 @@
 
 import { prisma } from '../lib/db/client';
 import { createTelegramGroupWithGramJS, addBotAsAdmin } from '../lib/services/telegramService';
+import { TelegramFloodWaitError } from '../lib/utils/errors';
 
 const NUMBER_OF_GROUPS = 10;
 const MAX_MEMBERS_PER_GROUP = 5;
@@ -37,7 +38,7 @@ async function createAndSaveGroup(
   groupNumber: number,
   botUsername: string = 'imin_squad_bot'
 ) {
-  const groupName = `${eventName} ${groupNumber}`;
+  const groupName = eventName;
   
   console.log(`Creating group ${groupNumber}/${NUMBER_OF_GROUPS}: ${groupName}...`);
   
@@ -54,7 +55,21 @@ async function createAndSaveGroup(
         await addBotAsAdmin(chatEntity, botUsername);
         console.log(`  - Added @${botUsername} as admin`);
       } catch (error: any) {
-        console.warn(`  ⚠ Warning: Failed to add bot as admin: ${error.message}`);
+        if (error instanceof TelegramFloodWaitError) {
+          const hours = Math.round(error.seconds / 3600);
+          const minutes = Math.round((error.seconds % 3600) / 60);
+          console.warn(`  ⚠ Flood wait when adding bot: ${hours > 0 ? `${hours}h ` : ''}${minutes}m (${error.seconds}s)`);
+          // Wait and retry once
+          await new Promise(resolve => setTimeout(resolve, (error.seconds + 1) * 1000));
+          try {
+            await addBotAsAdmin(chatEntity, botUsername);
+            console.log(`  - Added @${botUsername} as admin (after retry)`);
+          } catch (retryError: any) {
+            console.warn(`  ⚠ Warning: Failed to add bot as admin after retry: ${retryError.message}`);
+          }
+        } else {
+          console.warn(`  ⚠ Warning: Failed to add bot as admin: ${error.message}`);
+        }
         // Continue even if adding bot fails
       }
     } else {
@@ -81,6 +96,23 @@ async function createAndSaveGroup(
 
     return telegramGroup;
   } catch (error: any) {
+    if (error instanceof TelegramFloodWaitError) {
+      const hours = Math.round(error.seconds / 3600);
+      const minutes = Math.round((error.seconds % 3600) / 60);
+      console.error(`✗ Flood wait error when creating group ${groupNumber}:`);
+      console.error(`  Wait time: ${hours > 0 ? `${hours} hour${hours > 1 ? 's' : ''} and ` : ''}${minutes} minute${minutes !== 1 ? 's' : ''} (${error.seconds} seconds)`);
+      
+      if (error.seconds > 3600) {
+        console.error(`  This is a very long wait time. Consider reducing the number of groups or waiting longer.`);
+        throw error;
+      }
+      
+      // For shorter waits, we'll wait and continue
+      console.log(`  Waiting ${error.seconds} seconds before continuing...`);
+      await new Promise(resolve => setTimeout(resolve, (error.seconds + 1) * 1000));
+      throw error; // Re-throw to let the caller handle it
+    }
+    
     console.error(`✗ Failed to create group ${groupNumber}:`, error.message);
     throw error;
   }
@@ -112,12 +144,25 @@ async function main() {
         const group = await createAndSaveGroup(event.id, event.name, i);
         createdGroups.push(group);
         
-        // Add a small delay between requests to avoid rate limiting
+        // Add a delay between requests to avoid rate limiting
+        // Increased from 1 second to 3 seconds to be more conservative
         if (i < NUMBER_OF_GROUPS) {
-          await new Promise(resolve => setTimeout(resolve, 1000)); // 1 second delay
+          await new Promise(resolve => setTimeout(resolve, 3000)); // 3 second delay
         }
       } catch (error) {
-        console.error(`Failed to create group ${i}, continuing with next group...`);
+        if (error instanceof TelegramFloodWaitError) {
+          if (error.seconds > 3600) {
+            console.error(`\n✗ Stopping group creation due to long flood wait (${error.seconds} seconds)`);
+            console.error(`  Created ${createdGroups.length} groups before hitting the rate limit.`);
+            break; // Stop creating more groups
+          } else {
+            // Wait and continue with next group
+            console.log(`Waiting ${error.seconds} seconds before continuing...`);
+            await new Promise(resolve => setTimeout(resolve, (error.seconds + 1) * 1000));
+          }
+        } else {
+          console.error(`Failed to create group ${i}, continuing with next group...`);
+        }
         // Continue with next group even if one fails
       }
     }

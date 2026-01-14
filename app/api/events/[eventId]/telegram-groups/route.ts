@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createTelegramGroupsForEvent } from '@/lib/services/telegramService';
 import { getEventById } from '@/lib/services/eventService';
-import { EventNotFoundException } from '@/lib/utils/errors';
+import { EventNotFoundException, TelegramFloodWaitError } from '@/lib/utils/errors';
 import { createErrorResponse, createSuccessResponse } from '@/lib/utils/apiResponse';
 
 export const dynamic = 'force-dynamic';
@@ -81,6 +81,16 @@ export async function POST(
     if (error instanceof EventNotFoundException) {
       return createErrorResponse(error.message, 404);
     }
+    
+    if (error instanceof TelegramFloodWaitError) {
+      const hours = Math.round(error.seconds / 3600);
+      const minutes = Math.round((error.seconds % 3600) / 60);
+      return createErrorResponse(
+        `Telegram rate limit exceeded. Please wait ${hours > 0 ? `${hours} hour${hours > 1 ? 's' : ''} and ` : ''}${minutes} minute${minutes !== 1 ? 's' : ''} (${error.seconds} seconds) before creating more groups.`,
+        429 // Too Many Requests
+      );
+    }
+    
     console.error('Error creating Telegram groups:', error);
     return createErrorResponse(
       error.message || 'Internal server error',
