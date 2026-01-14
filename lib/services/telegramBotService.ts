@@ -110,7 +110,7 @@ async function getRealMemberCount(chatId: string): Promise<number> {
 
     const totalCount = countData.result || 0;
 
-    const realMemberCount = Math.max(0, totalCount - 2);
+    const realMemberCount = Math.max(0, totalCount - 1);
 
     console.log(`Member count for chat ${chatId}: total=${totalCount}, real=${realMemberCount}`);
     
