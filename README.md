@@ -7,6 +7,8 @@ A Next.js application with TypeScript that implements an event matching system. 
 - Event management with upcoming events API
 - User registration for events with language preferences
 - Automatic matching algorithm that groups users by common languages
+- Telegram group creation and management
+- Automated welcome messages for new group members with event info and ticket links
 - PostgreSQL database with Prisma ORM
 - TypeScript for type safety
 - Zod for request validation
@@ -53,6 +55,29 @@ A Next.js application with TypeScript that implements an event matching system. 
    - **Bot Token**: Message @BotFather on Telegram and create a new bot
    - **Session String**: This will be generated automatically after first authentication. For initial setup, you may need to authenticate manually.
 
+5. **Set up Telegram Bot Webhook (for welcome messages):**
+   
+   After deploying your application, configure the Telegram webhook to receive updates:
+   ```bash
+   curl -X POST "https://api.telegram.org/bot<YOUR_BOT_TOKEN>/setWebhook" \
+     -H "Content-Type: application/json" \
+     -d '{"url": "https://your-domain.com/api/telegram/webhook"}'
+   ```
+   
+   Replace:
+   - `<YOUR_BOT_TOKEN>` with your actual bot token
+   - `https://your-domain.com` with your deployed application URL
+   
+   To remove the webhook (if needed):
+   ```bash
+   curl -X POST "https://api.telegram.org/bot<YOUR_BOT_TOKEN>/deleteWebhook"
+   ```
+   
+   To check webhook status:
+   ```bash
+   curl "https://api.telegram.org/bot<YOUR_BOT_TOKEN>/getWebhookInfo"
+   ```
+
 3. **Set up the database:**
    ```bash
    # Generate Prisma client
@@ -90,6 +115,11 @@ A Next.js application with TypeScript that implements an event matching system. 
 
 - `POST /api/events/[eventId]/matching` - Perform matching algorithm for an event
 - `GET /api/events/[eventId]/matching` - Get existing matching results for an event
+
+### Telegram
+
+- `POST /api/events/[eventId]/telegram-groups` - Create Telegram groups for an event
+- `POST /api/telegram/webhook` - Telegram bot webhook endpoint (receives updates from Telegram)
 
 ## Database Schema
 

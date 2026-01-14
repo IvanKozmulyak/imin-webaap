@@ -9,7 +9,6 @@
 import { TelegramClient } from 'telegram';
 import { StringSession } from 'telegram/sessions';
 import { Api } from 'telegram/tl';
-import { isTelegramFloodWaitError, TelegramFloodWaitError } from '@/lib/utils/errors';
 
 const TELEGRAM_API_BASE = 'https://api.telegram.org/bot';
 
@@ -112,66 +111,6 @@ async function getTelegramClient(): Promise<TelegramClient> {
 }
 
 /**
- * Sleeps for a specified number of seconds
- * @param seconds Number of seconds to wait
- */
-async function sleep(seconds: number): Promise<void> {
-  const ms = seconds * 1000;
-  console.log(`Waiting ${seconds} seconds due to flood wait...`);
-  await new Promise(resolve => setTimeout(resolve, ms));
-}
-
-/**
- * Retries a function with exponential backoff on flood wait errors
- * @param fn The function to retry
- * @param maxRetries Maximum number of retries (default: 3)
- * @param baseDelay Base delay in seconds for exponential backoff (default: 1)
- * @returns The result of the function
- */
-async function retryWithBackoff<T>(
-  fn: () => Promise<T>,
-  maxRetries: number = 3,
-  baseDelay: number = 1
-): Promise<T> {
-  let lastError: any;
-  
-  for (let attempt = 0; attempt <= maxRetries; attempt++) {
-    try {
-      return await fn();
-    } catch (error: any) {
-      lastError = error;
-      
-      // Check if it's a flood wait error
-      const waitSeconds = isTelegramFloodWaitError(error);
-      if (waitSeconds !== null) {
-        if (attempt < maxRetries) {
-          // Wait for the specified time plus a small buffer
-          const waitTime = Math.min(waitSeconds + 1, 3600); // Cap at 1 hour
-          await sleep(waitTime);
-          continue;
-        } else {
-          // Max retries reached, throw the flood wait error
-          throw new TelegramFloodWaitError(waitSeconds, `Flood wait after ${maxRetries} retries`);
-        }
-      }
-      
-      // For non-flood-wait errors, use exponential backoff
-      if (attempt < maxRetries) {
-        const delay = baseDelay * Math.pow(2, attempt);
-        console.log(`Retry attempt ${attempt + 1}/${maxRetries} after ${delay} seconds...`);
-        await sleep(delay);
-        continue;
-      }
-      
-      // Max retries reached, throw the error
-      throw error;
-    }
-  }
-  
-  throw lastError;
-}
-
-/**
  * Creates a new Telegram group using GramJS
  * @param groupName Name of the group to create
  * @param maxMembers Maximum number of members (default: 5)
@@ -184,17 +123,15 @@ export async function createTelegramGroupWithGramJS(
   try {
     const client = await getTelegramClient();
 
-    // Create a new group with retry logic
-    const result = await retryWithBackoff(async () => {
-      return await client.invoke(
-        new Api.channels.CreateChannel({
-          title: groupName,
-          about: `Group for ${groupName}`,
-          megagroup: true, // Create a supergroup
-          broadcast: false,
-        })
-      );
-    });
+    // Create a new group
+    const result = await client.invoke(
+      new Api.channels.CreateChannel({
+        title: groupName,
+        about: `Group for ${groupName}`,
+        megagroup: true, // Create a supergroup
+        broadcast: false,
+      })
+    );
 
     // Extract the chat from the result
     // The result can be Updates or UpdatesTooLong, we need to handle both
@@ -207,21 +144,17 @@ export async function createTelegramGroupWithGramJS(
       throw new Error('Failed to create channel: Invalid result');
     }
 
-    // Get the chat entity for creating invite links with retry logic
-    const chatEntity = await retryWithBackoff(async () => {
-      return await client.getEntity(chat);
-    });
+    // Get the chat entity for creating invite links
+    const chatEntity = await client.getEntity(chat);
     
     // Create invite link using GramJS first (this works immediately after creation)
     let inviteLink: string;
     try {
-      const exportedInvite = await retryWithBackoff(async () => {
-        return await client.invoke(
-          new Api.messages.ExportChatInvite({
-            peer: chatEntity,
-          })
-        );
-      });
+      const exportedInvite = await client.invoke(
+        new Api.messages.ExportChatInvite({
+          peer: chatEntity,
+        })
+      );
       
       // Handle different invite types
       if (exportedInvite instanceof Api.ChatInviteExported) {
@@ -272,18 +205,6 @@ export async function createTelegramGroupWithGramJS(
     };
   } catch (error: any) {
     console.error('Error creating Telegram group with GramJS:', error);
-    
-    // If it's a flood wait error, throw it as-is so callers can handle it
-    if (error instanceof TelegramFloodWaitError) {
-      throw error;
-    }
-    
-    // Check if it's a flood wait error in the raw error
-    const waitSeconds = isTelegramFloodWaitError(error);
-    if (waitSeconds !== null) {
-      throw new TelegramFloodWaitError(waitSeconds, error.message);
-    }
-    
     throw new Error(`Failed to create Telegram group: ${error.message}`);
   }
 }
@@ -360,55 +281,39 @@ export async function addBotAsAdmin(
   try {
     const client = await getTelegramClient();
 
-    // Resolve the bot username to get its user entity with retry logic
-    const botEntity = await retryWithBackoff(async () => {
-      return await client.getEntity(botUsername);
-    });
+    // Resolve the bot username to get its user entity
+    const botEntity = await client.getEntity(botUsername);
     
     if (!(botEntity instanceof Api.User)) {
       throw new Error(`Bot ${botUsername} not found or is not a user`);
     }
 
-    // Add the bot as admin with appropriate permissions with retry logic
-    await retryWithBackoff(async () => {
-      return await client.invoke(
-        new Api.channels.EditAdmin({
-          channel: chatEntity,
-          userId: botEntity,
-          adminRights: new Api.ChatAdminRights({
-            changeInfo: true,
-            postMessages: true, // For groups, this is usually false
-            editMessages: false,
-            deleteMessages: true,
-            banUsers: true,
-            inviteUsers: true,
-            pinMessages: true,
-            addAdmins: false, // Don't allow bot to add other admins
-            anonymous: false,
-            manageCall: true,
-            other: true, // Other permissions
-          }),
-          rank: 'Bot', // Admin rank/title
-        })
-      );
-    });
+    // Add the bot as admin with appropriate permissions
+    await client.invoke(
+      new Api.channels.EditAdmin({
+        channel: chatEntity,
+        userId: botEntity,
+        adminRights: new Api.ChatAdminRights({
+          changeInfo: true,
+          postMessages: true, // For groups, this is usually false
+          editMessages: false,
+          deleteMessages: true,
+          banUsers: true,
+          inviteUsers: true,
+          pinMessages: true,
+          addAdmins: false, // Don't allow bot to add other admins
+          anonymous: false,
+          manageCall: true,
+          other: true, // Other permissions
+        }),
+        rank: 'Bot', // Admin rank/title
+      })
+    );
 
     console.log(`✓ Added bot @${botUsername} as admin to group`);
     return true;
   } catch (error: any) {
     console.error(`Error adding bot @${botUsername} as admin:`, error);
-    
-    // If it's a flood wait error, throw it as-is
-    if (error instanceof TelegramFloodWaitError) {
-      throw error;
-    }
-    
-    // Check if it's a flood wait error in the raw error
-    const waitSeconds = isTelegramFloodWaitError(error);
-    if (waitSeconds !== null) {
-      throw new TelegramFloodWaitError(waitSeconds, error.message);
-    }
-    
     throw new Error(`Failed to add bot as admin: ${error.message}`);
   }
 }
@@ -439,7 +344,7 @@ export async function createTelegramGroupsForEvent(
 
   for (let i = 1; i <= numberOfGroups; i++) {
     try {
-      const groupName = eventName;
+      const groupName = `${eventName} ${i}`;
       
       // Create the Telegram group
       const { chatId, inviteLink, chatEntity } = await createTelegramGroupWithGramJS(
@@ -452,20 +357,7 @@ export async function createTelegramGroupsForEvent(
         try {
           await addBotAsAdmin(chatEntity, botUsername);
         } catch (error: any) {
-          // If it's a flood wait error, we need to handle it
-          if (error instanceof TelegramFloodWaitError) {
-            console.warn(`Flood wait error when adding bot as admin for group ${i}: ${error.seconds} seconds`);
-            // Wait for the flood wait period
-            await sleep(error.seconds);
-            // Try again once
-            try {
-              await addBotAsAdmin(chatEntity, botUsername);
-            } catch (retryError: any) {
-              console.warn(`Warning: Failed to add bot as admin for group ${i} after retry: ${retryError.message}`);
-            }
-          } else {
-            console.warn(`Warning: Failed to add bot as admin for group ${i}: ${error.message}`);
-          }
+          console.warn(`Warning: Failed to add bot as admin for group ${i}: ${error.message}`);
           // Continue even if adding bot fails
         }
       }
@@ -489,32 +381,11 @@ export async function createTelegramGroupsForEvent(
         groupNumber: i,
       });
 
-      // Add a delay between requests to avoid rate limiting
-      // Increased from 1 second to 3 seconds to be more conservative
+      // Add a small delay between requests to avoid rate limiting
       if (i < numberOfGroups) {
-        await new Promise(resolve => setTimeout(resolve, 3000)); // 3 second delay
+        await new Promise(resolve => setTimeout(resolve, 1000)); // 1 second delay
       }
     } catch (error: any) {
-      // Check if it's a flood wait error
-      if (error instanceof TelegramFloodWaitError) {
-        console.error(`Flood wait error when creating group ${i}: ${error.seconds} seconds`);
-        console.error(`This is a significant wait time. Consider reducing the number of groups or waiting longer.`);
-        
-        // If the wait time is too long (more than 1 hour), throw the error
-        // Otherwise, wait and continue
-        if (error.seconds > 3600) {
-          throw new Error(
-            `Flood wait too long (${error.seconds} seconds ≈ ${Math.round(error.seconds / 3600)} hours). ` +
-            `Please wait before creating more groups.`
-          );
-        }
-        
-        // Wait for the flood wait period
-        await sleep(error.seconds);
-        // Continue with next group
-        continue;
-      }
-      
       console.error(`Failed to create group ${i}:`, error.message);
       // Continue with next group even if one fails
     }
