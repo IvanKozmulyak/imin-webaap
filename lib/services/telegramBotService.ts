@@ -89,7 +89,7 @@ function createWelcomeMessage(
   ticketUrl?: string | null
 ): { message: string; inlineKeyboard?: Array<Array<{ text: string; url: string }>> } {
   const message = `⚡️ **Yo ${firstName}, you're in.**\n\n` +
-    `Don't be a ghost—drop a GIF or Voice Note to prove you're real. 👻\n\n` +
+    `Don't be a ghost - drop a GIF or Voice Note to prove you're real. 👻\n\n` +
     `*Heads up: You need a ticket to get past the bouncer.*`;
   
   const result: { message: string; inlineKeyboard?: Array<Array<{ text: string; url: string }>> } = {
