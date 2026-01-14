@@ -35,7 +35,7 @@ export default function SplashScreen({ onAgree }: SplashScreenProps) {
             <div className="text-white text-[12px] font-normal leading-relaxed space-y-6 mb-8">
               <div>
                 <h2 className="font-semibold mb-2">1. INTRODUCTION</h2>
-                <p>Welcome to IMIN ("we," "our," or "us"). By accessing our website (imin.wtf) and using our services to connect with party groups, you agree to be bound by these Terms. If you do not agree, please do not use our service.</p>
+                <p>Welcome to IMIN (&quot;we,&quot; &quot;our,&quot; or &quot;us&quot;). By accessing our website (imin.wtf) and using our services to connect with party groups, you agree to be bound by these Terms. If you do not agree, please do not use our service.</p>
               </div>
 
               <div>
@@ -92,7 +92,7 @@ export default function SplashScreen({ onAgree }: SplashScreenProps) {
                 <h2 className="font-semibold mb-2">7. DATA PRIVACY & THIRD-PARTY PLATFORMS</h2>
                 <ul className="list-disc list-inside ml-2 space-y-1">
                   <li><strong>Data Processing:</strong> By using the service, you agree to our processing of your data (Name, Age, Preferences, Contact Info) to facilitate the matching process.</li>
-                  <li><strong>Telegram:</strong> You acknowledge that group chats are hosted on Telegram, a third-party platform. By joining a group, you agree to Telegram's Terms of Service and understand that your profile information may be visible to other group members.</li>
+                  <li><strong>Telegram:</strong> You acknowledge that group chats are hosted on Telegram, a third-party platform. By joining a group, you agree to Telegram&apos;s Terms of Service and understand that your profile information may be visible to other group members.</li>
                 </ul>
               </div>
 
@@ -263,7 +263,7 @@ export default function SplashScreen({ onAgree }: SplashScreenProps) {
                 : 'border-white/30 bg-white/35 text-black/50 cursor-not-allowed opacity-35'
             }`}
           >
-            I'M IN
+            I&apos;M IN
           </button>
         </div>
       </div>
