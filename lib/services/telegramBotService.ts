@@ -198,13 +198,18 @@ export async function handleTelegramWebhook(update: any): Promise<void> {
       await handleNewChatMembers(update.message);
     }
     
-    // Handle chat_member updates (when someone joins via invite link)
+    // Handle left chat member events
+    if (update.message?.left_chat_member) {
+      await handleLeftChatMember(update.message);
+    }
+    
+    // Handle chat_member updates (when someone joins or leaves via invite link)
     if (update.chat_member) {
       await handleChatMemberUpdate(update.chat_member);
     }
     
     // Log unhandled updates for debugging
-    if (!update.message?.new_chat_members && !update.chat_member) {
+    if (!update.message?.new_chat_members && !update.message?.left_chat_member && !update.chat_member) {
       console.log('Unhandled webhook update type:', update.update_id);
     }
   } catch (error: any) {
@@ -265,7 +270,7 @@ async function handleNewChatMembers(message: any): Promise<void> {
 }
 
 /**
- * Handles chat_member updates (when someone joins via invite link)
+ * Handles chat_member updates (when someone joins or leaves via invite link)
  * @param chatMemberUpdate The chat_member update object
  */
 async function handleChatMemberUpdate(chatMemberUpdate: any): Promise<void> {
@@ -274,7 +279,7 @@ async function handleChatMemberUpdate(chatMemberUpdate: any): Promise<void> {
   const oldStatus = chatMemberUpdate.old_chat_member.status;
   const member = chatMemberUpdate.new_chat_member.user;
   
-  // Only handle when someone becomes a member (joins the group)
+  // Handle when someone becomes a member (joins the group)
   if (newStatus === 'member' && oldStatus !== 'member') {
     // Skip if the new member is a bot (unless it's our bot)
     if (member.is_bot && member.username !== 'imin_squad_bot') {
@@ -314,4 +319,60 @@ async function handleChatMemberUpdate(chatMemberUpdate: any): Promise<void> {
 
     await updateMemberCountFromTelegram(telegramGroup.id, chatId);
   }
+  
+  // Handle when someone leaves the group (status changes from member to left or kicked)
+  if ((newStatus === 'left' || newStatus === 'kicked') && oldStatus === 'member') {
+    // Skip if the leaving member is a bot (unless it's our bot)
+    if (member.is_bot && member.username !== 'imin_squad_bot') {
+      return;
+    }
+    
+    // Get the Telegram group for this chat
+    const telegramGroup = await prisma.telegramGroup.findFirst({
+      where: {
+        telegramChatId: chatId,
+      },
+    });
+    
+    if (!telegramGroup) {
+      console.log(`No event found for chat ${chatId}, skipping member count update`);
+      return;
+    }
+    
+    // Update member count - this will automatically set isFull to false if count drops below maxMembers
+    await updateMemberCountFromTelegram(telegramGroup.id, chatId);
+    
+    console.log(`Member left group ${chatId}, updated member count`);
+  }
+}
+
+/**
+ * Handles when a chat member leaves via the message.left_chat_member event
+ * @param message The message object containing left_chat_member
+ */
+async function handleLeftChatMember(message: any): Promise<void> {
+  const chatId = message.chat.id.toString();
+  const leftMember = message.left_chat_member;
+  
+  // Skip if the leaving member is a bot (unless it's our bot)
+  if (leftMember?.is_bot && leftMember.username !== 'imin_squad_bot') {
+    return;
+  }
+  
+  // Get the Telegram group for this chat
+  const telegramGroup = await prisma.telegramGroup.findFirst({
+    where: {
+      telegramChatId: chatId,
+    },
+  });
+  
+  if (!telegramGroup) {
+    console.log(`No event found for chat ${chatId}, skipping member count update`);
+    return;
+  }
+  
+  // Update member count - this will automatically set isFull to false if count drops below maxMembers
+  await updateMemberCountFromTelegram(telegramGroup.id, chatId);
+  
+  console.log(`Member left group ${chatId}, updated member count`);
 }
