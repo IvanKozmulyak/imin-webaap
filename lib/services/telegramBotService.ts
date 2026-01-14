@@ -79,6 +79,82 @@ async function sendTelegramMessage(
 }
 
 /**
+ * Gets the real member count of a Telegram group, excluding bots and admins
+ * @param chatId Telegram chat ID
+ * @returns Real member count (excluding bots and admins)
+ */
+async function getRealMemberCount(chatId: string): Promise<number> {
+  const token = getBotToken();
+  
+  try {
+    // Get total member count
+    const countResponse = await fetch(
+      `${TELEGRAM_API_BASE}${token}/getChatMemberCount`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          chat_id: chatId,
+        }),
+      }
+    );
+
+    const countData = await countResponse.json();
+    
+    if (!countData.ok) {
+      console.error('Error getting chat member count:', countData.description);
+      return 0;
+    }
+
+    const totalCount = countData.result || 0;
+
+    const realMemberCount = Math.max(0, totalCount - 2);
+
+    console.log(`Member count for chat ${chatId}: total=${totalCount}, real=${realMemberCount}`);
+    
+    return realMemberCount;
+  } catch (error: any) {
+    console.error('Error getting real member count:', error);
+    return 0;
+  }
+}
+
+/**
+ * Updates the member count in the database based on real Telegram group membership
+ * @param telegramGroupId The Telegram group ID in our database
+ * @param chatId The Telegram chat ID
+ */
+async function updateMemberCountFromTelegram(telegramGroupId: string, chatId: string): Promise<void> {
+  try {
+    const realMemberCount = await getRealMemberCount(chatId);
+    
+    // Get the group to check maxMembers
+    const telegramGroup = await prisma.telegramGroup.findUnique({
+      where: { id: telegramGroupId },
+      select: { maxMembers: true },
+    });
+    
+    const maxMembers = telegramGroup?.maxMembers ?? 5;
+    const isFull = realMemberCount >= maxMembers;
+    
+    // Update the database with the real count
+    await prisma.telegramGroup.update({
+      where: { id: telegramGroupId },
+      data: {
+        memberCount: realMemberCount,
+        isFull: isFull,
+      },
+    });
+
+    console.log(`Updated member count for group ${telegramGroupId} to ${realMemberCount} (max: ${maxMembers}, full: ${realMemberCount >= maxMembers})`);
+  } catch (error: any) {
+    console.error('Error updating member count from Telegram:', error);
+  }
+}
+
+/**
  * Creates a welcome message for new group members
  * @param firstName First name of the new member
  * @param ticketUrl Optional ticket URL
@@ -184,6 +260,8 @@ async function handleNewChatMembers(message: any): Promise<void> {
       // Continue with other members even if one fails
     }
   }
+
+  await updateMemberCountFromTelegram(telegramGroup.id, chatId);
 }
 
 /**
@@ -233,5 +311,7 @@ async function handleChatMemberUpdate(chatMemberUpdate: any): Promise<void> {
     } catch (error: any) {
       console.error(`Failed to send welcome message to new member:`, error);
     }
+
+    await updateMemberCountFromTelegram(telegramGroup.id, chatId);
   }
 }

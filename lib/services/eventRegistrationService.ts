@@ -67,19 +67,6 @@ export async function createEventRegistration(
       },
     });
 
-    // Update Telegram group member count
-    if (telegramGroup) {
-      const newMemberCount = telegramGroup.memberCount + 1;
-      const isFull = newMemberCount >= telegramGroup.maxMembers;
-      
-      await tx.telegramGroup.update({
-        where: { id: telegramGroup.id },
-        data: {
-          memberCount: newMemberCount,
-          isFull,
-        },
-      });
-    }
 
     return newRegistration;
   });
