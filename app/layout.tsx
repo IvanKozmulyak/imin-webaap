@@ -1,16 +1,24 @@
-import type { Metadata } from 'next'
-import { Poppins } from 'next/font/google'
+import type { Metadata, Viewport } from 'next'
+import { Inter, JetBrains_Mono } from 'next/font/google'
 import './globals.css'
 
-const poppins = Poppins({
-  weight: ['400', '500'],
+const inter = Inter({
+  weight: ['300', '500', '700', '900'],
   subsets: ['latin'],
   display: 'swap',
+  variable: '--font-inter',
+})
+
+const jetbrainsMono = JetBrains_Mono({
+  weight: ['400', '700'],
+  subsets: ['latin'],
+  display: 'swap',
+  variable: '--font-mono',
 })
 
 export const metadata: Metadata = {
-  title: 'IM IN - Event Matching System',
-  description: 'Event matching system for grouping users by common languages',
+  title: 'IMIN | The Social Infrastructure',
+  description: 'Find your people for events. Don\'t let "I have no one to go with" stop you. We match you into squads of 5 for anywhere the music is loud.',
   icons: {
     icon: [
       { url: '/assets/logo.svg', type: 'image/svg+xml' },
@@ -22,14 +30,20 @@ export const metadata: Metadata = {
   },
 }
 
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 5,
+}
+
 export default function RootLayout({
   children,
 }: {
   children: React.ReactNode
 }) {
   return (
-    <html lang="en">
-      <body className={poppins.className}>{children}</body>
+    <html lang="en" className="scroll-smooth">
+      <body className={`${inter.variable} ${jetbrainsMono.variable} font-sans`}>{children}</body>
     </html>
   )
 }

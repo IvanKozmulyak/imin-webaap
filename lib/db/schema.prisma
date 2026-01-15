@@ -118,3 +118,17 @@ model TelegramGroup {
   @@index([isFull])
   @@map("telegram_group")
 }
+
+model PartnerRequest {
+  id           String   @id @default(uuid())
+  name         String   @db.VarChar(255)
+  email        String   @db.VarChar(255)
+  organization String   @db.VarChar(255)
+  phone        String?  @db.VarChar(50)
+  message      String   @db.Text
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  @@index([email])
+  @@index([createdAt])
+  @@map("partner_request")
+}
