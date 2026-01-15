@@ -2,6 +2,7 @@
 
 import { useSearchParams } from 'next/navigation';
 import { Suspense } from 'react';
+import Image from 'next/image';
 
 function SuccessContent() {
   const searchParams = useSearchParams();
@@ -10,13 +11,16 @@ function SuccessContent() {
   return (
     <div className="relative bg-black overflow-hidden flex flex-col" style={{ minHeight: '100svh' }}>
       {/* Background Image */}
-      <img
+      <Image
         src="/assets/background.png"
         alt=""
-        className="absolute inset-0 w-full h-full object-cover pointer-events-none"
+        fill
+        className="object-cover pointer-events-none"
         style={{ 
           zIndex: 0
         }}
+        priority
+        quality={90}
       />
 
       {/* Content */}
@@ -53,11 +57,13 @@ function SuccessContent() {
         {/* Success Content - Center */}
         <div className="flex flex-col items-center justify-center flex-1 w-full max-w-[90vw] sm:max-w-[400px] md:max-w-[480px] lg:max-w-[540px] xl:max-w-[358px] px-2 sm:px-3 md:px-4 py-2 sm:py-4 md:py-6 pb-0 sm:pb-0 md:pb-6">
           {/* Success Icon */}
-          <div className="w-[140px] h-[134px] sm:w-[180px] sm:h-[173px] md:w-[240px] md:h-[230px] lg:w-[320px] lg:h-[307px] xl:w-[438px] xl:h-[420px] mb-1 sm:mb-2 md:mb-3 lg:mb-4 xl:mb-9 flex items-center justify-center">
-            <img
+          <div className="w-[140px] h-[134px] sm:w-[180px] sm:h-[173px] md:w-[240px] md:h-[230px] lg:w-[320px] lg:h-[307px] xl:w-[438px] xl:h-[420px] mb-1 sm:mb-2 md:mb-3 lg:mb-4 xl:mb-9 flex items-center justify-center relative">
+            <Image
               src="/assets/success.png"
               alt="Success"
-              className="w-full h-full object-contain"
+              fill
+              className="object-contain"
+              priority
             />
           </div>
 

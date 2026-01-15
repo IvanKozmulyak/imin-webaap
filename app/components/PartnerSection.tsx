@@ -12,7 +12,7 @@ export default function PartnerSection() {
         <div className="partner-layout">
           <div>
             <span className="section-label" style={{ color: '#00FF94' }}>
-              // FOR ORGANIZERS
+              {'// FOR ORGANIZERS'}
             </span>
             <h2 style={{ fontSize: '2.5rem', fontWeight: 800, lineHeight: 1.1, marginBottom: '20px' }}>
               THE BRIDGE TO

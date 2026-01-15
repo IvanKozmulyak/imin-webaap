@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
 import { EventDto } from '@/lib/types/event';
 import CustomDropdown, { DropdownOption } from '../components/CustomDropdown';
 import SplashScreen from '../components/SplashScreen';
@@ -271,13 +272,16 @@ export default function RegisterPage() {
       {showSplash && <SplashScreen onAgree={() => setShowSplash(false)} />}
 
       {/* Background Image */}
-      <img
+      <Image
         src="/assets/background.png"
         alt=""
-        className="absolute inset-0 w-full h-full object-cover pointer-events-none"
+        fill
+        className="object-cover pointer-events-none"
         style={{
           zIndex: 0
         }}
+        priority
+        quality={90}
       />
 
       {/* Content */}

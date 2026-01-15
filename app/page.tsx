@@ -40,7 +40,7 @@ export default function Home() {
       <div className="container">
         {/* Hero Section */}
         <section className="hero">
-          <span className="section-label">// SOCIAL INFRASTRUCTURE</span>
+          <span className="section-label">{'// SOCIAL INFRASTRUCTURE'}</span>
           <h1>
             FIND YOUR PEOPLE
             <br />
@@ -61,7 +61,7 @@ export default function Home() {
         </section>
 
         {/* Problem Section */}
-        <span className="section-label">// THE PROBLEM</span>
+        <span className="section-label">{'// THE PROBLEM'}</span>
         <div className="bento-grid">
           <div className="glass-card card-featured">
             <h3 style={{ fontSize: '1.5rem', marginBottom: '15px' }}>The &quot;Solo&quot; Barrier</h3>
@@ -88,7 +88,7 @@ export default function Home() {
 
         {/* How It Works Section */}
         <section id="how">
-          <span className="section-label">// THE SYSTEM</span>
+          <span className="section-label">{'// THE SYSTEM'}</span>
           <div className="bento-grid">
             <div className="glass-card" style={{ position: 'relative' }}>
               <div className="step-number">01</div>
@@ -115,7 +115,7 @@ export default function Home() {
         </section>
 
         {/* Event Types Section */}
-        <span className="section-label">// DEPLOY ON</span>
+        <span className="section-label">{'// DEPLOY ON'}</span>
         <div className="slash-container">
           <div className="slash-card" role="button" tabIndex={0} aria-label="Techno / Raves">
             <div
@@ -186,33 +186,39 @@ export default function Home() {
         </div>
 
         {/* Trust Section */}
-        <span className="section-label">// TRUST & VIBE</span>
+        <span className="section-label">{'// TRUST & VIBE'}</span>
         <div className="trust-grid">
-          <div className="trust-card">
-            <img
+          <div className="trust-card" style={{ position: 'relative' }}>
+            <Image
               src="/assets/trust/real-profiles.avif"
               alt="Party scene"
               className="trust-card-image"
+              fill
+              style={{ objectFit: 'cover' }}
             />
             <div className="trust-overlay">
               <h3>Real Profiles</h3>
             </div>
           </div>
           <div className="trust-card">
-            <img
+            <Image
               src="/assets/trust/mixed-groups.avif"
               alt="Friends having fun"
               className="trust-card-image"
+              fill
+              style={{ objectFit: 'cover' }}
             />
             <div className="trust-overlay">
               <h3>Mixed Groups</h3>
             </div>
           </div>
-          <div className="trust-card">
-            <img
+          <div className="trust-card" style={{ position: 'relative' }}>
+            <Image
               src="/assets/trust/respect-first.avif"
               alt="Crowd at event"
               className="trust-card-image"
+              fill
+              style={{ objectFit: 'cover' }}
             />
             <div className="trust-overlay">
               <h3>Respect First</h3>
