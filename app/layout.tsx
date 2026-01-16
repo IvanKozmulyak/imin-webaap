@@ -3,14 +3,14 @@ import { Inter, JetBrains_Mono } from 'next/font/google'
 import './globals.css'
 
 const inter = Inter({
-  weight: ['300', '500', '700', '900'],
+  weight: ['400', '500', '600', '800'],
   subsets: ['latin'],
   display: 'swap',
   variable: '--font-inter',
 })
 
 const jetbrainsMono = JetBrains_Mono({
-  weight: ['400', '700'],
+  weight: ['500', '700'],
   subsets: ['latin'],
   display: 'swap',
   variable: '--font-mono',
