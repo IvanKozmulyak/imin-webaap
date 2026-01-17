@@ -239,7 +239,7 @@ export default function Home() {
             <span className="section-label" style={{ color: '#A855F7' }}>
               {'// REVENUE LOGIC'}
             </span>
-            <h2 style={{ fontSize: '3rem', fontWeight: 800, marginBottom: '20px', letterSpacing: '-0.02em' }}>
+            <h2 className="revenue-logic-title" style={{ fontSize: '3rem', fontWeight: 800, marginBottom: '20px', letterSpacing: '-0.02em' }}>
               The Multiplier <span style={{ color: '#A855F7' }}>Effect</span>
             </h2>
           </div>
