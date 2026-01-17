@@ -43,8 +43,8 @@ export default function Home() {
         {/* Hero Section */}
         <section className="hero">
           <span className="section-label">{'// SOCIAL INFRASTRUCTURE'}</span>
-          <h1>
-            <span style={{ whiteSpace: 'nowrap' }}>TURN ABANDONED CHECKOUTS</span>
+          <h1 className="hero-title">
+            <span>TURN ABANDONED CHECKOUTS</span>
             <br />
             INTO <span style={{ color: '#A855F7' }}>SQUAD SALES.</span>
           </h1>
@@ -104,7 +104,7 @@ export default function Home() {
             We don&apos;t compete for your traffic. We sit on top of your existing ticketing stack as a &quot;Social Layer&quot; to convert solo traffic.
           </p>
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '30px' }}>
+          <div className="solution-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '30px' }}>
             {/* Step 01 */}
             <div className="glass-card" style={{ position: 'relative' }}>
               <div className="step-number">01</div>
