@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import Image from 'next/image'
 import PartnerAccessSection from './components/PartnerAccessSection'
+import CallToActionSection from './components/CallToActionSection'
 
 export default function Home() {
   return (
@@ -153,17 +154,18 @@ export default function Home() {
         <div className="section-divider" />
 
         {/* The Economics Section */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '40px', marginBottom: '100px', alignItems: 'center' }}>
-          {/* Left: Economics Benefits */}
-          <div>
-            <span className="section-label" style={{ color: '#A855F7', textAlign: 'center' }}>
-              {'// THE ECONOMICS'}
-            </span>
-            <h2 style={{ fontSize: '2rem', fontWeight: 800, marginBottom: '30px', letterSpacing: '-0.02em' }}>
-              Why Squads Pay More.
-            </h2>
+        <div style={{ marginBottom: '100px' }}>
+          <span className="section-label" style={{ color: '#A855F7' }}>
+            {'// THE ECONOMICS'}
+          </span>
+          <div className="economics-section" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '40px', alignItems: 'center' }}>
+            {/* Left: Economics Benefits */}
+            <div className="economics-benefits">
+              <h2 style={{ fontSize: '2rem', fontWeight: 800, marginBottom: '30px', letterSpacing: '-0.02em' }}>
+                Why Squads Pay More.
+              </h2>
             
-            <ul style={{ listStyle: 'none', color: 'white' }}>
+            <ul className="economics-list" style={{ listStyle: 'none', color: 'white' }}>
               <li style={{ marginBottom: '24px', display: 'flex', alignItems: 'flex-start', gap: '16px' }}>
                 <span style={{ color: '#A855F7', fontSize: '1.5rem', lineHeight: '1' }}>✓</span>
                 <div>
@@ -191,7 +193,7 @@ export default function Home() {
           </div>
 
           {/* Right: Market Stats Card */}
-          <div className="glass-card">
+          <div className="glass-card economics-stats-card">
             <h4 style={{ color: 'var(--text-gray)', fontFamily: 'var(--font-mono)', fontSize: '0.9rem', marginBottom: '20px' }}>
               GLOBAL NIGHTLIFE MARKET
             </h4>
@@ -227,6 +229,7 @@ export default function Home() {
               <span style={{ color: 'var(--text-gray)' }}>Current Market</span>
               <span style={{ color: '#A855F7', fontWeight: 600 }}>$21.9B Unlocked Revenue</span>
             </div>
+          </div>
           </div>
         </div>
 
@@ -341,12 +344,30 @@ export default function Home() {
             </div>
           </div>
 
-          {/* Partner Access Section */}
-          <PartnerAccessSection />
         </div>
 
         {/* Divider */}
         <div className="section-divider" />
+
+        {/* Social Contract Section */}
+        <div className="glass-card" style={{ marginBottom: '100px', textAlign: 'center' }}>
+          <span className="section-label" style={{ marginBottom: '10px' }}>
+            {'// THE SOCIAL CONTRACT'}
+          </span>
+          <h2 style={{ fontSize: '2rem', marginBottom: '20px' }}>ELIMINATING THE &quot;NO-SHOW&quot;.</h2>
+          <p style={{ color: 'var(--text-gray)', maxWidth: '700px', margin: '0 auto 30px auto' }}>
+            Solo attendees have the highest flake rate. They wake up, feel lazy, and don&apos;t go.
+            <strong> IMIN Squads introduce accountability.</strong> When 4 other people are waiting for you in a Telegram chat, you show up.
+          </p>
+          <div style={{ display: 'inline-block', padding: '10px 20px', border: '1px solid #00FF94', color: '#00FF94', borderRadius: '50px', fontWeight: 700 }}>
+            IMIN SHOW-UP RATE: 96%
+          </div>
+        </div>
+        {/* Divider */}
+        <div className="section-divider" />
+
+        {/* Partner Access Section */}
+        <PartnerAccessSection />
 
         {/* THE SYSTEM Section - KEPT FROM CURRENT PAGE */}
         <section id="how">
@@ -375,24 +396,6 @@ export default function Home() {
             </div>
           </div>
         </section>
-
-        {/* Divider */}
-        <div className="section-divider" />
-
-        {/* Social Contract Section */}
-        <div className="glass-card" style={{ marginBottom: '100px', textAlign: 'center' }}>
-          <span className="section-label" style={{ marginBottom: '10px' }}>
-            {'// THE SOCIAL CONTRACT'}
-          </span>
-          <h2 style={{ fontSize: '2rem', marginBottom: '20px' }}>ELIMINATING THE &quot;NO-SHOW&quot;.</h2>
-          <p style={{ color: 'var(--text-gray)', maxWidth: '700px', margin: '0 auto 30px auto' }}>
-            Solo attendees have the highest flake rate. They wake up, feel lazy, and don&apos;t go.
-            <strong> IMIN Squads introduce accountability.</strong> When 4 other people are waiting for you in a Telegram chat, you show up.
-          </p>
-          <div style={{ display: 'inline-block', padding: '10px 20px', border: '1px solid #00FF94', color: '#00FF94', borderRadius: '50px', fontWeight: 700 }}>
-            IMIN SHOW-UP RATE: 96%
-          </div>
-        </div>
 
         {/* Divider */}
         <div className="section-divider" />
@@ -511,6 +514,9 @@ export default function Home() {
             </div>
           </div>
         </div>
+
+        {/* Call to Action Section */}
+        <CallToActionSection />
 
         {/* Footer */}
         <footer>
