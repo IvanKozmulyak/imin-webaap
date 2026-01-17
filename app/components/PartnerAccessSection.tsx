@@ -26,7 +26,7 @@ export default function PartnerAccessSection() {
         body: JSON.stringify({
           organization: formData.organization,
           email: formData.email,
-          message: `Annual Attendees: ${formData.annualAttendees}`,
+          annualAttendees: formData.annualAttendees,
         }),
       });
 
@@ -60,7 +60,7 @@ export default function PartnerAccessSection() {
   };
 
   return (
-    <div className="partner-access-layout" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '60px', marginBottom: '100px', alignItems: 'center' }}>
+    <div id="partner-access" className="partner-access-layout" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '60px', marginBottom: '100px', alignItems: 'center' }}>
       {/* Left: Text Content */}
       <div>
         <span className="section-label" style={{ color: '#00FF94', border: '1px solid #00FF94', padding: '4px 12px', borderRadius: '4px', display: 'inline-block', marginBottom: '20px' }}>

@@ -4,11 +4,9 @@ import { prisma } from '@/lib/db/client';
 export const dynamic = 'force-dynamic';
 
 interface PartnerRequestData {
-  name: string;
-  email: string;
   organization: string;
-  phone?: string;
-  message: string;
+  email: string;
+  annualAttendees: string;
 }
 
 export async function POST(request: NextRequest) {
@@ -16,7 +14,7 @@ export async function POST(request: NextRequest) {
     const body: PartnerRequestData = await request.json();
 
     // Validate required fields
-    if (!body.name || !body.email || !body.organization || !body.message) {
+    if (!body.organization || !body.email || !body.annualAttendees) {
       return NextResponse.json(
         { error: 'Missing required fields' },
         { status: 400 }
@@ -35,11 +33,9 @@ export async function POST(request: NextRequest) {
     // Save partner request to database
     const partnerRequest = await prisma.partnerRequest.create({
       data: {
-        name: body.name.trim(),
-        email: body.email.trim().toLowerCase(),
         organization: body.organization.trim(),
-        phone: body.phone?.trim() || null,
-        message: body.message.trim(),
+        email: body.email.trim().toLowerCase(),
+        annualAttendees: body.annualAttendees.trim(),
       },
     });
 

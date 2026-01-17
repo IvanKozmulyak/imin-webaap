@@ -120,13 +120,11 @@ model TelegramGroup {
 }
 
 model PartnerRequest {
-  id           String   @id @default(uuid())
-  name         String   @db.VarChar(255)
-  email        String   @db.VarChar(255)
-  organization String   @db.VarChar(255)
-  phone        String?  @db.VarChar(50)
-  message      String   @db.Text
-  createdAt    DateTime @default(now()) @map("created_at")
+  id              String   @id @default(uuid())
+  organization    String   @db.VarChar(255)
+  email           String   @db.VarChar(255)
+  annualAttendees String   @map("annual_attendees") @db.VarChar(50)
+  createdAt       DateTime @default(now()) @map("created_at")
 
   @@index([email])
   @@index([createdAt])
