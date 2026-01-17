@@ -2,9 +2,18 @@
 
 export default function CallToActionSection() {
   const scrollToPartner = () => {
-    const partnerSection = document.getElementById('partner-access');
-    if (partnerSection) {
-      partnerSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    const element = document.getElementById('partner-access');
+    if (element) {
+      const elementRect = element.getBoundingClientRect();
+      const absoluteElementTop = elementRect.top + window.pageYOffset;
+      const viewportHeight = window.innerHeight;
+      const elementHeight = elementRect.height;
+      const scrollPosition = absoluteElementTop - (viewportHeight / 2) + (elementHeight / 2);
+      
+      window.scrollTo({
+        top: scrollPosition,
+        behavior: 'smooth'
+      });
     }
   };
 

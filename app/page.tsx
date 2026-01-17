@@ -1,9 +1,26 @@
+'use client';
+
 import Link from 'next/link'
 import Image from 'next/image'
 import PartnerAccessSection from './components/PartnerAccessSection'
 import CallToActionSection from './components/CallToActionSection'
 
 export default function Home() {
+  const scrollToPartnerAccess = () => {
+    const element = document.getElementById('partner-access');
+    if (element) {
+      const elementRect = element.getBoundingClientRect();
+      const absoluteElementTop = elementRect.top + window.pageYOffset;
+      const viewportHeight = window.innerHeight;
+      const elementHeight = elementRect.height;
+      const scrollPosition = absoluteElementTop - (viewportHeight / 2) + (elementHeight / 2);
+      
+      window.scrollTo({
+        top: scrollPosition,
+        behavior: 'smooth'
+      });
+    }
+  };
   return (
     <>
       {/* Ambient Background with Blobs */}
@@ -33,9 +50,9 @@ export default function Home() {
                 priority
               />
             </Link>
-            <Link href="/register" className="btn-gradient">
+            <button onClick={scrollToPartnerAccess} className="btn-gradient" style={{ border: 'none', cursor: 'pointer', font: 'inherit' }}>
               Get Access
-            </Link>
+            </button>
           </nav>
         </div>
       </header>
@@ -54,9 +71,9 @@ export default function Home() {
           </p>
 
           <div>
-            <Link href="/register" className="btn-gradient">
+            <button onClick={scrollToPartnerAccess} className="btn-gradient" style={{ border: 'none', cursor: 'pointer', font: 'inherit' }}>
               Partner with us
-            </Link>
+            </button>
             <a href="#how" className="btn-ghost">
               See the flow
             </a>
