@@ -130,3 +130,16 @@ model PartnerRequest {
   @@index([createdAt])
   @@map("partner_request")
 }
+
+model ConversationMessage {
+  id        String   @id @default(uuid())
+  chatId    String   @map("chat_id") @db.VarChar(255)
+  role      String   @db.VarChar(20) // 'system' | 'user' | 'assistant'
+  content   String   @db.Text
+  createdAt DateTime @default(now()) @map("created_at")
+  sequence  Int      // Order of message in conversation (0 = system prompt)
+
+  @@index([chatId, sequence])
+  @@index([chatId, createdAt])
+  @@map("conversation_message")
+}

@@ -4,6 +4,8 @@
  */
 
 import { prisma } from '@/lib/db/client';
+import { conversationMemory } from './conversationMemoryService';
+import { generateLLMResponse } from './llmService';
 
 const TELEGRAM_API_BASE = 'https://api.telegram.org/bot';
 
@@ -203,6 +205,11 @@ function createLeaveMessage(): string {
  */
 export async function handleTelegramWebhook(update: any): Promise<void> {
   try {
+    // Handle regular messages (including mentions)
+    if (update.message?.text && !update.message?.new_chat_members && !update.message?.left_chat_member) {
+      await handleMessage(update.message);
+    }
+    
     // Handle new chat member events
     if (update.message?.new_chat_members) {
       await handleNewChatMembers(update.message);
@@ -216,11 +223,6 @@ export async function handleTelegramWebhook(update: any): Promise<void> {
     // Handle chat_member updates (when someone joins or leaves via invite link)
     if (update.chat_member) {
       await handleChatMemberUpdate(update.chat_member);
-    }
-    
-    // Log unhandled updates for debugging
-    if (!update.message?.new_chat_members && !update.message?.left_chat_member && !update.chat_member) {
-      console.log('Unhandled webhook update type:', update.update_id);
     }
   } catch (error: any) {
     console.error('Error handling webhook update:', error);
@@ -363,6 +365,79 @@ async function handleChatMemberUpdate(chatMemberUpdate: any): Promise<void> {
     await updateMemberCountFromTelegram(telegramGroup.id, chatId);
     
     console.log(`Member left group ${chatId}, updated member count`);
+  }
+}
+
+/**
+ * Handles regular text messages and mentions
+ * @param message The message object from Telegram
+ */
+async function handleMessage(message: any): Promise<void> {
+  const chatId = message.chat.id.toString();
+  const text = message.text || '';
+  const botUsername = process.env.TELEGRAM_BOT_USERNAME || 'imin_squad_bot';
+  
+  // Check if bot is mentioned/tagged in the message
+  const isMentioned = 
+    text.includes(`@${botUsername}`) ||
+    (message.entities && message.entities.some((e: any) => 
+      e.type === 'mention' && text.substring(e.offset, e.offset + e.length) === `@${botUsername}`
+    ));
+
+  // Only respond if bot is mentioned
+  if (!isMentioned) {
+    return;
+  }
+
+  try {
+    // Remove the mention from the message text
+    const cleanText = text.replace(`@${botUsername}`, '').trim();
+    
+    if (!cleanText) {
+      // If message is just a mention, send a helpful response
+      await sendTelegramMessage(
+        chatId,
+        'Hi! I\'m here to help. What would you like to know?',
+        'Markdown'
+      );
+      return;
+    }
+
+    // Add user message to conversation buffer
+    await conversationMemory.addUserMessage(chatId, cleanText);
+
+    // Generate LLM response
+    const llmResponse = await generateLLMResponse(chatId, cleanText);
+
+    if (llmResponse.error) {
+      console.error('LLM error:', llmResponse.error);
+      await sendTelegramMessage(
+        chatId,
+        'Sorry, I encountered an error processing your message. Please try again later.',
+        'Markdown'
+      );
+      return;
+    }
+
+    // Add assistant response to buffer
+    await conversationMemory.addAssistantMessage(chatId, llmResponse.content);
+
+    // Send response back to Telegram
+    await sendTelegramMessage(chatId, llmResponse.content, 'Markdown');
+
+    console.log(`Response sent to chat ${chatId}`);
+  } catch (error: any) {
+    console.error(`Error handling message in chat ${chatId}:`, error);
+    // Try to send error message to user
+    try {
+      await sendTelegramMessage(
+        chatId,
+        'Sorry, I encountered an error. Please try again later.',
+        'Markdown'
+      );
+    } catch (sendError) {
+      console.error('Failed to send error message:', sendError);
+    }
   }
 }
 
