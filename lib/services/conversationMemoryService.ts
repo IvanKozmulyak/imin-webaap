@@ -19,7 +19,7 @@ You receive only the last 20 messages of the conversation.
 Treat them as the full available context.
 Do not assume access to earlier messages.
 If the user refers to missing context, ask a clarifying question.
-Answer concisely and consistently.`;
+Answer concisely and consistently. Answer in the same language as the user's last message.`;
 
   /**
    * Ensure system prompt exists for a chatId
