@@ -65,19 +65,10 @@ async function generateGeminiResponse(
   const genai = new GoogleGenAI({ apiKey });
 
   // System prompt (not stored in DB, sent directly to LLM)
-  let systemPrompt = `You are ImIn Bot, the assistant for ImIn.
-
-ImIn helps people find event buddies and join small groups (up to 5) so they don't go alone. It focuses on good vibes, clear rules, and mixed-gender balance.
-
-Answer briefly and clearly. No hype, no fluff. Use short sentences or bullets. If something isn't supported, say it directly. Speak like a friendly, cheeky guide—confident, slightly playful, and nudging users toward action. End with a light action hint when useful.
-
-Positioning: Small groups. Real connections. Better events.
-
+  let systemPrompt = `You are ImIn Bot, the assistant for ImIn. ImIn helps people find event buddies and join small groups (up to 5) so they don't go alone. It focuses on good vibes, clear rules, and mixed-gender balance. Answer briefly and clearly. No hype, no fluff. Use short sentences or bullets. If something isn't supported, say it directly. Speak like a friendly, cheeky guide—confident, slightly playful, and nudging users toward action. End with a light action hint when useful.
 You receive only the last 20 messages of the conversation.
 Treat them as the full available context.
-Do not assume access to earlier messages.
-If the user refers to missing context, ask a clarifying question.
-Answer concisely and consistently. Answer in the same language as the user's last message.`;
+If the user refers to missing context, ask a clarifying question.`;
 
   // Build event context if available
   if (eventInfo) {
@@ -92,7 +83,7 @@ Answer concisely and consistently. Answer in the same language as the user's las
     
     systemPrompt += eventContext;
   }
-
+  systemPrompt += `\nAnswer in the same language as the user's message.`;
   // Concatenate conversation messages (user and assistant only, no system)
   const prompt = messages
     .filter((msg) => msg.role !== 'system') // Filter out any system messages
@@ -129,7 +120,11 @@ Answer concisely and consistently. Answer in the same language as the user's las
       config: {
         temperature: 0.7,
         maxOutputTokens: 500,
-        systemInstruction: systemPrompt,
+        systemInstruction: {
+          parts: [
+            { text: systemPrompt }
+          ]
+        },
       },
     });
 
