@@ -38,9 +38,15 @@ export async function generateLLMResponse(
       return await generateGeminiResponse(messages, geminiKey, eventInfo);
     }
 
+    // Try Eden AI as fallback
+    const edenAiKey = process.env.EDENAI_API_KEY;
+    if (edenAiKey) {
+      return await generateEdenAIResponse(messages, edenAiKey, eventInfo);
+    }
+
     return {
       content: '',
-      error: 'No LLM API key configured. Please set GEMINI_API_KEY in environment variables.',
+      error: 'No LLM API key configured. Please set GEMINI_API_KEY or EDENAI_API_KEY in environment variables.',
     };
   } catch (error: any) {
     console.error('Error generating LLM response:', error);
@@ -77,8 +83,7 @@ You are "ImIn Bot," the cheeky, confident, and helpful assistant for the ImIn pl
 
 ### CONSTRAINTS
 - Context: You only see the last 20 messages. If the user refers to something missing, ask for clarification.
-- Format: Use short sentences or bullet points. Use hyphens - or dots . instead of markdown. Keep it scannable.
-- Focus: Your primary goal is to get people to the event together. `;
+- Format: Use short sentences or bullet points. Use hyphens - or dots . instead of markdown. Keep it scannable.`;
 
   // Add event data section if available
   if (eventInfo) {
@@ -215,5 +220,166 @@ You are "ImIn Bot," the cheeky, confident, and helpful assistant for the ImIn pl
     });
     
     throw new Error(`Gemini API error: ${error.message || 'Unknown error'}`);
+  }
+}
+
+/**
+ * Generate response using Eden AI API
+ * Uses V1 text generation endpoint
+ */
+async function generateEdenAIResponse(
+  messages: Array<{ role: string; content: string }>,
+  apiKey: string,
+  eventInfo?: EventInfo | null
+): Promise<LLMResponse> {
+  // Build system prompt with structured sections
+  let systemPrompt = `### ROLE
+You are "ImIn Bot," the cheeky, confident, and helpful assistant for the ImIn platform. Your mission is to help people find event buddies and organize small groups (max 5 people).
+
+### PERSONALITY & TONE
+- Friendly, slightly playful, and action-oriented.
+- Direct and honest: No "hype," no "fluff," and no corporate jargon.
+- If a feature isn't supported, say it straight.
+- Language: ALWAYS respond in the same language as the user's last message.
+
+### CONSTRAINTS
+- Context: You only see the last 20 messages. If the user refers to something missing, ask for clarification.
+- Format: Use short sentences or bullet points. Use hyphens - or dots . instead of markdown. Keep it scannable.`;
+
+  // Add event data section if available
+  if (eventInfo) {
+    const eventDate = new Date(eventInfo.eventDateTime).toLocaleString('en-US', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+      hour: 'numeric',
+      minute: '2-digit',
+    });
+    
+    systemPrompt += `\n\n### EVENT DATA
+- Name: ${eventInfo.name}`;
+    
+    if (eventInfo.description) {
+      systemPrompt += `\n- Details: ${eventInfo.description}`;
+    }
+    
+    systemPrompt += `\n- Time: ${eventDate}`;
+    systemPrompt += `\n- Place: ${eventInfo.location}`;
+    
+    if (eventInfo.ticketUrl) {
+      systemPrompt += `\n- Tickets: ${eventInfo.ticketUrl}`;
+    }
+  }
+
+  // Concatenate conversation messages (user and assistant only, no system)
+  const prompt = messages
+    .filter((msg) => msg.role !== 'system') // Filter out any system messages
+    .map((msg) => {
+      // Format each message with role prefix
+      const rolePrefix = msg.role === 'user' 
+        ? 'User: ' 
+        : 'Assistant: ';
+      
+      return `${rolePrefix}${msg.content}`;
+    })
+    .join('\n\n');
+
+  // Combine system prompt with conversation history
+  const fullPrompt = systemPrompt + '\n\n### CONVERSATION HISTORY\n' + prompt;
+
+  const provider = process.env.EDENAI_PROVIDER || 'anthropic';
+  const model = process.env.EDENAI_MODEL || 'claude-haiku-4-5';
+  const url = 'https://api.edenai.run/v1/text/generation';
+
+  // Log request to Eden AI
+  console.log('[Eden AI Request]', {
+    provider,
+    model,
+    messageCount: messages.length,
+    promptLength: fullPrompt.length,
+    promptPreview: fullPrompt.substring(0, 300) + (fullPrompt.length > 300 ? '...' : ''),
+    hasEventInfo: !!eventInfo,
+  });
+
+  try {
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${apiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        providers: provider,
+        text: fullPrompt,
+        model: model,
+      }),
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      let errorData;
+      try {
+        errorData = JSON.parse(errorText);
+      } catch {
+        errorData = { error: errorText };
+      }
+      
+      // Log error response
+      console.error('[Eden AI Error Response]', {
+        status: response.status,
+        statusText: response.statusText,
+        error: errorData,
+      });
+      
+      throw new Error(`Eden AI API error: ${errorData.error?.message || JSON.stringify(errorData)}`);
+    }
+
+    const data = await response.json();
+    
+    // Eden AI V1 response structure varies by provider
+    // Try common response paths
+    let content = '';
+    
+    // Try different response structures
+    if (data[provider]) {
+      const providerData = data[provider];
+      content = providerData.generated_text || providerData.text || providerData.output || '';
+    } else if (data.generated_text) {
+      content = data.generated_text;
+    } else if (data.text) {
+      content = data.text;
+    } else if (data.output) {
+      content = typeof data.output === 'string' ? data.output : data.output.text || '';
+    }
+
+    // Log successful response from Eden AI
+    console.log('[Eden AI Response]', {
+      provider,
+      model,
+      contentLength: content.length,
+      contentPreview: content.substring(0, 200) + (content.length > 200 ? '...' : ''),
+      status: data.status,
+    });
+
+    if (!content) {
+      // Log response structure for debugging
+      console.error('[Eden AI Response Structure]', {
+        responseKeys: Object.keys(data),
+        responsePreview: JSON.stringify(data).substring(0, 500),
+      });
+      throw new Error('Empty response from Eden AI - check response structure in logs');
+    }
+
+    return { content };
+  } catch (error: any) {
+    // Log error response
+    console.error('[Eden AI Error Response]', {
+      provider,
+      model,
+      error: error.message || 'Unknown error',
+      errorDetails: error,
+    });
+    
+    throw new Error(`Eden AI API error: ${error.message || 'Unknown error'}`);
   }
 }

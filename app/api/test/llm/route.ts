@@ -27,21 +27,22 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Check if Gemini API key is configured
+    // Check if any LLM API key is configured
     const geminiKey = process.env.GEMINI_API_KEY;
-    if (!geminiKey) {
+    const edenAiKey = process.env.EDENAI_API_KEY;
+    if (!geminiKey && !edenAiKey) {
       return NextResponse.json(
         {
-          error: 'GEMINI_API_KEY is not configured. Please set it in your environment variables.',
+          error: 'No LLM API key configured. Please set GEMINI_API_KEY or EDENAI_API_KEY in your environment variables.',
           userMessage: message,
           chatId,
-          provider: 'Gemini AI',
         },
         { status: 500 }
       );
     }
 
-    console.log(`[Test API] Processing message for chatId: ${chatId}, using Gemini AI`);
+    const provider = geminiKey ? 'Gemini AI' : 'Eden AI';
+    console.log(`[Test API] Processing message for chatId: ${chatId}, using ${provider}`);
 
     // Add user message to conversation
     await conversationMemory.addUserMessage(chatId, message);
@@ -75,8 +76,10 @@ export async function POST(request: NextRequest) {
       userMessage: message,
       assistantResponse: llmResponse.content,
       chatId,
-      provider: 'Gemini AI',
-      model: process.env.GEMINI_MODEL || 'gemini-2.0-flash-exp',
+      provider,
+      model: geminiKey 
+        ? (process.env.GEMINI_MODEL || 'gemini-2.5-flash-lite')
+        : (process.env.EDENAI_MODEL || 'claude-haiku-4-5'),
       conversationHistory: history.map((msg) => ({
         role: msg.role,
         content: msg.content.substring(0, 100) + (msg.content.length > 100 ? '...' : ''),
