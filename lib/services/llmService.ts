@@ -83,7 +83,7 @@ If the user refers to missing context, ask a clarifying question.`;
     
     systemPrompt += eventContext;
   }
-  systemPrompt += `\nAnswer in the same language as the user's message.`;
+
   // Concatenate conversation messages (user and assistant only, no system)
   const prompt = messages
     .filter((msg) => msg.role !== 'system') // Filter out any system messages
@@ -100,6 +100,8 @@ If the user refers to missing context, ask a clarifying question.`;
   const model = process.env.GEMINI_MODEL || 'gemini-2.5-flash-lite';
   systemPrompt += '\n\n';
   systemPrompt += prompt
+
+  systemPrompt += `\nAnswer in the same language as the user's last message.`;
   // Log request to Gemini
   console.log('[Gemini Request]', {
     model,
@@ -146,26 +148,26 @@ If the user refers to missing context, ask a clarifying question.`;
       }
     }
 
-    // Remove role prefixes that the LLM might include in its response
-    // Common prefixes: "Assistant: ", "Asistente: ", "助手: ", etc.
-    content = content.trim();
-    const rolePrefixes = [
-      /^Assistant:\s*/i,
-      /^Asistente:\s*/i,
-      /^助手:\s*/i,
-      /^アシスタント:\s*/i,
-      /^Помощник:\s*/i,
-      /^Aide:\s*/i,
-      /^Assistent:\s*/i,
-      /^User:\s*/i,
-      /^Usuario:\s*/i,
-      /^System:\s*/i,
-    ];
+    // // Remove role prefixes that the LLM might include in its response
+    // // Common prefixes: "Assistant: ", "Asistente: ", "助手: ", etc.
+    // content = content.trim();
+    // const rolePrefixes = [
+    //   /^Assistant:\s*/i,
+    //   /^Asistente:\s*/i,
+    //   /^助手:\s*/i,
+    //   /^アシスタント:\s*/i,
+    //   /^Помощник:\s*/i,
+    //   /^Aide:\s*/i,
+    //   /^Assistent:\s*/i,
+    //   /^User:\s*/i,
+    //   /^Usuario:\s*/i,
+    //   /^System:\s*/i,
+    // ];
     
-    for (const prefix of rolePrefixes) {
-      content = content.replace(prefix, '');
-    }
-    content = content.trim();
+    // for (const prefix of rolePrefixes) {
+    //   content = content.replace(prefix, '');
+    // }
+    // content = content.trim();
 
     // Log successful response from Gemini
     console.log('[Gemini Response]', {
