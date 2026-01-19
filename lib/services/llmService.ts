@@ -289,7 +289,7 @@ You are "ImIn Bot," the cheeky, confident, and helpful assistant for the ImIn pl
     }
   }
 
-  const model = process.env.EDENAI_MODEL || 'claude-haiku-4-5';
+  const model = process.env.EDENAI_MODEL || 'gpt-4';
   const url = 'https://api.edenai.run/v3/llm/chat/completions';
 
   // Log request to Eden AI
