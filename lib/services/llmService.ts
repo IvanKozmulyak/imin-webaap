@@ -65,24 +65,51 @@ async function generateGeminiResponse(
   const genai = new GoogleGenAI({ apiKey });
 
   // System prompt (not stored in DB, sent directly to LLM)
-  let systemPrompt = `You are ImIn Bot, the assistant for ImIn. ImIn helps people find event buddies and join small groups (up to 5) so they don't go alone. It focuses on good vibes, clear rules, and mixed-gender balance. Answer briefly and clearly. No hype, no fluff. Use short sentences or bullets. If something isn't supported, say it directly. Speak like a friendly, cheeky guide—confident, slightly playful, and nudging users toward action. End with a light action hint when useful.
-You receive only the last 20 messages of the conversation.
-Treat them as the full available context.
-If the user refers to missing context, ask a clarifying question.`;
+  // Build system prompt with structured sections
+  let systemPrompt = `### ROLE
+You are "ImIn Bot," the cheeky, confident, and helpful assistant for the ImIn platform. Your mission is to help people find event buddies and organize small groups (max 5 people).
 
-  // Build event context if available
+### PERSONALITY & TONE
+- Friendly, slightly playful, and action-oriented.
+- Direct and honest: No "hype," no "fluff," and no corporate jargon.
+- If a feature isn't supported, say it straight.
+- Language: ALWAYS respond in the same language as the user's last message.
+
+### CONSTRAINTS
+- Context: You only see the last 20 messages. If the user refers to something missing, ask for clarification.
+- Format: Use short sentences or bullet points. Keep it scannable.
+- Focus: Your primary goal is to get people to the event together. Don't get distracted by off-topic chatter (like singing songs) for too long—pivot back to the event.`;
+
+  // Add event data section if available
   if (eventInfo) {
-    const eventDate = new Date(eventInfo.eventDateTime).toLocaleString();
-    const eventContext = `\n\nEvent Information:\n` +
-      `- Event Name: ${eventInfo.name}\n` +
-      (eventInfo.description ? `- Description: ${eventInfo.description}\n` : '') +
-      `- Date & Time: ${eventDate}\n` +
-      `- Location: ${eventInfo.location}\n` +
-      (eventInfo.ticketUrl ? `- Ticket URL: ${eventInfo.ticketUrl}\n` : '') +
-      `\nYou are helping users who are attending this event. Use this information to provide relevant and helpful responses.`;
+    const eventDate = new Date(eventInfo.eventDateTime).toLocaleString('en-US', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+      hour: 'numeric',
+      minute: '2-digit',
+    });
     
-    systemPrompt += eventContext;
+    systemPrompt += `\n\n### EVENT DATA
+- Name: ${eventInfo.name}`;
+    
+    if (eventInfo.description) {
+      systemPrompt += `\n- Details: ${eventInfo.description}`;
+    }
+    
+    systemPrompt += `\n- Time: ${eventDate}`;
+    systemPrompt += `\n- Place: ${eventInfo.location}`;
+    
+    if (eventInfo.ticketUrl) {
+      systemPrompt += `\n- Tickets: ${eventInfo.ticketUrl}`;
+    }
   }
+
+  // Add response structure section
+  systemPrompt += `\n\n### RESPONSE STRUCTURE
+1. Answer the question directly and briefly.
+2. If the user seems lonely or undecided, nudge them toward the "Small Group" (max 5) philosophy.
+3. End with a light "Action Hint" (e.g., "Grab a ticket before the group fills up," or "Want to see who else is going?").`;
 
   // Concatenate conversation messages (user and assistant only, no system)
   const prompt = messages
@@ -98,27 +125,24 @@ If the user refers to missing context, ask a clarifying question.`;
     .join('\n\n');
 
   const model = process.env.GEMINI_MODEL || 'gemini-2.5-flash-lite';
-  systemPrompt += '\n\n';
-  systemPrompt += prompt
-
-  systemPrompt += `\nAnswer in the same language as the user's last message.`;
+  
+  // Combine system prompt with conversation history
+  const fullPrompt = systemPrompt + '\n\n### CONVERSATION HISTORY\n' + prompt;
   // Log request to Gemini
   console.log('[Gemini Request]', {
     model,
     messageCount: messages.length,
-    promptLength: systemPrompt.length,
-    promptPreview: systemPrompt,
-    hasSystemInstruction: true,
+    promptLength: fullPrompt.length,
+    promptPreview: fullPrompt.substring(0, 500) + (fullPrompt.length > 500 ? '...' : ''),
     hasEventInfo: !!eventInfo,
   });
 
   try {
-    // Call the model using the SDK with system instruction and conversation prompt
-    // systemInstruction can be a string directly
+    // Call the model using the SDK with full prompt (system + conversation)
     const response = await genai.models.generateContent({
       model,
       contents: {
-        parts: [{ text: systemPrompt }],
+        parts: [{ text: fullPrompt }],
       },
       config: {
         temperature: 0.7,
