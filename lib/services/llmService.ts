@@ -78,7 +78,7 @@ You are "ImIn Bot," the cheeky, confident, and helpful assistant for the ImIn pl
 ### CONSTRAINTS
 - Context: You only see the last 20 messages. If the user refers to something missing, ask for clarification.
 - Format: Use short sentences or bullet points. Keep it scannable.
-- Focus: Your primary goal is to get people to the event together. Don't get distracted by off-topic chatter (like singing songs) for too long—pivot back to the event.`;
+- Focus: Your primary goal is to get people to the event together. `;
 
   // Add event data section if available
   if (eventInfo) {
@@ -105,12 +105,6 @@ You are "ImIn Bot," the cheeky, confident, and helpful assistant for the ImIn pl
     }
   }
 
-  // Add response structure section
-  systemPrompt += `\n\n### RESPONSE STRUCTURE
-1. Answer the question directly and briefly.
-2. If the user seems lonely or undecided, nudge them toward the "Small Group" (max 5) philosophy.
-3. End with a light "Action Hint" (e.g., "Grab a ticket before the group fills up," or "Want to see who else is going?").`;
-
   // Concatenate conversation messages (user and assistant only, no system)
   const prompt = messages
     .filter((msg) => msg.role !== 'system') // Filter out any system messages
@@ -133,7 +127,7 @@ You are "ImIn Bot," the cheeky, confident, and helpful assistant for the ImIn pl
     model,
     messageCount: messages.length,
     promptLength: fullPrompt.length,
-    promptPreview: fullPrompt.substring(0, 500) + (fullPrompt.length > 500 ? '...' : ''),
+    promptPreview: fullPrompt,
     hasEventInfo: !!eventInfo,
   });
 
@@ -197,7 +191,7 @@ You are "ImIn Bot," the cheeky, confident, and helpful assistant for the ImIn pl
     console.log('[Gemini Response]', {
       model,
       contentLength: content.length,
-      contentPreview: content.substring(0, 200) + (content.length > 200 ? '...' : ''),
+      contentPreview: content,
       hasCandidates: !!(response.candidates && response.candidates.length > 0),
     });
 
