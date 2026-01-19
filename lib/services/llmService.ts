@@ -98,13 +98,14 @@ If the user refers to missing context, ask a clarifying question.`;
     .join('\n\n');
 
   const model = process.env.GEMINI_MODEL || 'gemini-2.5-flash-lite';
-
+  systemPrompt += '\n\n';
+  systemPrompt += prompt
   // Log request to Gemini
   console.log('[Gemini Request]', {
     model,
     messageCount: messages.length,
-    promptLength: prompt.length,
-    promptPreview: prompt.substring(0, 300) + (prompt.length > 300 ? '...' : ''),
+    promptLength: systemPrompt.length,
+    promptPreview: systemPrompt,
     hasSystemInstruction: true,
     hasEventInfo: !!eventInfo,
   });
@@ -115,16 +116,11 @@ If the user refers to missing context, ask a clarifying question.`;
     const response = await genai.models.generateContent({
       model,
       contents: {
-        parts: [{ text: prompt }],
+        parts: [{ text: systemPrompt }],
       },
       config: {
         temperature: 0.7,
         maxOutputTokens: 500,
-        systemInstruction: {
-          parts: [
-            { text: systemPrompt }
-          ]
-        },
       },
     });
 
