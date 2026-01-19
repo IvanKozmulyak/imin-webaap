@@ -377,6 +377,11 @@ async function handleMessage(message: any): Promise<void> {
   const text = message.text || '';
   const botUsername = process.env.TELEGRAM_BOT_USERNAME || 'imin_squad_bot';
   
+  // Skip if message is empty or from a bot (unless it's our bot)
+  if (!text || (message.from?.is_bot && message.from?.username !== botUsername)) {
+    return;
+  }
+
   // Check if bot is mentioned/tagged in the message
   const isMentioned = 
     text.includes(`@${botUsername}`) ||
@@ -384,17 +389,25 @@ async function handleMessage(message: any): Promise<void> {
       e.type === 'mention' && text.substring(e.offset, e.offset + e.length) === `@${botUsername}`
     ));
 
-  // Only respond if bot is mentioned
-  if (!isMentioned) {
-    return;
-  }
-
+  // Save ALL messages to conversation memory (for context)
+  // But only respond if bot is mentioned
   try {
-    // Remove the mention from the message text
+    // Remove the mention from the message text for storage
     const cleanText = text.replace(`@${botUsername}`, '').trim();
     
+    // Always save user messages to conversation memory
+    if (cleanText) {
+      await conversationMemory.addUserMessage(chatId, cleanText);
+      console.log(`[Telegram] Saved message to conversation memory for chatId: ${chatId}`);
+    }
+
+    // Only respond if bot is mentioned
+    if (!isMentioned) {
+      return;
+    }
+
+    // If message is just a mention (no text after cleaning), send a helpful response
     if (!cleanText) {
-      // If message is just a mention, send a helpful response
       await sendTelegramMessage(
         chatId,
         'Hi! I\'m here to help. What would you like to know?',
@@ -402,9 +415,6 @@ async function handleMessage(message: any): Promise<void> {
       );
       return;
     }
-
-    // Add user message to conversation buffer
-    await conversationMemory.addUserMessage(chatId, cleanText);
 
     // Generate LLM response
     const llmResponse = await generateLLMResponse(chatId, cleanText);
@@ -425,18 +435,20 @@ async function handleMessage(message: any): Promise<void> {
     // Send response back to Telegram
     await sendTelegramMessage(chatId, llmResponse.content, 'Markdown');
 
-    console.log(`Response sent to chat ${chatId}`);
+    console.log(`[Telegram] Response sent to chat ${chatId}`);
   } catch (error: any) {
-    console.error(`Error handling message in chat ${chatId}:`, error);
-    // Try to send error message to user
-    try {
-      await sendTelegramMessage(
-        chatId,
-        'Sorry, I encountered an error. Please try again later.',
-        'Markdown'
-      );
-    } catch (sendError) {
-      console.error('Failed to send error message:', sendError);
+    console.error(`[Telegram] Error handling message in chat ${chatId}:`, error);
+    // Try to send error message to user (only if bot was mentioned)
+    if (isMentioned) {
+      try {
+        await sendTelegramMessage(
+          chatId,
+          'Sorry, I encountered an error. Please try again later.',
+          'Markdown'
+        );
+      } catch (sendError) {
+        console.error('Failed to send error message:', sendError);
+      }
     }
   }
 }
