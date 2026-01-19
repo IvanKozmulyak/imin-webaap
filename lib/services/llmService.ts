@@ -225,7 +225,7 @@ You are "ImIn Bot," the cheeky, confident, and helpful assistant for the ImIn pl
 
 /**
  * Generate response using Eden AI API
- * Uses V1 text generation endpoint
+ * Uses V3 chat completions endpoint
  */
 async function generateEdenAIResponse(
   messages: Array<{ role: string; content: string }>,
@@ -271,33 +271,31 @@ You are "ImIn Bot," the cheeky, confident, and helpful assistant for the ImIn pl
     }
   }
 
-  // Concatenate conversation messages (user and assistant only, no system)
-  const prompt = messages
-    .filter((msg) => msg.role !== 'system') // Filter out any system messages
-    .map((msg) => {
-      // Format each message with role prefix
-      const rolePrefix = msg.role === 'user' 
-        ? 'User: ' 
-        : 'Assistant: ';
-      
-      return `${rolePrefix}${msg.content}`;
-    })
-    .join('\n\n');
+  // Build messages array for Eden AI (includes system message)
+  const edenMessages: Array<{ role: 'system' | 'user' | 'assistant'; content: string }> = [
+    {
+      role: 'system',
+      content: systemPrompt,
+    },
+  ];
 
-  // Combine system prompt with conversation history
-  const fullPrompt = systemPrompt + '\n\n### CONVERSATION HISTORY\n' + prompt;
+  // Add conversation messages (user and assistant only, no system)
+  for (const msg of messages) {
+    if (msg.role !== 'system') {
+      edenMessages.push({
+        role: msg.role === 'user' ? 'user' : 'assistant',
+        content: msg.content,
+      });
+    }
+  }
 
-  const provider = process.env.EDENAI_PROVIDER || 'anthropic';
   const model = process.env.EDENAI_MODEL || 'claude-haiku-4-5';
-  const url = 'https://api.edenai.run/v1/text/generation';
+  const url = 'https://api.edenai.run/v3/llm/chat/completions';
 
   // Log request to Eden AI
   console.log('[Eden AI Request]', {
-    provider,
     model,
-    messageCount: messages.length,
-    promptLength: fullPrompt.length,
-    promptPreview: fullPrompt.substring(0, 300) + (fullPrompt.length > 300 ? '...' : ''),
+    messageCount: edenMessages.length,
     hasEventInfo: !!eventInfo,
   });
 
@@ -309,9 +307,11 @@ You are "ImIn Bot," the cheeky, confident, and helpful assistant for the ImIn pl
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        providers: provider,
-        text: fullPrompt,
-        model: model,
+        model,
+        messages: edenMessages,
+        stream: false,
+        temperature: 0.7,
+        max_tokens: 500,
       }),
     });
 
@@ -336,29 +336,29 @@ You are "ImIn Bot," the cheeky, confident, and helpful assistant for the ImIn pl
 
     const data = await response.json();
     
-    // Eden AI V1 response structure varies by provider
-    // Try common response paths
+    // Eden AI V3 response structure: data.choices[0].message.content
     let content = '';
     
-    // Try different response structures
-    if (data[provider]) {
-      const providerData = data[provider];
-      content = providerData.generated_text || providerData.text || providerData.output || '';
-    } else if (data.generated_text) {
-      content = data.generated_text;
-    } else if (data.text) {
-      content = data.text;
-    } else if (data.output) {
-      content = typeof data.output === 'string' ? data.output : data.output.text || '';
+    if (data.choices && data.choices.length > 0) {
+      const choice = data.choices[0];
+      if (choice.message && choice.message.content) {
+        content = choice.message.content;
+      }
+    }
+    
+    // Fallback: try alternative response structures
+    if (!content && data.output) {
+      const output = data.output;
+      if (output.choices && output.choices.length > 0) {
+        content = output.choices[0].message?.content || '';
+      }
     }
 
     // Log successful response from Eden AI
     console.log('[Eden AI Response]', {
-      provider,
       model,
       contentLength: content.length,
       contentPreview: content.substring(0, 200) + (content.length > 200 ? '...' : ''),
-      status: data.status,
     });
 
     if (!content) {
@@ -374,7 +374,6 @@ You are "ImIn Bot," the cheeky, confident, and helpful assistant for the ImIn pl
   } catch (error: any) {
     // Log error response
     console.error('[Eden AI Error Response]', {
-      provider,
       model,
       error: error.message || 'Unknown error',
       errorDetails: error,
