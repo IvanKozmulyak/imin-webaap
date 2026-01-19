@@ -30,7 +30,7 @@ function getBotToken(): string {
 async function sendTelegramMessage(
   chatId: string,
   text: string,
-  parseMode: 'Markdown' | 'HTML' = 'Markdown',
+  parseMode: 'Markdown' | 'HTML' | null = null,
   inlineKeyboard?: Array<Array<{ text: string; url?: string; callback_data?: string }>>
 ): Promise<void> {
   const token = getBotToken();
@@ -39,9 +39,13 @@ async function sendTelegramMessage(
     const payload: any = {
       chat_id: chatId,
       text,
-      parse_mode: parseMode,
       disable_web_page_preview: false,
     };
+
+    // Only add parse_mode if specified (null means plain text)
+    if (parseMode) {
+      payload.parse_mode = parseMode;
+    }
 
     // Add inline keyboard if provided
     if (inlineKeyboard && inlineKeyboard.length > 0) {
@@ -406,6 +410,24 @@ async function handleMessage(message: any): Promise<void> {
       return;
     }
 
+    // Get event information for this group
+    const telegramGroup = await prisma.telegramGroup.findFirst({
+      where: {
+        telegramChatId: chatId,
+      },
+      include: {
+        event: true,
+      },
+    });
+
+    const eventInfo = telegramGroup?.event ? {
+      name: telegramGroup.event.name,
+      description: telegramGroup.event.description,
+      eventDateTime: telegramGroup.event.eventDateTime,
+      location: telegramGroup.event.location,
+      ticketUrl: telegramGroup.event.ticketUrl,
+    } : null;
+
     // If message is just a mention (no text after cleaning), send a helpful response
     if (!cleanText) {
       await sendTelegramMessage(
@@ -416,15 +438,14 @@ async function handleMessage(message: any): Promise<void> {
       return;
     }
 
-    // Generate LLM response
-    const llmResponse = await generateLLMResponse(chatId, cleanText);
+    // Generate LLM response with event information
+    const llmResponse = await generateLLMResponse(chatId, cleanText, eventInfo);
 
     if (llmResponse.error) {
       console.error('LLM error:', llmResponse.error);
       await sendTelegramMessage(
         chatId,
-        'Sorry, I encountered an error processing your message. Please try again later.',
-        'Markdown'
+        'Sorry, I encountered an error processing your message. Please try again later.'
       );
       return;
     }
@@ -432,8 +453,9 @@ async function handleMessage(message: any): Promise<void> {
     // Add assistant response to buffer
     await conversationMemory.addAssistantMessage(chatId, llmResponse.content);
 
-    // Send response back to Telegram
-    await sendTelegramMessage(chatId, llmResponse.content, 'Markdown');
+    // Send response back to Telegram (without parse mode to avoid Markdown parsing errors)
+    // LLM responses may contain special characters that break Markdown parsing
+    await sendTelegramMessage(chatId, llmResponse.content);
 
     console.log(`[Telegram] Response sent to chat ${chatId}`);
   } catch (error: any) {
@@ -443,8 +465,7 @@ async function handleMessage(message: any): Promise<void> {
       try {
         await sendTelegramMessage(
           chatId,
-          'Sorry, I encountered an error. Please try again later.',
-          'Markdown'
+          'Sorry, I encountered an error. Please try again later.'
         );
       } catch (sendError) {
         console.error('Failed to send error message:', sendError);

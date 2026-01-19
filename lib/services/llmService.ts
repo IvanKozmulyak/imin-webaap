@@ -48,10 +48,24 @@ export async function generateLLMResponse(
  */
 async function generateGeminiResponse(
   messages: Array<{ role: string; content: string }>,
-  apiKey: string
+  apiKey: string,
+  eventInfo?: EventInfo | null
 ): Promise<LLMResponse> {
   // Initialize the Gemini client
   const genai = new GoogleGenAI({ apiKey });
+
+  // Build event context if available
+  let eventContext = '';
+  if (eventInfo) {
+    const eventDate = new Date(eventInfo.eventDateTime).toLocaleString();
+    eventContext = `\n\nEvent Information:\n` +
+      `- Event Name: ${eventInfo.name}\n` +
+      (eventInfo.description ? `- Description: ${eventInfo.description}\n` : '') +
+      `- Date & Time: ${eventDate}\n` +
+      `- Location: ${eventInfo.location}\n` +
+      (eventInfo.ticketUrl ? `- Ticket URL: ${eventInfo.ticketUrl}\n` : '') +
+      `\nYou are helping users who are attending this event. Use this information to provide relevant and helpful responses.`;
+  }
 
   // Concatenate all messages into a single string
   const prompt = messages
@@ -62,6 +76,12 @@ async function generateGeminiResponse(
         : msg.role === 'user' 
         ? 'User: ' 
         : 'Assistant: ';
+      
+      // Add event context to system message
+      if (msg.role === 'system' && eventContext) {
+        return `${rolePrefix}${msg.content}${eventContext}`;
+      }
+      
       return `${rolePrefix}${msg.content}`;
     })
     .join('\n\n');
