@@ -14,35 +14,6 @@ export interface Message {
 
 class ConversationMemoryService {
   private readonly defaultMaxMessages = 20;
-  private readonly systemPrompt = `You are an AI assistant embedded in a Telegram bot.
-You receive only the last 20 messages of the conversation.
-Treat them as the full available context.
-Do not assume access to earlier messages.
-If the user refers to missing context, ask a clarifying question.
-Answer concisely and consistently. Answer in the same language as the user's last message.`;
-
-  /**
-   * Ensure system prompt exists for a chatId
-   */
-  private async ensureSystemPrompt(chatId: string): Promise<void> {
-    const existingSystem = await prisma.conversationMessage.findFirst({
-      where: {
-        chatId,
-        role: 'system',
-      },
-    });
-
-    if (!existingSystem) {
-      await prisma.conversationMessage.create({
-        data: {
-          chatId,
-          role: 'system',
-          content: this.systemPrompt,
-          sequence: 0,
-        },
-      });
-    }
-  }
 
   /**
    * Get the next sequence number for a chatId
@@ -61,8 +32,6 @@ Answer concisely and consistently. Answer in the same language as the user's las
    * Add a user message to the buffer
    */
   async addUserMessage(chatId: string, content: string, maxMessages: number = this.defaultMaxMessages): Promise<void> {
-    await this.ensureSystemPrompt(chatId);
-    
     const sequence = await this.getNextSequence(chatId);
     
     await prisma.conversationMessage.create({
@@ -81,8 +50,6 @@ Answer concisely and consistently. Answer in the same language as the user's las
    * Add an assistant message to the buffer
    */
   async addAssistantMessage(chatId: string, content: string, maxMessages: number = this.defaultMaxMessages): Promise<void> {
-    await this.ensureSystemPrompt(chatId);
-    
     const sequence = await this.getNextSequence(chatId);
     
     await prisma.conversationMessage.create({
@@ -99,25 +66,22 @@ Answer concisely and consistently. Answer in the same language as the user's las
 
   /**
    * Trim buffer to maintain maxMessages limit
-   * Always preserves system prompt and removes oldest messages
-   * If we have more than maxMessages, delete the oldest non-system message
+   * If we have more than maxMessages, delete the oldest message
    */
   private async trimBuffer(chatId: string, maxMessages: number): Promise<void> {
-    // Count non-system messages
-    const nonSystemCount = await prisma.conversationMessage.count({
+    // Count all messages
+    const messageCount = await prisma.conversationMessage.count({
       where: {
         chatId,
-        role: { not: 'system' },
       },
     });
 
-    // If we exceed the limit, remove the oldest non-system message
-    if (nonSystemCount > maxMessages) {
-      // Get the oldest non-system message to delete
+    // If we exceed the limit, remove the oldest message
+    if (messageCount > maxMessages) {
+      // Get the oldest message to delete
       const oldestMessage = await prisma.conversationMessage.findFirst({
         where: {
           chatId,
-          role: { not: 'system' },
         },
         orderBy: { sequence: 'asc' },
         select: { id: true, sequence: true, role: true },
@@ -137,18 +101,19 @@ Answer concisely and consistently. Answer in the same language as the user's las
 
   /**
    * Get the conversation history for a chatId
-   * Returns messages in chronological order with system prompt included
+   * Returns messages in chronological order (excluding system messages)
    */
   async getConversationHistory(chatId: string): Promise<Message[]> {
-    await this.ensureSystemPrompt(chatId);
-    
     const messages = await prisma.conversationMessage.findMany({
-      where: { chatId },
+      where: { 
+        chatId,
+        role: { not: 'system' }, // Exclude system messages
+      },
       orderBy: { sequence: 'asc' },
     });
 
     return messages.map((msg: { role: string; content: string; createdAt: Date }) => ({
-      role: msg.role as 'system' | 'user' | 'assistant',
+      role: msg.role as 'user' | 'assistant',
       content: msg.content,
       timestamp: msg.createdAt.getTime(),
     }));
@@ -164,7 +129,7 @@ Answer concisely and consistently. Answer in the same language as the user's las
   }
 
   /**
-   * Get formatted messages for LLM (without timestamps)
+   * Get formatted messages for LLM (without timestamps, excluding system messages)
    */
   async getFormattedMessages(chatId: string): Promise<Array<{ role: string; content: string }>> {
     const messages = await this.getConversationHistory(chatId);
