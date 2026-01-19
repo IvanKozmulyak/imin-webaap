@@ -11,13 +11,22 @@ export interface LLMResponse {
   error?: string;
 }
 
+export interface EventInfo {
+  name: string;
+  description?: string | null;
+  eventDateTime: Date;
+  location: string;
+  ticketUrl?: string | null;
+}
+
 /**
  * Generate a response using Gemini AI (default)
  * Falls back to other providers if Gemini is not configured
  */
 export async function generateLLMResponse(
   chatId: string,
-  userMessage: string
+  userMessage: string,
+  eventInfo?: EventInfo | null
 ): Promise<LLMResponse> {
   try {
     // Get conversation history
@@ -26,7 +35,7 @@ export async function generateLLMResponse(
     // Try Gemini first (default)
     const geminiKey = process.env.GEMINI_API_KEY;
     if (geminiKey) {
-      return await generateGeminiResponse(messages, geminiKey);
+      return await generateGeminiResponse(messages, geminiKey, eventInfo);
     }
 
     return {

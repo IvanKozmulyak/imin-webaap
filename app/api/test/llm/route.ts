@@ -47,7 +47,7 @@ export async function POST(request: NextRequest) {
     await conversationMemory.addUserMessage(chatId, message);
 
     // Generate LLM response using Gemini (test API doesn't have event context)
-    const llmResponse = await generateLLMResponse(chatId, message, null);
+    const llmResponse = await generateLLMResponse(chatId, message);
 
     if (llmResponse.error) {
       console.error(`[Test API] Gemini API error: ${llmResponse.error}`);
