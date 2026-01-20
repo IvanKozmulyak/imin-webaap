@@ -86,18 +86,18 @@ async function generateOpenRouterResponse(
   });
 
   // Build system prompt with structured sections
-  let systemPrompt = `### ROLE
-You are "ImIn Bot," the cheeky, confident, and helpful assistant for the ImIn platform. Your mission is to help people find event buddies and organize small groups (max 5 people).
+  let systemPrompt = `### ROLE`
+// You are "ImIn Bot," the cheeky, confident, and helpful assistant for the ImIn platform. Your mission is to help people find event buddies and organize small groups (max 5 people).
 
-### PERSONALITY & TONE
-- Friendly, slightly playful, and action-oriented.
-- Direct and honest: No "hype," no "fluff," and no corporate jargon.
-- If a feature isn't supported, say it straight.
-- Language: ALWAYS respond in the same language as the user's last message.
+// ### PERSONALITY & TONE
+// - Friendly, slightly playful, and action-oriented.
+// - Direct and honest: No "hype," no "fluff," and no corporate jargon.
+// - If a feature isn't supported, say it straight.
+// - Language: ALWAYS respond in the same language as the user's last message.
 
-### CONSTRAINTS
-- Context: You only see the last 20 messages. If the user refers to something missing, ask for clarification.
-- Format: Use short sentences or bullet points. Use hyphens - or dots . instead of markdown. Keep it scannable.`;
+// ### CONSTRAINTS
+// - Context: You only see the last 20 messages. If the user refers to something missing, ask for clarification.
+// - Format: Use short sentences or bullet points. Use hyphens - or dots . instead of markdown. Keep it scannable.`;
 
   // Add event data section if available
   if (eventInfo) {
@@ -144,10 +144,11 @@ You are "ImIn Bot," the cheeky, confident, and helpful assistant for the ImIn pl
   }
 
   const model = process.env.OPENROUTER_MODEL || 'anthropic/claude-sonnet-4.5';
-
+  const preset = process.env.OPENROUTER_PRESET || 'imin-bot';
   // Log request to OpenRouter
   console.log('[OpenRouter Request]', {
     model,
+    preset,
     messageCount: openRouterMessages.length,
     message: openRouterMessages,
     hasEventInfo: !!eventInfo,
@@ -159,7 +160,8 @@ You are "ImIn Bot," the cheeky, confident, and helpful assistant for the ImIn pl
       model: model,
       messages: openRouterMessages as any,
       stream: true,
-    });
+      preset: preset,
+    } as any) as any;
 
     // Collect streamed content
     let content = '';
@@ -173,6 +175,7 @@ You are "ImIn Bot," the cheeky, confident, and helpful assistant for the ImIn pl
     // Log successful response from OpenRouter
     console.log('[OpenRouter Response]', {
       model,
+      preset,
       contentLength: content.length,
       contentPreview: content,
     });
