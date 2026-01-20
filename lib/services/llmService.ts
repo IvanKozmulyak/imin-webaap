@@ -296,6 +296,7 @@ You are "ImIn Bot," the cheeky, confident, and helpful assistant for the ImIn pl
   console.log('[Eden AI Request]', {
     model,
     messageCount: edenMessages.length,
+    message: edenMessages,
     hasEventInfo: !!eventInfo,
   });
 
@@ -307,7 +308,7 @@ You are "ImIn Bot," the cheeky, confident, and helpful assistant for the ImIn pl
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model,
+        model: model,
         messages: edenMessages,
         stream: false,
         temperature: 0.7,
