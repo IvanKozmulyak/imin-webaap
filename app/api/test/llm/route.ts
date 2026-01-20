@@ -30,10 +30,13 @@ export async function POST(request: NextRequest) {
     // Check if any LLM API key is configured
     const geminiKey = process.env.GEMINI_API_KEY;
     const edenAiKey = process.env.EDENAI_API_KEY;
-    if (!geminiKey && !edenAiKey) {
+    const pineconeKey = process.env.PINECONE_API_KEY;
+    const pineconeAssistantName = process.env.PINECONE_ASSISTANT_NAME;
+    
+    if (!geminiKey && !edenAiKey && !(pineconeKey && pineconeAssistantName)) {
       return NextResponse.json(
         {
-          error: 'No LLM API key configured. Please set GEMINI_API_KEY or EDENAI_API_KEY in your environment variables.',
+          error: 'No LLM API key configured. Please set GEMINI_API_KEY, EDENAI_API_KEY, or PINECONE_API_KEY (with PINECONE_ASSISTANT_NAME) in your environment variables.',
           userMessage: message,
           chatId,
         },
@@ -41,7 +44,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const provider = geminiKey ? 'Gemini AI' : 'Eden AI';
+    const provider = geminiKey ? 'Gemini AI' : (edenAiKey ? 'Eden AI' : 'Pinecone');
     console.log(`[Test API] Processing message for chatId: ${chatId}, using ${provider}`);
 
     // Add user message to conversation
@@ -79,7 +82,9 @@ export async function POST(request: NextRequest) {
       provider,
       model: geminiKey 
         ? (process.env.GEMINI_MODEL || 'gemini-2.5-flash-lite')
-        : (process.env.EDENAI_MODEL || 'claude-haiku-4-5'),
+        : (edenAiKey 
+          ? (process.env.EDENAI_MODEL || 'gpt-4')
+          : (process.env.PINECONE_MODEL || 'gpt-4o')),
       conversationHistory: history.map((msg) => ({
         role: msg.role,
         content: msg.content.substring(0, 100) + (msg.content.length > 100 ? '...' : ''),

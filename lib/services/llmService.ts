@@ -4,6 +4,7 @@
  */
 
 import { GoogleGenAI } from '@google/genai';
+import { Pinecone } from '@pinecone-database/pinecone';
 import { conversationMemory, Message } from './conversationMemoryService';
 
 export interface LLMResponse {
@@ -31,7 +32,12 @@ export async function generateLLMResponse(
   try {
     // Get conversation history
     const messages = await conversationMemory.getFormattedMessages(chatId);
-
+    const pineconeKey = process.env.PINECONE_API_KEY;
+    const pineconeAssistantName = process.env.PINECONE_ASSISTANT_NAME;
+    if (pineconeKey && pineconeAssistantName) {
+      return await generatePineconeResponse(messages, pineconeKey, pineconeAssistantName, eventInfo);
+    }
+    
     // Try Gemini first (default)
     const geminiKey = process.env.GEMINI_API_KEY;
     if (geminiKey) {
@@ -46,7 +52,7 @@ export async function generateLLMResponse(
 
     return {
       content: '',
-      error: 'No LLM API key configured. Please set GEMINI_API_KEY or EDENAI_API_KEY in environment variables.',
+      error: 'No LLM API key configured. Please set GEMINI_API_KEY, EDENAI_API_KEY, or PINECONE_API_KEY in environment variables.',
     };
   } catch (error: any) {
     console.error('Error generating LLM response:', error);
@@ -382,5 +388,127 @@ You are "ImIn Bot," the cheeky, confident, and helpful assistant for the ImIn pl
     });
     
     throw new Error(`Eden AI API error: ${error.message || 'Unknown error'}`);
+  }
+}
+
+/**
+ * Generate response using Pinecone Assistant API
+ * Uses Pinecone's Assistant chat endpoint
+ */
+async function generatePineconeResponse(
+  messages: Array<{ role: string; content: string }>,
+  apiKey: string,
+  assistantName: string,
+  eventInfo?: EventInfo | null
+): Promise<LLMResponse> {
+  // Build system prompt with structured sections
+  let systemPrompt = `### ROLE
+You are "ImIn Bot," the cheeky, confident, and helpful assistant for the ImIn platform. Your mission is to help people find event buddies and organize small groups (max 5 people).
+
+### PERSONALITY & TONE
+- Friendly, slightly playful, and action-oriented.
+- Direct and honest: No "hype," no "fluff," and no corporate jargon.
+- If a feature isn't supported, say it straight.
+- Language: ALWAYS respond in the same language as the user's last message.
+
+### CONSTRAINTS
+- NO MARKDOWN: Do not use asterisks, hashes, or brackets. Use plain text only.
+- Context: You only see the last 20 messages. If the user refers to something missing, ask for clarification.
+- Format: Use short sentences or bullet points. Use hyphens - or dots . instead of markdown. Keep it scannable.`;
+
+  // Add event data section if available
+  if (eventInfo) {
+    const eventDate = new Date(eventInfo.eventDateTime).toLocaleString('en-US', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+      hour: 'numeric',
+      minute: '2-digit',
+    });
+    
+    systemPrompt += `\n\n### EVENT DATA
+- Name: ${eventInfo.name}`;
+    
+    if (eventInfo.description) {
+      systemPrompt += `\n- Details: ${eventInfo.description}`;
+    }
+    
+    systemPrompt += `\n- Time: ${eventDate}`;
+    systemPrompt += `\n- Place: ${eventInfo.location}`;
+    
+    if (eventInfo.ticketUrl) {
+      systemPrompt += `\n- Tickets: ${eventInfo.ticketUrl}`;
+    }
+  }
+
+  // Build messages array for Pinecone (includes system message)
+  const pineconeMessages: Array<{ role: 'system' | 'user' | 'assistant'; content: string }> = [
+    {
+      role: 'system',
+      content: systemPrompt,
+    },
+  ];
+
+  // Add conversation messages (user and assistant only, no system)
+  for (const msg of messages) {
+    if (msg.role !== 'system') {
+      pineconeMessages.push({
+        role: msg.role === 'user' ? 'user' : 'assistant',
+        content: msg.content,
+      });
+    }
+  }
+
+  const model = process.env.PINECONE_MODEL || 'gpt-4o';
+  const pc = new Pinecone({ apiKey });
+  const assistant = pc.assistant(assistantName);
+
+  // Log request to Pinecone
+  console.log('[Pinecone Request]', {
+    assistantName,
+    model,
+    messageCount: pineconeMessages.length,
+    message: pineconeMessages,
+    hasEventInfo: !!eventInfo,
+  });
+
+  try {
+    const response = await assistant.chat({
+      messages: pineconeMessages,
+    });
+
+    // Pinecone response structure: response.message.content
+    const content = response.message?.content || '';
+
+    // Log successful response from Pinecone
+    console.log('[Pinecone Response]', {
+      assistantName,
+      model,
+      contentLength: content.length,
+      contentPreview: content,
+      finishReason: response.finishReason,
+      citations: response.citations?.length || 0,
+    });
+
+    if (!content) {
+      // Log response structure for debugging
+      console.error('[Pinecone Response Structure]', {
+        responseKeys: Object.keys(response),
+        responsePreview: JSON.stringify(response).substring(0, 500),
+      });
+      throw new Error('Empty response from Pinecone - check response structure in logs');
+    }
+
+    return { content };
+  } catch (error: any) {
+    // Log error response
+    console.error('[Pinecone Error Response]', {
+      assistantName,
+      model,
+      error: error.message || 'Unknown error',
+      errorDetails: error,
+    });
+    
+    throw new Error(`Pinecone API error: ${error.message || 'Unknown error'}`);
   }
 }
