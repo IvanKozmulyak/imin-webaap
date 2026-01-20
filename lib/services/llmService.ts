@@ -157,7 +157,6 @@ You are "ImIn Bot," the cheeky, confident, and helpful assistant for the ImIn pl
     // Call OpenRouter API with streaming
     const stream = await openrouter.chat.send({
       model: model,
-      preset: preset,
       messages: openRouterMessages as any,
       stream: true,
     });
