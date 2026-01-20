@@ -441,15 +441,15 @@ You are "ImIn Bot," the cheeky, confident, and helpful assistant for the ImIn pl
     }
   }
 
-  // Build messages array for Pinecone (includes system message)
-  const pineconeMessages: Array<{ role: 'system' | 'user' | 'assistant'; content: string }> = [
+  // Build messages array for Pinecone
+  const pineconeMessages: Array<{ role: 'user' | 'assistant'; content: string }> = [
     {
-      role: 'system',
+      role: 'assistant',
       content: systemPrompt,
     },
   ];
 
-  // Add conversation messages (user and assistant only, no system)
+  // Add conversation messages
   for (const msg of messages) {
     if (msg.role !== 'system') {
       pineconeMessages.push({
@@ -459,14 +459,12 @@ You are "ImIn Bot," the cheeky, confident, and helpful assistant for the ImIn pl
     }
   }
 
-  const model = process.env.PINECONE_MODEL || 'gpt-4o';
   const pc = new Pinecone({ apiKey });
   const assistant = pc.assistant(assistantName);
 
   // Log request to Pinecone
   console.log('[Pinecone Request]', {
     assistantName,
-    model,
     messageCount: pineconeMessages.length,
     message: pineconeMessages,
     hasEventInfo: !!eventInfo,
@@ -483,7 +481,6 @@ You are "ImIn Bot," the cheeky, confident, and helpful assistant for the ImIn pl
     // Log successful response from Pinecone
     console.log('[Pinecone Response]', {
       assistantName,
-      model,
       contentLength: content.length,
       contentPreview: content,
       finishReason: response.finishReason,
@@ -504,7 +501,6 @@ You are "ImIn Bot," the cheeky, confident, and helpful assistant for the ImIn pl
     // Log error response
     console.error('[Pinecone Error Response]', {
       assistantName,
-      model,
       error: error.message || 'Unknown error',
       errorDetails: error,
     });
