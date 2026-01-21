@@ -497,12 +497,12 @@ export async function addBotAsAdmin(
         adminRights: new Api.ChatAdminRights({
           changeInfo: true,
           postMessages: true, // For groups, this is usually false
-          editMessages: false,
+          editMessages: true,
           deleteMessages: true,
           banUsers: true,
           inviteUsers: true,
           pinMessages: true,
-          addAdmins: false, // Don't allow bot to add other admins
+          addAdmins: true, // Don't allow bot to add other admins
           anonymous: false,
           manageCall: true,
           other: true, // Other permissions
