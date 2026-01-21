@@ -11,8 +11,8 @@ interface EventRegistration {
   eventId: string;
   name: string;
   email: string;
-  telegram: string;
   age: number;
+  sex: string;
   languagesISpeak: string[];
   createdAt: Date;
 }
@@ -53,8 +53,8 @@ async function getGroupMembers(
     eventId: m.eventRegistration.eventId,
     name: m.eventRegistration.name,
     email: m.eventRegistration.email,
-    telegram: m.eventRegistration.telegram,
     age: m.eventRegistration.age,
+    sex: m.eventRegistration.sex,
     languagesISpeak: m.eventRegistration.languages.map((l: any) => l.languageCode),
     createdAt: m.eventRegistration.createdAt,
   }));
@@ -89,8 +89,8 @@ export async function performMatching(eventId: string): Promise<MatchingResultDt
       eventId: reg.eventId,
       name: reg.name,
       email: reg.email,
-      telegram: reg.telegram,
       age: reg.age,
+      sex: reg.sex,
       languagesISpeak: reg.languages.map(l => l.languageCode),
       createdAt: reg.createdAt,
     }));
@@ -350,8 +350,8 @@ export async function performMatching(eventId: string): Promise<MatchingResultDt
     });
 
     const groupDtos: MatchingGroupDto[] = groups.map((group: any) => {
-      const memberTelegrams = group.members
-        .map((m: any) => m.eventRegistration.telegram)
+      const memberEmails = group.members
+        .map((m: any) => m.eventRegistration.email)
         .sort();
       
       const languageCodes = group.languages
@@ -362,7 +362,7 @@ export async function performMatching(eventId: string): Promise<MatchingResultDt
         id: group.id,
         eventId: group.eventId,
         languageCodes,
-        memberTelegrams,
+        memberEmails,
         createdAt: group.createdAt.toISOString(),
       };
     });
@@ -403,8 +403,8 @@ export async function getEventGroups(eventId: string): Promise<MatchingGroupDto[
   });
 
   const groupDtos: MatchingGroupDto[] = groups.map(group => {
-    const memberTelegrams = group.members
-      .map(m => m.eventRegistration.telegram)
+    const memberEmails = group.members
+      .map(m => m.eventRegistration.email)
       .sort();
     
     const languageCodes = group.languages
@@ -415,7 +415,7 @@ export async function getEventGroups(eventId: string): Promise<MatchingGroupDto[
       id: group.id,
       eventId: group.eventId,
       languageCodes,
-      memberTelegrams,
+      memberEmails,
       createdAt: group.createdAt.toISOString(),
     };
   });
@@ -452,8 +452,8 @@ export async function getMatchingResults(eventId: string): Promise<MatchingResul
   });
 
   const groupDtos: MatchingGroupDto[] = groups.map(group => {
-    const memberTelegrams = group.members
-      .map(m => m.eventRegistration.telegram)
+    const memberEmails = group.members
+      .map(m => m.eventRegistration.email)
       .sort();
     
     const languageCodes = group.languages
@@ -464,7 +464,7 @@ export async function getMatchingResults(eventId: string): Promise<MatchingResul
       id: group.id,
       eventId: group.eventId,
       languageCodes,
-      memberTelegrams,
+      memberEmails,
       createdAt: group.createdAt.toISOString(),
     };
   });

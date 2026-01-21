@@ -2,7 +2,7 @@ export interface MatchingGroupDto {
   id: string; // UUID
   eventId: string; // UUID
   languageCodes: string[]; // Common languages (intersection of all members)
-  memberTelegrams: string[]; // Sorted list of telegram usernames
+  memberEmails: string[]; // Sorted list of member email addresses
   createdAt: string; // ISO 8601 timestamp
 }
 
