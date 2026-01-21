@@ -220,7 +220,7 @@ export default function Home() {
         <section className="flow-section">
           <div className="container">
             <div className="flow-header">
-              <span className="section-tag">// THE MECHANIC</span>
+              <span className="section-tag">{'// THE MECHANIC'}</span>
               <h2 style={{ fontSize: '3rem' }}>How We Fill The Floor.</h2>
             </div>
 
