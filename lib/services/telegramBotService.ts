@@ -181,7 +181,7 @@ function createWelcomeMessage(
 
     let message = `⚡️ **${firstName}, you’re in.**\n\n`;
 
-    if (memberCount <= 2) {
+    if (memberCount <= 3) {
         message +=
             `⏳ **Group is forming**\n` +
             `Waiting for more members to join.\n` +
