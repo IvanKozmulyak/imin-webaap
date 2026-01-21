@@ -225,12 +225,12 @@ export async function createTelegramGroupWithGramJS(
     const chatEntity = await client.getEntity(chat);
     
     // Make the user anonymous in the group
-    try {
-      await makeUserAnonymous(chatEntity as Api.Channel);
-    } catch (error: any) {
-      console.warn(`Warning: Failed to make user anonymous: ${error.message}`);
-      // Continue even if making user anonymous fails
-    }
+    // try {
+    //   await makeUserAnonymous(chatEntity as Api.Channel);
+    // } catch (error: any) {
+    //   console.warn(`Warning: Failed to make user anonymous: ${error.message}`);
+    //   // Continue even if making user anonymous fails
+    // }
     
     // Set group photo if image path is provided
     if (imagePath) {

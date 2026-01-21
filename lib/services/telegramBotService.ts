@@ -9,6 +9,10 @@ import { generateLLMResponse } from './llmService';
 
 const TELEGRAM_API_BASE = 'https://api.telegram.org/bot';
 
+const scheduledIcebreakers = new Map<string, NodeJS.Timeout>();
+const MIN_MEMBERS_FOR_DISCUSSIONS = 3;
+const ICEBREAKER_DELAY_MS = 2 * 60 * 1000;
+
 /**
  * Gets the Telegram bot token from environment
  */
@@ -85,9 +89,9 @@ async function sendTelegramMessage(
 }
 
 /**
- * Gets the real member count of a Telegram group, excluding bots and admins
+ * Gets the real member count of a Telegram group, excluding bots, the creator, and admins
  * @param chatId Telegram chat ID
- * @returns Real member count (excluding bots and admins)
+ * @returns Real member count (excluding bots, creator, and admins)
  */
 async function getRealMemberCount(chatId: string): Promise<number> {
   const token = getBotToken();
@@ -116,7 +120,7 @@ async function getRealMemberCount(chatId: string): Promise<number> {
 
     const totalCount = countData.result || 0;
 
-    const realMemberCount = Math.max(0, totalCount - 1);
+    const realMemberCount = Math.max(0, totalCount - 2);
 
     console.log(`Member count for chat ${chatId}: total=${totalCount}, real=${realMemberCount}`);
     
@@ -161,18 +165,39 @@ async function updateMemberCountFromTelegram(telegramGroupId: string, chatId: st
 }
 
 /**
- * Creates a welcome message for new group members
+ * Creates a welcome message for new group members based on current member count
  * @param firstName First name of the new member
+ * @param memberCount Current number of members in the group
  * @param ticketUrl Optional ticket URL
+ * @param botUsername Bot username for tagging
  * @returns Object with message text and optional inline keyboard
  */
 function createWelcomeMessage(
   firstName: string,
-  ticketUrl?: string | null
+  memberCount: number,
+  ticketUrl?: string | null,
+  botUsername: string = 'imin_squad_bot'
 ): { message: string; inlineKeyboard?: Array<Array<{ text: string; url: string }>> } {
-  const message = `⚡️ **Yo ${firstName}, you're in.**\n\n` +
-    `Don't be a ghost - drop a GIF or Voice Note to prove you're real. 👻\n\n` +
-    `*Heads up: You need a ticket to get past the bouncer.*`;
+  let message = `⚡️ **Yo ${firstName}, you're in.**\n\n`;
+  
+  if (memberCount >= 1 && memberCount <= 2) {
+    message += `⏳ **Still waiting for others to join...**\n\n` +
+      `Hang tight! We're gathering the squad. More members will join soon! 👥
+       Welcome to the group! Let's get started! 🚀`;
+  } else if (memberCount >= 3 && memberCount <= 5) {
+    message += `🎉 **Awesome! The squad is forming.**\n\n` +
+      `Time to break the ice! Drop a message, share a GIF, or introduce yourself - let's get this party started! 🚀💬`;
+  }
+  
+  // Add instructions on how to interact with the bot
+  message += `\n\n` +
+    `💡 **How to interact with me:**\n` +
+    `Tag me (@${botUsername}) to ask questions about the party or event info! I'm here to help. 🤖`;
+  
+  // Add ticket info if available
+  if (ticketUrl) {
+    message += `\n\n*Heads up: You need a ticket to get past the bouncer.*`;
+  }
   
   const result: { message: string; inlineKeyboard?: Array<Array<{ text: string; url: string }>> } = {
     message,
@@ -201,6 +226,95 @@ function createLeaveMessage(): string {
   return `👋 **Someone left the squad.**\n\n` +
     `Don't worry - we're on it! We'll find someone awesome to fill the spot. 🔍\n\n` +
     `*The squad stays strong.* 💪`;
+}
+
+/**
+ * Gets icebreaker messages to help people get to know each other
+ * @returns Array of icebreaker message texts
+ */
+function getIcebreakerMessages(): string[] {
+  return [
+    `🌟 **Let's break the ice!**\n\n` +
+    `Share something fun about yourself! What's the best concert or event you've ever been to? 🎵`,
+    
+    `🎯 **Quick question for everyone:**\n\n` +
+    `What are you most excited about for this event? Drop a message and let's chat! 💬`,
+    
+    `🎨 **Time to get creative!**\n\n` +
+    `Share a GIF or emoji that describes your vibe right now! Let's see what everyone's feeling! 😎`,
+    
+    `🗣️ **Let's hear from everyone:**\n\n` +
+    `What's one thing you'd like to know about your squad members? Ask away! 🤔`,
+    
+    `🎪 **Fun fact time!**\n\n` +
+    `Share a fun fact about yourself - something that might surprise the group! 🎲`,
+  ];
+}
+
+/**
+ * Sends icebreaker messages to help group members get to know each other
+ * @param chatId Telegram chat ID
+ */
+async function sendIcebreakerMessages(chatId: string): Promise<void> {
+  try {
+    const messages = getIcebreakerMessages();
+    
+    for (let i = 0; i < messages.length; i++) {
+      setTimeout(async () => {
+        try {
+          await sendTelegramMessage(chatId, messages[i], 'Markdown');
+          console.log(`Icebreaker message ${i + 1} sent to chat ${chatId}`);
+        } catch (error: any) {
+          console.error(`Failed to send icebreaker message ${i + 1}:`, error);
+        }
+      }, i * 30000); // 30 seconds between messages
+    }
+    
+    // Clean up the scheduled entry after all messages are sent
+    setTimeout(() => {
+      scheduledIcebreakers.delete(chatId);
+      console.log(`Cleaned up icebreaker schedule for chat ${chatId}`);
+    }, messages.length * 30000);
+  } catch (error: any) {
+    console.error(`Error in sendIcebreakerMessages for chat ${chatId}:`, error);
+    scheduledIcebreakers.delete(chatId);
+  }
+}
+
+/**
+ * Schedules icebreaker messages if minimum members have joined and not already scheduled
+ * @param chatId Telegram chat ID
+ * @param memberCount Current member count
+ */
+function scheduleIcebreakerMessagesIfNeeded(chatId: string, memberCount: number): void {
+  // Only schedule if we have minimum members and haven't already scheduled
+  if (memberCount >= MIN_MEMBERS_FOR_DISCUSSIONS && !scheduledIcebreakers.has(chatId)) {
+    console.log(`Scheduling icebreaker messages for chat ${chatId} (${memberCount} members, minimum: ${MIN_MEMBERS_FOR_DISCUSSIONS})`);
+    
+    const timeoutId = setTimeout(() => {
+      sendIcebreakerMessages(chatId);
+    }, ICEBREAKER_DELAY_MS);
+    
+    scheduledIcebreakers.set(chatId, timeoutId);
+    console.log(`Icebreaker messages scheduled for chat ${chatId} in 2 minutes`);
+  }
+}
+
+/**
+ * Cancels scheduled icebreaker messages if member count drops below minimum
+ * @param chatId Telegram chat ID
+ * @param memberCount Current member count
+ */
+function cancelIcebreakerMessagesIfNeeded(chatId: string, memberCount: number): void {
+  // Cancel if count drops below minimum and we have a scheduled icebreaker
+  if (memberCount < MIN_MEMBERS_FOR_DISCUSSIONS && scheduledIcebreakers.has(chatId)) {
+    const timeoutId = scheduledIcebreakers.get(chatId);
+    if (timeoutId) {
+      clearTimeout(timeoutId);
+      scheduledIcebreakers.delete(chatId);
+      console.log(`Cancelled icebreaker messages for chat ${chatId} (member count dropped to ${memberCount})`);
+    }
+  }
 }
 
 /**
@@ -258,6 +372,14 @@ async function handleNewChatMembers(message: any): Promise<void> {
   }
   
   const event = telegramGroup.event;
+  const botUsername = process.env.TELEGRAM_BOT_USERNAME || 'imin_squad_bot';
+  
+  const currentMemberCount = await getRealMemberCount(chatId);
+  
+  // Count real new members (excluding bots except our bot)
+  const realNewMembersCount = newMembers.filter((m) => {
+    return !m.is_bot || (m as any).username === 'imin_squad_bot';
+  }).length;
   
   // Send welcome message for each new member
   for (const member of newMembers) {
@@ -268,9 +390,13 @@ async function handleNewChatMembers(message: any): Promise<void> {
     
     try {
       const firstName = member.first_name || 'there';
+      // Use current count + new members for welcome message
+      const memberCountForMessage = currentMemberCount + realNewMembersCount;
       const { message, inlineKeyboard } = createWelcomeMessage(
         firstName,
-        event.ticketUrl
+        memberCountForMessage,
+        event.ticketUrl,
+        botUsername
       );
       
       await sendTelegramMessage(chatId, message, 'Markdown', inlineKeyboard);
@@ -282,7 +408,14 @@ async function handleNewChatMembers(message: any): Promise<void> {
     }
   }
 
+  // Update member count and check if we should schedule icebreakers
   await updateMemberCountFromTelegram(telegramGroup.id, chatId);
+  
+  // Get updated member count after the update
+  const updatedMemberCount = await getRealMemberCount(chatId);
+  
+  // Schedule icebreaker messages if minimum members reached
+  scheduleIcebreakerMessagesIfNeeded(chatId, updatedMemberCount);
 }
 
 /**
@@ -318,12 +451,20 @@ async function handleChatMemberUpdate(chatMemberUpdate: any): Promise<void> {
     }
     
     const event = telegramGroup.event;
+    const botUsername = process.env.TELEGRAM_BOT_USERNAME || 'imin_squad_bot';
+    
+    // Get current member count before updating
+    const currentMemberCount = await getRealMemberCount(chatId);
     
     try {
       const firstName = member.first_name || 'there';
+      // Use current count + 1 for welcome message (this new member)
+      const memberCountForMessage = currentMemberCount + 1;
       const { message, inlineKeyboard } = createWelcomeMessage(
         firstName,
-        event.ticketUrl
+        memberCountForMessage,
+        event.ticketUrl,
+        botUsername
       );
       
       await sendTelegramMessage(chatId, message, 'Markdown', inlineKeyboard);
@@ -333,7 +474,14 @@ async function handleChatMemberUpdate(chatMemberUpdate: any): Promise<void> {
       console.error(`Failed to send welcome message to new member:`, error);
     }
 
+    // Update member count and check if we should schedule icebreakers
     await updateMemberCountFromTelegram(telegramGroup.id, chatId);
+    
+    // Get updated member count after the update
+    const updatedMemberCount = await getRealMemberCount(chatId);
+    
+    // Schedule icebreaker messages if minimum members reached
+    scheduleIcebreakerMessagesIfNeeded(chatId, updatedMemberCount);
   }
   
   // Handle when someone leaves the group (status changes from member to left or kicked)
@@ -367,6 +515,12 @@ async function handleChatMemberUpdate(chatMemberUpdate: any): Promise<void> {
     
     // Update member count - this will automatically set isFull to false if count drops below maxMembers
     await updateMemberCountFromTelegram(telegramGroup.id, chatId);
+    
+    // Get updated member count after the update
+    const updatedMemberCount = await getRealMemberCount(chatId);
+    
+    // Cancel icebreaker messages if count drops below minimum
+    cancelIcebreakerMessagesIfNeeded(chatId, updatedMemberCount);
     
     console.log(`Member left group ${chatId}, updated member count`);
   }
@@ -511,6 +665,12 @@ async function handleLeftChatMember(message: any): Promise<void> {
   
   // Update member count - this will automatically set isFull to false if count drops below maxMembers
   await updateMemberCountFromTelegram(telegramGroup.id, chatId);
+  
+  // Get updated member count after the update
+  const updatedMemberCount = await getRealMemberCount(chatId);
+  
+  // Cancel icebreaker messages if count drops below minimum
+  cancelIcebreakerMessagesIfNeeded(chatId, updatedMemberCount);
   
   console.log(`Member left group ${chatId}, updated member count`);
 }
