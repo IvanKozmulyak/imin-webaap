@@ -173,49 +173,45 @@ async function updateMemberCountFromTelegram(telegramGroupId: string, chatId: st
  * @returns Object with message text and optional inline keyboard
  */
 function createWelcomeMessage(
-  firstName: string,
-  memberCount: number,
-  ticketUrl?: string | null,
-  botUsername: string = 'imin_squad_bot'
+    firstName: string,
+    memberCount: number,
+    ticketUrl?: string | null,
+    botUsername: string = 'imin_squad_bot'
 ): { message: string; inlineKeyboard?: Array<Array<{ text: string; url: string }>> } {
-  let message = `⚡️ **Yo ${firstName}, you're in.**\n\n`;
-  
-  if (memberCount >= 1 && memberCount <= 2) {
-    message += `⏳ **Still waiting for others to join...**\n\n` +
-      `Hang tight! We're gathering the squad. More members will join soon! 👥
-       Welcome to the group! Let's get started! 🚀`;
-  } else if (memberCount >= 3 && memberCount <= 5) {
-    message += `🎉 **Awesome! The squad is forming.**\n\n` +
-      `Time to break the ice! Drop a message, share a GIF, or introduce yourself - let's get this party started! 🚀💬`;
-  }
-  
-  // Add instructions on how to interact with the bot
-  message += `\n\n` +
-    `💡 **How to interact with me:**\n` +
-    `Tag me (@${botUsername}) to ask questions about the party or event info! I'm here to help. 🤖`;
-  
-  // Add ticket info if available
-  if (ticketUrl) {
-    message += `\n\n*Heads up: You need a ticket to get past the bouncer.*`;
-  }
-  
-  const result: { message: string; inlineKeyboard?: Array<Array<{ text: string; url: string }>> } = {
-    message,
-  };
 
-  // Add buy ticket button if ticket URL is available
-  if (ticketUrl) {
-    result.inlineKeyboard = [
-      [
-        {
-          text: 'Buy Ticket',
-          url: ticketUrl,
-        },
-      ],
-    ];
-  }
+    let message = `⚡️ **${firstName}, you’re in.**\n\n`;
 
-  return result;
+    if (memberCount <= 2) {
+        message +=
+            `⏳ **Group is forming**\n` +
+            `Waiting for more members to join.\n` +
+            `You’ll be notified when things start.`;
+    } else {
+        message +=
+            `🎉 **Group is active**\n` +
+            `Say hi, introduce yourself, or start a conversation.`;
+    }
+
+    message +=
+        `\n\n💡 **Need info?**\n` +
+        `Mention @${botUsername} to get event details or help.`;
+
+    if (ticketUrl) {
+        message += `\n\n*Heads up: You need a ticket to get past the bouncer.*`;
+    }
+
+    const result: {
+        message: string;
+        inlineKeyboard?: Array<Array<{ text: string; url: string }>>;
+    } = { message };
+
+    if (ticketUrl) {
+        result.inlineKeyboard = [
+            [{ text: 'Buy Ticket', url: ticketUrl }],
+        ];
+    }
+
+    return result;
 }
 
 /**
