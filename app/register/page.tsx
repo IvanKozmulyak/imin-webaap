@@ -26,8 +26,8 @@ export default function RegisterPage() {
     eventId: '',
     name: '',
     email: '',
-    telegram: '',
     age: '',
+    sex: '',
     languagesISpeak: [] as string[],
   });
 
@@ -109,13 +109,6 @@ export default function RegisterPage() {
           delete newErrors.email;
         }
         break;
-      case 'telegram':
-        if (!value || (typeof value === 'string' && value.trim() === '')) {
-          newErrors.telegram = 'Telegram username is required';
-        } else {
-          delete newErrors.telegram;
-        }
-        break;
       case 'age':
         if (!value || value === '') {
           newErrors.age = 'Age is required';
@@ -141,6 +134,13 @@ export default function RegisterPage() {
           delete newErrors.languagesISpeak;
         }
         break;
+      case 'sex':
+        if (!value || (typeof value === 'string' && value.trim() === '')) {
+          newErrors.sex = 'Sex is required';
+        } else {
+          delete newErrors.sex;
+        }
+        break;
     }
     
     setErrors(newErrors);
@@ -160,9 +160,6 @@ export default function RegisterPage() {
     } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
       newErrors.email = 'Please enter a valid email address';
     }
-    if (!formData.telegram || formData.telegram.trim() === '') {
-      newErrors.telegram = 'Telegram username is required';
-    }
     if (!formData.age || formData.age === '') {
       newErrors.age = 'Age is required';
     } else {
@@ -174,6 +171,9 @@ export default function RegisterPage() {
       } else if (ageNum > 99) {
         newErrors.age = 'Age must be at most 99';
       }
+    }
+    if (!formData.sex || formData.sex.trim() === '') {
+      newErrors.sex = 'Sex is required';
     }
     if (!formData.languagesISpeak || formData.languagesISpeak.length === 0) {
       newErrors.languagesISpeak = 'Please select at least one language';
@@ -203,8 +203,8 @@ export default function RegisterPage() {
         body: JSON.stringify({
           name: formData.name,
           email: formData.email,
-          telegram: formData.telegram,
           age: parseInt(formData.age),
+          sex: formData.sex,
           languagesISpeak: formData.languagesISpeak,
         }),
       });
@@ -404,67 +404,66 @@ export default function RegisterPage() {
             )}
           </div>
 
-          {/* Telegram */}
-          <div className="mb-[26px]">
-            <label className="block mb-2 text-white text-xs font-normal">
-              Telegram <span className="text-[#CC0000]">*</span>
-            </label>
-            <div className="relative">
-              <span className="absolute left-5 top-1/2 -translate-y-1/2 text-white text-[13px] font-medium z-10">
-                @
-              </span>
+          {/* Age and Sex in one row */}
+          <div className="mb-[26px] flex gap-4">
+            {/* Age */}
+            <div className="flex-1">
+              <label className="block mb-2 text-white text-xs font-normal">
+                Your Age <span className="text-[#CC0000]">*</span>
+              </label>
               <input
-                type="text"
-                value={formData.telegram}
+                type="number"
+                value={formData.age}
                 onChange={(e) => {
-                  setFormData({ ...formData, telegram: e.target.value });
-                  if (errors.telegram) validateField('telegram', e.target.value);
+                  setFormData({ ...formData, age: e.target.value });
+                  if (errors.age) validateField('age', e.target.value);
                 }}
-                onBlur={(e) => validateField('telegram', e.target.value)}
-                placeholder="johnblack"
-                className={`w-full h-[45px] pl-9 pr-5 rounded-[27px] border bg-white/5 backdrop-blur-[15px] text-white text-[13px] font-medium placeholder:text-white/25 focus:outline-none focus:ring-2 focus:ring-white/50 ${
-                  errors.telegram ? 'border-red-500' : 'border-white/30'
+                onBlur={(e) => validateField('age', e.target.value)}
+                placeholder="28"
+                min={18}
+                max={99}
+                className={`w-full h-[45px] px-5 rounded-[27px] border bg-white/5 backdrop-blur-[15px] text-white text-[13px] font-medium placeholder:text-white/25 focus:outline-none focus:ring-2 focus:ring-white/50 ${
+                  errors.age ? 'border-red-500' : 'border-white/30'
                 }`}
               />
+              {errors.age && (
+                <div className="mt-1 flex items-center gap-1">
+                  <svg className="w-3 h-3 text-red-500" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                  </svg>
+                  <p className="text-red-500 text-xs">{errors.age}</p>
+                </div>
+              )}
             </div>
-            {errors.telegram && (
-              <div className="mt-1 flex items-center gap-1">
-                <svg className="w-3 h-3 text-red-500" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-                </svg>
-                <p className="text-red-500 text-xs">{errors.telegram}</p>
-              </div>
-            )}
-          </div>
 
-          {/* Age */}
-          <div className="mb-[26px]">
-            <label className="block mb-2 text-white text-xs font-normal">
-              Your Age <span className="text-[#CC0000]">*</span>
-            </label>
-            <input
-              type="number"
-              value={formData.age}
-              onChange={(e) => {
-                setFormData({ ...formData, age: e.target.value });
-                if (errors.age) validateField('age', e.target.value);
-              }}
-              onBlur={(e) => validateField('age', e.target.value)}
-              placeholder="28"
-              min={18}
-              max={99}
-              className={`w-full h-[45px] px-5 rounded-[27px] border bg-white/5 backdrop-blur-[15px] text-white text-[13px] font-medium placeholder:text-white/25 focus:outline-none focus:ring-2 focus:ring-white/50 ${
-                errors.age ? 'border-red-500' : 'border-white/30'
-              }`}
-            />
-            {errors.age && (
-              <div className="mt-1 flex items-center gap-1">
-                <svg className="w-3 h-3 text-red-500" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-                </svg>
-                <p className="text-red-500 text-xs">{errors.age}</p>
-              </div>
-            )}
+            {/* Sex */}
+            <div className="flex-1">
+              <label className="block mb-2 text-white text-xs font-normal">
+                Sex <span className="text-[#CC0000]">*</span>
+              </label>
+              <CustomDropdown
+                options={[
+                  { value: 'Male', label: 'Male' },
+                  { value: 'Female', label: 'Female' },
+                  { value: 'Other', label: 'Other' },
+                ]}
+                value={formData.sex}
+                onChange={(value) => {
+                  setFormData({ ...formData, sex: value });
+                  validateField('sex', value);
+                }}
+                placeholder="Select sex"
+                className={errors.sex ? 'border-red-500' : ''}
+              />
+              {errors.sex && (
+                <div className="mt-1 flex items-center gap-1">
+                  <svg className="w-3 h-3 text-red-500" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                  </svg>
+                  <p className="text-red-500 text-xs">{errors.sex}</p>
+                </div>
+              )}
+            </div>
           </div>
 
           {/* Languages */}

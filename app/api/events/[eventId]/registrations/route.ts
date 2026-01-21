@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createEventRegistration } from '@/lib/services/eventRegistrationService';
 import { eventRegistrationRequestSchema } from '@/lib/utils/validation';
-import { EventNotFoundException, DuplicateTelegramError } from '@/lib/utils/errors';
+import { EventNotFoundException } from '@/lib/utils/errors';
 import { createErrorResponse, createSuccessResponse } from '@/lib/utils/apiResponse';
 
 export const dynamic = 'force-dynamic';
@@ -36,20 +36,6 @@ export async function POST(
   } catch (error: any) {
     if (error instanceof EventNotFoundException) {
       return createErrorResponse(error.message, 404);
-    }
-    if (error instanceof DuplicateTelegramError) {
-      return createErrorResponse(error.message, 400);
-    }
-    // Handle Prisma unique constraint violation
-    if (error.code === 'P2002' && error.meta?.target?.includes('telegram')) {
-      // Try to get telegram from error message or use generic message
-      const telegram = error.meta?.target?.find((t: string) => t === 'telegram') 
-        ? 'provided' 
-        : 'provided';
-      return createErrorResponse(
-        `Telegram ${telegram} is already registered`,
-        400
-      );
     }
     console.error('Error creating event registration:', error);
     return createErrorResponse('Internal server error', 500);

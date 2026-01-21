@@ -1,6 +1,6 @@
 import { prisma } from '@/lib/db/client';
 import { EventRegistrationRequestDto, EventRegistrationResponseDto } from '@/lib/types/registration';
-import { EventNotFoundException, DuplicateTelegramError } from '@/lib/utils/errors';
+import { EventNotFoundException } from '@/lib/utils/errors';
 import { createTelegramGroupInvite } from './telegramService';
 
 export async function createEventRegistration(
@@ -13,14 +13,6 @@ export async function createEventRegistration(
   });
   if (!event) {
     throw new EventNotFoundException(eventId);
-  }
-
-  // Check for duplicate telegram
-  const existing = await prisma.eventRegistration.findUnique({
-    where: { telegram: data.telegram },
-  });
-  if (existing) {
-    throw new DuplicateTelegramError(data.telegram);
   }
 
   // Find or create a Telegram group
@@ -53,8 +45,8 @@ export async function createEventRegistration(
         eventId,
         name: data.name,
         email: data.email,
-        telegram: data.telegram,
         age: data.age,
+        sex: data.sex,
         telegramGroupId: telegramGroup?.id,
         languages: {
           create: data.languagesISpeak.map(langCode => ({
@@ -76,8 +68,8 @@ export async function createEventRegistration(
     eventId: registration.eventId,
     name: registration.name,
     email: registration.email,
-    telegram: registration.telegram,
     age: registration.age,
+    sex: registration.sex,
     languagesISpeak: registration.languages.map(l => l.languageCode),
     createdAt: registration.createdAt.toISOString(),
     telegramInviteLink: inviteLink,
