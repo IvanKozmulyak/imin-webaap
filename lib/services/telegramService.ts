@@ -224,6 +224,20 @@ export async function createTelegramGroupWithGramJS(
     // Get the chat entity for creating invite links
     const chatEntity = await client.getEntity(chat);
     
+    // Hide message history for new members (they won't see previous messages)
+    try {
+      await client.invoke(
+        new Api.channels.TogglePreHistoryHidden({
+          channel: chatEntity as Api.Channel,
+          enabled: true, // true = hide history for new members
+        })
+      );
+      console.log('✓ Message history hidden for new members');
+    } catch (error: any) {
+      console.warn(`Warning: Failed to hide message history: ${error.message}`);
+      // Continue even if hiding history fails
+    }
+    
     // Make the user anonymous in the group
     // try {
     //   await makeUserAnonymous(chatEntity as Api.Channel);
