@@ -252,27 +252,48 @@ function getIcebreakerMessages(): string[] {
  * @param chatId Telegram chat ID
  */
 async function sendIcebreakerMessages(chatId: string): Promise<void> {
+  console.log(`[Icebreaker] Starting to send icebreaker messages for chat ${chatId}`);
+  
   try {
     const messages = getIcebreakerMessages();
+    console.log(`[Icebreaker] Got ${messages.length} icebreaker messages to send`);
     
-    for (let i = 0; i < messages.length; i++) {
+    // Send first message immediately
+    try {
+      await sendTelegramMessage(chatId, messages[0], 'Markdown');
+      console.log(`[Icebreaker] Message 1/5 sent to chat ${chatId}`);
+    } catch (error: any) {
+      console.error(`[Icebreaker] Failed to send message 1/5:`, error);
+    }
+    
+    // Schedule remaining messages with delays
+    for (let i = 1; i < messages.length; i++) {
+      const delay = i * 30000; // 30 seconds between messages
+      const messageIndex = i + 1;
+      
       setTimeout(async () => {
         try {
+          console.log(`[Icebreaker] Attempting to send message ${messageIndex}/5 to chat ${chatId}`);
           await sendTelegramMessage(chatId, messages[i], 'Markdown');
-          console.log(`Icebreaker message ${i + 1} sent to chat ${chatId}`);
+          console.log(`[Icebreaker] Message ${messageIndex}/5 sent successfully to chat ${chatId}`);
         } catch (error: any) {
-          console.error(`Failed to send icebreaker message ${i + 1}:`, error);
+          console.error(`[Icebreaker] Failed to send message ${messageIndex}/5:`, error);
         }
-      }, i * 30000); // 30 seconds between messages
+      }, delay);
+      
+      console.log(`[Icebreaker] Scheduled message ${messageIndex}/5 for ${delay}ms delay`);
     }
     
     // Clean up the scheduled entry after all messages are sent
+    const totalDelay = messages.length * 30000;
     setTimeout(() => {
       scheduledIcebreakers.delete(chatId);
-      console.log(`Cleaned up icebreaker schedule for chat ${chatId}`);
-    }, messages.length * 30000);
+      console.log(`[Icebreaker] Cleaned up icebreaker schedule for chat ${chatId}`);
+    }, totalDelay);
+    
+    console.log(`[Icebreaker] All messages scheduled for chat ${chatId}`);
   } catch (error: any) {
-    console.error(`Error in sendIcebreakerMessages for chat ${chatId}:`, error);
+    console.error(`[Icebreaker] Error in sendIcebreakerMessages for chat ${chatId}:`, error);
     scheduledIcebreakers.delete(chatId);
   }
 }
@@ -285,14 +306,37 @@ async function sendIcebreakerMessages(chatId: string): Promise<void> {
 function scheduleIcebreakerMessagesIfNeeded(chatId: string, memberCount: number): void {
   // Only schedule if we have minimum members and haven't already scheduled
   if (memberCount >= MIN_MEMBERS_FOR_DISCUSSIONS && !scheduledIcebreakers.has(chatId)) {
-    console.log(`Scheduling icebreaker messages for chat ${chatId} (${memberCount} members, minimum: ${MIN_MEMBERS_FOR_DISCUSSIONS})`);
+    console.log(`[Icebreaker] Scheduling icebreaker messages for chat ${chatId} (${memberCount} members, minimum: ${MIN_MEMBERS_FOR_DISCUSSIONS})`);
     
-    const timeoutId = setTimeout(() => {
-      sendIcebreakerMessages(chatId);
+    const timeoutId = setTimeout(async () => {
+      console.log(`[Icebreaker] ⏰ Timeout fired for chat ${chatId} at ${new Date().toISOString()}, calling sendIcebreakerMessages`);
+      try {
+        await sendIcebreakerMessages(chatId);
+      } catch (error: any) {
+        console.error(`[Icebreaker] Error in timeout callback for chat ${chatId}:`, error);
+        scheduledIcebreakers.delete(chatId);
+      }
     }, ICEBREAKER_DELAY_MS);
     
+    // Verify timeout was created
+    if (!timeoutId) {
+      console.error(`[Icebreaker] ❌ Failed to create timeout for chat ${chatId}`);
+      return;
+    }
+    
     scheduledIcebreakers.set(chatId, timeoutId);
-    console.log(`Icebreaker messages scheduled for chat ${chatId} in 2 minutes`);
+    const scheduledTime = new Date(Date.now() + ICEBREAKER_DELAY_MS);
+    console.log(`[Icebreaker] ✅ Icebreaker messages scheduled for chat ${chatId}`);
+    console.log(`[Icebreaker]    Delay: ${ICEBREAKER_DELAY_MS}ms (${ICEBREAKER_DELAY_MS / 1000 / 60} minutes)`);
+    console.log(`[Icebreaker]    Scheduled to fire at: ${scheduledTime.toISOString()}`);
+    console.log(`[Icebreaker]    Timeout ID: ${timeoutId}`);
+    console.log(`[Icebreaker]    Total scheduled icebreakers: ${scheduledIcebreakers.size}`);
+  } else {
+    if (memberCount < MIN_MEMBERS_FOR_DISCUSSIONS) {
+      console.log(`[Icebreaker] Not scheduling - member count ${memberCount} is below minimum ${MIN_MEMBERS_FOR_DISCUSSIONS}`);
+    } else if (scheduledIcebreakers.has(chatId)) {
+      console.log(`[Icebreaker] Not scheduling - already scheduled for chat ${chatId}`);
+    }
   }
 }
 
