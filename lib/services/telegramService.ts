@@ -507,7 +507,7 @@ export async function addBotAsAdmin(
           manageCall: true,
           other: true, // Other permissions
         }),
-        rank: 'Bot', // Admin rank/title
+        rank: 'Admin', // Admin rank/title
       })
     );
 
