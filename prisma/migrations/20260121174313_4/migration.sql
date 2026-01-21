@@ -12,4 +12,4 @@ DROP INDEX "event_registration_telegram_key";
 -- AlterTable
 ALTER TABLE "event_registration" DROP COLUMN "telegram",
 ADD COLUMN     "city" VARCHAR(255),
-ADD COLUMN     "sex" VARCHAR(50) NOT NULL;
+ADD COLUMN     "sex" VARCHAR(50);
