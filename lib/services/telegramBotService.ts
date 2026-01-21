@@ -354,7 +354,7 @@ export async function handleTelegramWebhook(update: any): Promise<void> {
  */
 async function handleNewChatMembers(message: any): Promise<void> {
   const chatId = message.chat.id.toString();
-  const newMembers = message.new_chat_members || [];
+  const newMembers: any[] = message.new_chat_members || [];
   
   // Get event information for this group
   const telegramGroup = await prisma.telegramGroup.findFirst({
@@ -378,7 +378,7 @@ async function handleNewChatMembers(message: any): Promise<void> {
   
   // Count real new members (excluding bots except our bot)
   const realNewMembersCount = newMembers.filter((m) => {
-    return !m.is_bot || (m as any).username === 'imin_squad_bot';
+    return !m.is_bot || m.username === 'imin_squad_bot';
   }).length;
   
   // Send welcome message for each new member
