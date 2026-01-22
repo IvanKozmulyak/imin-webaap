@@ -3257,7 +3257,11 @@ footer {
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: rgba(10, 10, 10, 0.85);
+  background-color: #000;
+  background-image: linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.5)), url('/assets/background-gateway.png');
+  background-size: 100% 100%, 72%;
+  background-position: 0 0, center;
+  background-repeat: no-repeat, no-repeat;
   color: #FFFFFF;
   width: 100%;
   height: 100%;
@@ -3265,7 +3269,6 @@ footer {
   display: flex;
   flex-direction: column;
   z-index: 1000;
-  /* Full screen overlay on top of hero section - semi-transparent background */
   backdrop-filter: blur(2px);
 }
 
