@@ -31,6 +31,16 @@ function HomeContent() {
   }, [attendees]);
 
   useEffect(() => {
+    // Force reload videos when style changes to prevent caching issues
+    const videos = document.querySelectorAll('video');
+    videos.forEach((video) => {
+      if (video instanceof HTMLVideoElement) {
+        video.load();
+      }
+    });
+  }, [isFestivalStyle]);
+
+  useEffect(() => {
     // Parallax blob animation
     const handleScroll = () => {
       const scrollPos = window.scrollY;
@@ -186,11 +196,13 @@ function HomeContent() {
               <div className="iphone-frame"></div>
               <div className="iphone-screen">
                 <Image
+                  key={isFestivalStyle ? 'festival-hero' : 'nightlife-hero'}
                   src={isFestivalStyle ? "/assets/placeholders/festival-eventsimin.png" : "/assets/placeholders/eventsimin.png"}
                   alt="IMIN App"
                   className="screen-content"
                   fill
                   style={{ objectFit: 'cover' }}
+                  unoptimized
                 />
               </div>
             </div>
@@ -207,57 +219,57 @@ function HomeContent() {
               {isFestivalStyle ? 'Built For Multi-Day Experiences' : 'Built For High-Frequency Events'}
             </h2>
           </div>
-          <div className="markets-grid">
-            {isFestivalStyle ? (
-              <>
-                <div className="market-card">
-                  <Image src="https://images.unsplash.com/photo-1470225620780-dba8ba36b745?q=80&w=800&auto=format&fit=crop" alt="Music Festival Crowd" width={800} height={200} className="market-img" />
-                  <div className="market-content">
-                    <h3>Major Music Festivals</h3>
-                    <p>For large-scale events where organizing camping and travel is a major friction point for solo attendees.</p>
+            <div className="markets-grid">
+              {isFestivalStyle ? (
+                <>
+                  <div className="market-card" key="festival-card-1">
+                    <Image key="festival-img-1" src="https://images.unsplash.com/photo-1470225620780-dba8ba36b745?q=80&w=800&auto=format&fit=crop" alt="Music Festival Crowd" width={800} height={200} className="market-img" unoptimized />
+                    <div className="market-content">
+                      <h3>Major Music Festivals</h3>
+                      <p>For large-scale events where organizing camping and travel is a major friction point for solo attendees.</p>
+                    </div>
                   </div>
-                </div>
-                <div className="market-card">
-                  <Image src="https://images.unsplash.com/photo-1545128485-c400e7702796?q=80&w=800&auto=format&fit=crop" alt="Dance Festival" width={800} height={200} className="market-img" />
-                  <div className="market-content">
-                    <h3>Dance & Bachata Congresses</h3>
-                    <p>Community-driven events where connection is key. We help dancers find roommates and travel buddies.</p>
+                  <div className="market-card" key="festival-card-2">
+                    <Image key="festival-img-2" src="https://images.unsplash.com/photo-1545128485-c400e7702796?q=80&w=800&auto=format&fit=crop" alt="Dance Festival" width={800} height={200} className="market-img" unoptimized />
+                    <div className="market-content">
+                      <h3>Dance & Bachata Congresses</h3>
+                      <p>Community-driven events where connection is key. We help dancers find roommates and travel buddies.</p>
+                    </div>
                   </div>
-                </div>
-                <div className="market-card">
-                  <Image src="https://images.unsplash.com/photo-1596394516093-501ba68a0ba6?q=80&w=800&auto=format&fit=crop" alt="Beach Festival" width={800} height={200} className="market-img" />
-                  <div className="market-content">
-                    <h3>Destination & Resort Events</h3>
-                    <p>Complex travel logistics are solved by our AI, coordinating flights and transfers for international guests.</p>
+                  <div className="market-card" key="festival-card-3">
+                    <Image key="festival-img-3" src="https://images.unsplash.com/photo-1596394516093-501ba68a0ba6?q=80&w=800&auto=format&fit=crop" alt="Beach Festival" width={800} height={200} className="market-img" unoptimized />
+                    <div className="market-content">
+                      <h3>Destination & Resort Events</h3>
+                      <p>Complex travel logistics are solved by our AI, coordinating flights and transfers for international guests.</p>
+                    </div>
                   </div>
-                </div>
-              </>
-            ) : (
-              <>
-                <div className="market-card">
-                  <Image src="/assets/event-types/night-clubs.jpg" alt="Night Clubs" width={800} height={200} className="market-img" />
-                  <div className="market-content">
-                    <h3>Night Clubs & Venues</h3>
-                    <p>For weekly parties and regular club nights where solo attendees need a squad to feel comfortable entering.</p>
+                </>
+              ) : (
+                <>
+                  <div className="market-card" key="nightlife-card-1">
+                    <Image key="nightlife-img-1" src="/assets/event-types/night-clubs.jpg" alt="Night Clubs" width={800} height={200} className="market-img" unoptimized />
+                    <div className="market-content">
+                      <h3>Night Clubs & Venues</h3>
+                      <p>For weekly parties and regular club nights where solo attendees need a squad to feel comfortable entering.</p>
+                    </div>
                   </div>
-                </div>
-                <div className="market-card">
-                  <Image src="/assets/event-types/techno-raves.jpg" alt="Techno Raves" width={800} height={200} className="market-img" />
-                  <div className="market-content">
-                    <h3>Techno Raves & Underground</h3>
-                    <p>Community-focused events where finding your crew is essential. We match by music taste and vibe.</p>
+                  <div className="market-card" key="nightlife-card-2">
+                    <Image key="nightlife-img-2" src="/assets/event-types/techno-raves.jpg" alt="Techno Raves" width={800} height={200} className="market-img" unoptimized />
+                    <div className="market-content">
+                      <h3>Techno Raves & Underground</h3>
+                      <p>Community-focused events where finding your crew is essential. We match by music taste and vibe.</p>
+                    </div>
                   </div>
-                </div>
-                <div className="market-card">
-                  <Image src="/assets/event-types/rooftop.jpg" alt="Rooftop Events" width={800} height={200} className="market-img" />
-                  <div className="market-content">
-                    <h3>Rooftop & Pop-Up Events</h3>
-                    <p>Exclusive events where social proof matters. We bundle solo attendees into confident squads.</p>
+                  <div className="market-card" key="nightlife-card-3">
+                    <Image key="nightlife-img-3" src="/assets/event-types/rooftop.jpg" alt="Rooftop Events" width={800} height={200} className="market-img" unoptimized />
+                    <div className="market-content">
+                      <h3>Rooftop & Pop-Up Events</h3>
+                      <p>Exclusive events where social proof matters. We bundle solo attendees into confident squads.</p>
+                    </div>
                   </div>
-                </div>
-              </>
-            )}
-          </div>
+                </>
+              )}
+            </div>
         </div>
       </section>
 
@@ -368,11 +380,13 @@ function HomeContent() {
                   <div className="iphone-frame"></div>
                   <div className="iphone-screen">
                     <Image
+                      key={isFestivalStyle ? 'festival-link' : 'nightlife-link'}
                       src={isFestivalStyle ? "/assets/placeholders/festival-linkscreen.png" : "/assets/placeholders/linkscreen.png"}
                       alt="Link"
                       className="screen-content"
                       fill
                       style={{ objectFit: 'cover' }}
+                      unoptimized
                     />
                   </div>
                 </div>
@@ -393,11 +407,13 @@ function HomeContent() {
                   <div className="iphone-frame"></div>
                   <div className="iphone-screen">
                     <Image
+                      key={isFestivalStyle ? 'festival-regis' : 'nightlife-regis'}
                       src={isFestivalStyle ? "/assets/placeholders/festival-regisimin.png" : "/assets/placeholders/regisimin.png"}
                       alt="Form"
                       className="screen-content"
                       fill
                       style={{ objectFit: 'cover' }}
+                      unoptimized
                     />
                   </div>
                 </div>
@@ -422,11 +438,13 @@ function HomeContent() {
                   <div className="iphone-frame"></div>
                   <div className="iphone-screen">
                     <Image
+                      key={isFestivalStyle ? 'festival-telegram' : 'nightlife-telegram'}
                       src={isFestivalStyle ? "/assets/placeholders/festival-telegramimin.png" : "/assets/placeholders/telegramimin.png"}
                       alt="Chat"
                       className="screen-content"
                       fill
                       style={{ objectFit: 'cover' }}
+                      unoptimized
                     />
                   </div>
                 </div>
@@ -450,7 +468,15 @@ function HomeContent() {
                   <div className="iphone-body"></div>
                   <div className="iphone-frame"></div>
                   <div className="iphone-screen">
-                    <video className="screen-content" autoPlay loop muted playsInline poster={isFestivalStyle ? "/assets/placeholders/festival-partyvideo-poster.jpg" : "/assets/placeholders/partyvideo-poster.jpg"}>
+                    <video 
+                      key={isFestivalStyle ? 'festival-video' : 'nightlife-video'}
+                      className="screen-content" 
+                      autoPlay 
+                      loop 
+                      muted 
+                      playsInline 
+                      poster={isFestivalStyle ? "/assets/placeholders/festival-partyvideo-poster.jpg" : "/assets/placeholders/partyvideo-poster.jpg"}
+                    >
                       <source src={isFestivalStyle ? "/assets/placeholders/festival-partyvideo.mp4" : "/assets/placeholders/partyvideo.mp4"} type="video/mp4" />
                     </video>
                   </div>
@@ -740,7 +766,7 @@ function HomeContent() {
 
 export default function Home() {
   return (
-    <Suspense fallback={<div>Loading...</div>}>
+    <Suspense fallback={null}>
       <HomeContent />
     </Suspense>
   );
