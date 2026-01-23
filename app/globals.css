@@ -1491,6 +1491,10 @@ footer {
     padding: 40px 0 !important;
   }
 
+  .calc-grid > div {
+    padding: 0 12px !important;
+  }
+
   .calc-grid h2 {
     font-size: 2rem !important;
   }
@@ -1599,6 +1603,10 @@ footer {
   #bot > div {
     grid-template-columns: 1fr !important;
     gap: 40px !important;
+  }
+
+  #bot > div > div:first-child {
+    padding: 0 12px !important;
   }
 
   #bot h2 {

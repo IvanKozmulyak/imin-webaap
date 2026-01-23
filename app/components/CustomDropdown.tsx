@@ -102,7 +102,7 @@ export default function CustomDropdown({
         <div className={`${baseDropdownClass} absolute z-50 w-full mt-2 overflow-hidden shadow-lg`} style={{ borderRadius: variant === 'register' ? '27px' : '12px' }}>
           <div className="max-h-[200px] overflow-y-auto">
             {options.length === 0 ? (
-              <div className="px-5 py-3 text-center text-[13px]" style={{ color: variant === 'register' ? 'rgba(255, 255, 255, 0.5)' : (isFestivalStyle ? '#64748b' : 'rgba(255, 255, 255, 0.5)') }}>
+              <div className="px-4 py-3 md:px-5 md:py-3 text-center text-[13px]" style={{ color: variant === 'register' ? 'rgba(255, 255, 255, 0.5)' : (isFestivalStyle ? '#64748b' : 'rgba(255, 255, 255, 0.5)') }}>
                 No options available
               </div>
             ) : (
@@ -112,9 +112,9 @@ export default function CustomDropdown({
                   type="button"
                   onClick={() => handleSelect(option.value)}
                   disabled={option.disabled}
+                  className="px-4 py-3 md:px-5 md:py-3"
                   style={{
                     width: '100%',
-                    padding: variant === 'register' ? '12px 20px' : '12px 20px',
                     textAlign: 'left',
                     fontSize: '13px',
                     fontWeight: 500,
@@ -122,11 +122,17 @@ export default function CustomDropdown({
                     backgroundColor: value === option.value 
                       ? (variant === 'register' ? 'rgba(255, 255, 255, 0.2)' : (isFestivalStyle ? 'rgba(124, 58, 237, 0.1)' : 'rgba(255, 255, 255, 0.2)'))
                       : 'transparent',
-                    color: value === option.value
-                      ? 'white'
-                      : (option.disabled 
-                        ? 'rgba(255, 255, 255, 0.3)'
-                        : 'white'),
+                    color: isFestivalStyle
+                      ? (value === option.value
+                          ? 'var(--primary-purple)'
+                          : (option.disabled 
+                            ? 'rgba(0, 0, 0, 0.3)'
+                            : 'var(--text-dark)'))
+                      : (value === option.value
+                          ? 'white'
+                          : (option.disabled 
+                            ? 'rgba(255, 255, 255, 0.3)'
+                            : 'white')),
                     cursor: option.disabled ? 'not-allowed' : 'pointer',
                   }}
                   onMouseEnter={(e) => {
