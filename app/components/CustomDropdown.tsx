@@ -16,6 +16,7 @@ interface CustomDropdownProps {
   disabled?: boolean;
   required?: boolean;
   className?: string;
+  isFestivalStyle?: boolean;
 }
 
 export default function CustomDropdown({
@@ -26,6 +27,7 @@ export default function CustomDropdown({
   disabled = false,
   required = false,
   className = '',
+  isFestivalStyle = false,
 }: CustomDropdownProps) {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -56,17 +58,23 @@ export default function CustomDropdown({
 
   const hasError = className?.includes('border-red-500');
   
+  const baseButtonClass = isFestivalStyle 
+    ? 'form-dropdown-button-festival'
+    : 'form-dropdown-button-nightlife';
+  
+  const baseDropdownClass = isFestivalStyle
+    ? 'form-dropdown-menu-festival'
+    : 'form-dropdown-menu-nightlife';
+
   return (
     <div className="relative" ref={dropdownRef}>
       <button
         type="button"
         onClick={() => !disabled && setIsOpen(!isOpen)}
         disabled={disabled}
-        className={`w-full h-[45px] px-5 rounded-[27px] border bg-white/5 backdrop-blur-[15px] text-white text-[13px] font-medium appearance-none focus:outline-none focus:ring-2 focus:ring-white/50 flex items-center justify-between ${
+        className={`${baseButtonClass} ${!selectedOption ? 'form-dropdown-placeholder' : ''} ${
           disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'
-        } ${!selectedOption ? 'text-white/50' : ''} ${
-          hasError ? 'border-red-500' : 'border-white/30'
-        }`}
+        } ${hasError ? 'border-red-500' : ''}`}
       >
         <span className="truncate">{displayValue}</span>
         <svg
@@ -79,16 +87,16 @@ export default function CustomDropdown({
         >
           <path
             d="M10.4998 13.9999C10.615 14.0006 10.7291 13.9785 10.8358 13.935C10.9424 13.8914 11.0393 13.8273 11.1211 13.7462L16.3711 8.49617C16.5359 8.3314 16.6284 8.10793 16.6284 7.87492C16.6284 7.64191 16.5359 7.41844 16.3711 7.25367C16.2063 7.0889 15.9829 6.99634 15.7498 6.99634C15.5168 6.99634 15.2934 7.0889 15.1286 7.25367L10.4998 11.8912L5.87109 7.26242C5.7037 7.11907 5.48838 7.04417 5.26817 7.05267C5.04795 7.06118 4.83905 7.15247 4.68322 7.3083C4.52739 7.46413 4.4361 7.67303 4.42759 7.89325C4.41909 8.11346 4.49399 8.32878 4.63734 8.49617L9.88734 13.7462C10.0503 13.9078 10.2703 13.999 10.4998 13.9999Z"
-            fill="white"
+            fill={isFestivalStyle ? 'currentColor' : 'white'}
           />
         </svg>
       </button>
 
       {isOpen && !disabled && (
-        <div className="absolute z-50 w-full mt-2 rounded-[27px] border border-white bg-black/95 backdrop-blur-[15px] overflow-hidden shadow-lg">
+        <div className={`${baseDropdownClass} absolute z-50 w-full mt-2 overflow-hidden shadow-lg`} style={{ borderRadius: '12px' }}>
           <div className="max-h-[200px] overflow-y-auto">
             {options.length === 0 ? (
-              <div className="px-5 py-3 text-white/50 text-[13px] text-center">
+              <div className="px-5 py-3 text-center text-[13px]" style={{ color: isFestivalStyle ? '#64748b' : 'rgba(255, 255, 255, 0.5)' }}>
                 No options available
               </div>
             ) : (
@@ -98,13 +106,33 @@ export default function CustomDropdown({
                   type="button"
                   onClick={() => handleSelect(option.value)}
                   disabled={option.disabled}
-                  className={`w-full px-5 py-3 text-left text-[13px] font-medium transition-all ${
-                    value === option.value
-                      ? 'bg-white/20 text-white'
-                      : option.disabled
-                      ? 'text-white/30 cursor-not-allowed'
-                      : 'text-white hover:bg-white/10'
-                  }`}
+                  style={{
+                    width: '100%',
+                    padding: '12px 20px',
+                    textAlign: 'left',
+                    fontSize: '13px',
+                    fontWeight: 500,
+                    transition: 'all 0.2s',
+                    backgroundColor: value === option.value 
+                      ? (isFestivalStyle ? 'rgba(124, 58, 237, 0.1)' : 'rgba(255, 255, 255, 0.2)')
+                      : 'transparent',
+                    color: value === option.value
+                      ? (isFestivalStyle ? 'var(--primary-purple)' : 'white')
+                      : (option.disabled 
+                        ? (isFestivalStyle ? '#cbd5e1' : 'rgba(255, 255, 255, 0.3)')
+                        : (isFestivalStyle ? '#1e293b' : 'white')),
+                    cursor: option.disabled ? 'not-allowed' : 'pointer',
+                  }}
+                  onMouseEnter={(e) => {
+                    if (!option.disabled && value !== option.value) {
+                      e.currentTarget.style.backgroundColor = isFestivalStyle ? 'rgba(124, 58, 237, 0.05)' : 'rgba(255, 255, 255, 0.1)';
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (value !== option.value) {
+                      e.currentTarget.style.backgroundColor = 'transparent';
+                    }
+                  }}
                 >
                   {option.label}
                 </button>
