@@ -336,7 +336,8 @@ export default function RegisterPage() {
               }}
               placeholder={loading ? 'Loading events...' : events.length === 0 ? 'No events available' : 'Select an event'}
               disabled={loading || events.length === 0}
-              className={errors.eventId ? 'border-red-500' : ''}
+              variant="register"
+              className={errors.eventId ? 'error' : ''}
             />
             {errors.eventId && (
               <div className="mt-1 flex items-center gap-1">
@@ -382,7 +383,7 @@ export default function RegisterPage() {
               Email <span className="text-[#CC0000]">*</span>
             </label>
             <input
-              type="text"
+              type="email"
               value={formData.email}
               onChange={(e) => {
                 setFormData({ ...formData, email: e.target.value });
@@ -453,7 +454,8 @@ export default function RegisterPage() {
                   validateField('sex', value);
                 }}
                 placeholder="Select sex"
-                className={errors.sex ? 'border-red-500' : ''}
+                variant="register"
+                className={errors.sex ? 'error' : ''}
               />
               {errors.sex && (
                 <div className="mt-1 flex items-center gap-1">

@@ -17,6 +17,7 @@ interface CustomDropdownProps {
   required?: boolean;
   className?: string;
   isFestivalStyle?: boolean;
+  variant?: 'default' | 'register';
 }
 
 export default function CustomDropdown({
@@ -28,6 +29,7 @@ export default function CustomDropdown({
   required = false,
   className = '',
   isFestivalStyle = false,
+  variant = 'default',
 }: CustomDropdownProps) {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -58,13 +60,17 @@ export default function CustomDropdown({
 
   const hasError = className?.includes('border-red-500');
   
-  const baseButtonClass = isFestivalStyle 
-    ? 'form-dropdown-button-festival'
-    : 'form-dropdown-button-nightlife';
+  const baseButtonClass = variant === 'register'
+    ? 'form-dropdown-button-register'
+    : (isFestivalStyle 
+      ? 'form-dropdown-button-festival'
+      : 'form-dropdown-button-nightlife');
   
-  const baseDropdownClass = isFestivalStyle
-    ? 'form-dropdown-menu-festival'
-    : 'form-dropdown-menu-nightlife';
+  const baseDropdownClass = variant === 'register'
+    ? 'form-dropdown-menu-register'
+    : (isFestivalStyle
+      ? 'form-dropdown-menu-festival'
+      : 'form-dropdown-menu-nightlife');
 
   return (
     <div className="relative" ref={dropdownRef}>
@@ -74,7 +80,7 @@ export default function CustomDropdown({
         disabled={disabled}
         className={`${baseButtonClass} ${!selectedOption ? 'form-dropdown-placeholder' : ''} ${
           disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'
-        } ${hasError ? 'border-red-500' : ''}`}
+        } ${hasError || className.includes('error') ? 'error' : ''}`}
       >
         <span className="truncate">{displayValue}</span>
         <svg
@@ -87,16 +93,16 @@ export default function CustomDropdown({
         >
           <path
             d="M10.4998 13.9999C10.615 14.0006 10.7291 13.9785 10.8358 13.935C10.9424 13.8914 11.0393 13.8273 11.1211 13.7462L16.3711 8.49617C16.5359 8.3314 16.6284 8.10793 16.6284 7.87492C16.6284 7.64191 16.5359 7.41844 16.3711 7.25367C16.2063 7.0889 15.9829 6.99634 15.7498 6.99634C15.5168 6.99634 15.2934 7.0889 15.1286 7.25367L10.4998 11.8912L5.87109 7.26242C5.7037 7.11907 5.48838 7.04417 5.26817 7.05267C5.04795 7.06118 4.83905 7.15247 4.68322 7.3083C4.52739 7.46413 4.4361 7.67303 4.42759 7.89325C4.41909 8.11346 4.49399 8.32878 4.63734 8.49617L9.88734 13.7462C10.0503 13.9078 10.2703 13.999 10.4998 13.9999Z"
-            fill={isFestivalStyle ? 'currentColor' : 'white'}
+            fill={variant === 'register' ? 'white' : (isFestivalStyle ? 'currentColor' : 'white')}
           />
         </svg>
       </button>
 
       {isOpen && !disabled && (
-        <div className={`${baseDropdownClass} absolute z-50 w-full mt-2 overflow-hidden shadow-lg`} style={{ borderRadius: '12px' }}>
+        <div className={`${baseDropdownClass} absolute z-50 w-full mt-2 overflow-hidden shadow-lg`} style={{ borderRadius: variant === 'register' ? '27px' : '12px' }}>
           <div className="max-h-[200px] overflow-y-auto">
             {options.length === 0 ? (
-              <div className="px-5 py-3 text-center text-[13px]" style={{ color: isFestivalStyle ? '#64748b' : 'rgba(255, 255, 255, 0.5)' }}>
+              <div className="px-5 py-3 text-center text-[13px]" style={{ color: variant === 'register' ? 'rgba(255, 255, 255, 0.5)' : (isFestivalStyle ? '#64748b' : 'rgba(255, 255, 255, 0.5)') }}>
                 No options available
               </div>
             ) : (
@@ -108,24 +114,24 @@ export default function CustomDropdown({
                   disabled={option.disabled}
                   style={{
                     width: '100%',
-                    padding: '12px 20px',
+                    padding: variant === 'register' ? '12px 20px' : '12px 20px',
                     textAlign: 'left',
                     fontSize: '13px',
                     fontWeight: 500,
                     transition: 'all 0.2s',
                     backgroundColor: value === option.value 
-                      ? (isFestivalStyle ? 'rgba(124, 58, 237, 0.1)' : 'rgba(255, 255, 255, 0.2)')
+                      ? (variant === 'register' ? 'rgba(255, 255, 255, 0.2)' : (isFestivalStyle ? 'rgba(124, 58, 237, 0.1)' : 'rgba(255, 255, 255, 0.2)'))
                       : 'transparent',
                     color: value === option.value
-                      ? (isFestivalStyle ? 'var(--primary-purple)' : 'white')
+                      ? 'white'
                       : (option.disabled 
-                        ? (isFestivalStyle ? '#cbd5e1' : 'rgba(255, 255, 255, 0.3)')
-                        : (isFestivalStyle ? '#1e293b' : 'white')),
+                        ? 'rgba(255, 255, 255, 0.3)'
+                        : 'white'),
                     cursor: option.disabled ? 'not-allowed' : 'pointer',
                   }}
                   onMouseEnter={(e) => {
                     if (!option.disabled && value !== option.value) {
-                      e.currentTarget.style.backgroundColor = isFestivalStyle ? 'rgba(124, 58, 237, 0.05)' : 'rgba(255, 255, 255, 0.1)';
+                      e.currentTarget.style.backgroundColor = variant === 'register' ? 'rgba(255, 255, 255, 0.1)' : (isFestivalStyle ? 'rgba(124, 58, 237, 0.05)' : 'rgba(255, 255, 255, 0.1)');
                     }
                   }}
                   onMouseLeave={(e) => {

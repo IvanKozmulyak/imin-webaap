@@ -156,14 +156,14 @@ function HomeContent() {
       )}
 
       {/* Header */}
-      <header style={{ padding: '30px 0', position: 'absolute', width: '100%', top: 0, zIndex: 10 }}>
+      <header style={{ padding: '20px 0', position: 'absolute', width: '100%', top: 0, zIndex: 10 }}>
         <div className="container" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <Link href="/" className="logo">
             <Image
               src="/assets/logo.svg"
               alt="IMIN Logo"
-              width={80}
-              height={40}
+              width={60}
+              height={30}
               priority
               style={{ height: 'auto' }}
             />
