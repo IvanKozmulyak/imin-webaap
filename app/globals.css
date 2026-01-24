@@ -623,13 +623,17 @@ a {
 
 /* Buttons */
 .btn-gradient {
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   background: var(--gradient-primary);
   color: white;
   padding: 14px 32px;
   border-radius: 50px;
   font-weight: 600;
   font-size: 1rem;
+  line-height: 1;
+  text-align: center;
   box-shadow: 0 4px 20px rgba(168, 85, 247, 0.4);
   transition: opacity 0.2s, transform 0.2s, box-shadow 0.2s;
   cursor: pointer;

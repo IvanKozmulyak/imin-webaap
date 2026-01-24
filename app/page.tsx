@@ -181,8 +181,8 @@ function HomeContent() {
             <p>
               {isFestivalStyle ? (
                 <>
-                    <span style={{ color: 'var(--primary-purple)', fontWeight: 800 }}>Don&apos;t lose sales </span> to{' '}
-                  solo travel anxiety.
+                    <span style={{ color: 'var(--primary-purple)', fontWeight: 800 }}>Don&apos;t lose sales </span> bacause of{' '}
+                  solo anxiety.
                   <br />
                   We match users into{' '}
                   <span style={{ color: 'var(--vivid-pink)', fontWeight: 800 }}>groups of 5</span>, ensuring they have the company and the means to <span style={{ color: 'var(--primary-purple)', fontWeight: 800 }}>buy your ticket.</span>
