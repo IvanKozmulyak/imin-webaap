@@ -25,6 +25,7 @@ function ContactContent() {
   }>({});
 
   const attendeeOptions: DropdownOption[] = [
+    { value: 'Under 10k Attendees', label: 'Under 10k Attendees' },
     { value: '10k - 50k Attendees', label: '10k - 50k Attendees' },
     { value: '50k - 200k Attendees', label: '50k - 200k Attendees' },
     { value: '200k+ Attendees', label: '200k+ Attendees' },

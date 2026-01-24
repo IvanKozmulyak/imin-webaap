@@ -32,7 +32,7 @@
 .festival-style {
   --bg-base: #FFFBF7;
   --text-dark: #0F172A;
-  --text-muted: #64748B;
+  --text-muted: #0F172A;
   --primary-purple: #7C3AED;
   --vivid-pink: #EC4899;
   --sunset-orange: #F97316;
@@ -135,7 +135,7 @@
 
 .festival-style .hero p,
 .festival-style p {
-  color: #475569;
+  color: var(--text-dark);
 }
 
 .festival-style .glass-card {

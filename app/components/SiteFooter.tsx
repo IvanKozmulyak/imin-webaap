@@ -58,7 +58,7 @@ export default function SiteFooter() {
           <div className="footer-col">
             <h4>PRODUCT</h4>
             <ul>
-              <li><Link href={roiHref}>ROI Calculator</Link></li>
+              <li><Link href={roiHref}>Revenue Calculator</Link></li>
               <li><Link href={economicsHref}>Economics</Link></li>
               <li><Link href={aiAgentHref}>AI Agent</Link></li>
               <li><Link href={partnerProgramHref}>Partner Program</Link></li>

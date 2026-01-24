@@ -34,6 +34,7 @@ function HomeContent() {
   }>({});
 
   const attendeeOptions: DropdownOption[] = [
+    { value: 'Under 10k Attendees', label: 'Under 10k Attendees' },
     { value: '10k - 50k Attendees', label: '10k - 50k Attendees' },
     { value: '50k - 200k Attendees', label: '50k - 200k Attendees' },
     { value: '200k+ Attendees', label: '200k+ Attendees' },
@@ -167,8 +168,8 @@ function HomeContent() {
             <h1>
               {isFestivalStyle ? (
                 <>
-                  The Full-Service Concierge For Your<br />
-                  <span className="text-gradient">Solo Attendees.</span>
+                  <span className="hero-nowrap-line">UNITING PEOPLE TO</span><br />
+                  <span className="text-gradient">POWER YOUR EVENT.</span>
                 </>
               ) : (
                 <>
@@ -180,7 +181,11 @@ function HomeContent() {
             <p>
               {isFestivalStyle ? (
                 <>
-                  24% of your audience wants to come but the logistics of traveling alone stop them. We don&apos;t just connect them; our AI concierge organizes their entire trip—from carpooling and flights to shared accommodation—so they buy the ticket.
+                    <span style={{ color: 'var(--primary-purple)', fontWeight: 800 }}>Don&apos;t lose sales </span> to{' '}
+                  solo travel anxiety.
+                  <br />
+                  We match users into{' '}
+                  <span style={{ color: 'var(--vivid-pink)', fontWeight: 800 }}>groups of 5</span>, ensuring they have the company and the means to <span style={{ color: 'var(--primary-purple)', fontWeight: 800 }}>buy your ticket.</span>
                 </>
               ) : (
                 <>
@@ -194,7 +199,7 @@ function HomeContent() {
             </p>
             <div className="hero-actions" style={{ display: 'flex', gap: '15px', flexWrap: 'wrap' }}>
               <a href="#partner" className="btn-gradient">Start Integrating</a>
-              <a href="#calc" className="btn-outline">{isFestivalStyle ? 'Calculate Revenue' : 'Calculate ROI'}</a>
+              <a href="#calc" className="btn-outline">{isFestivalStyle ? 'Calculate Revenue' : 'Calculate Revenue'}</a>
             </div>
           </div>
           <div className="phone-perspective">
@@ -248,7 +253,7 @@ function HomeContent() {
                     <Image key="festival-img-3" src="https://images.unsplash.com/photo-1596394516093-501ba68a0ba6?q=80&w=800&auto=format&fit=crop" alt="Beach Festival" width={800} height={200} className="market-img" unoptimized />
                     <div className="market-content">
                       <h3>Destination & Resort Events</h3>
-                      <p>Complex travel logistics are solved by our AI, coordinating flights and transfers for international guests.</p>
+                      <p>Build belonging effortlessly. Our AI groups guests into sets of five, ensuring every attendee has a curated group to join and explore with.</p>
                     </div>
                   </div>
                 </>
@@ -303,12 +308,12 @@ function HomeContent() {
           </svg>
         </div>
 
-        {/* ROI Calculator Section */}
+        {/* Revenue Calculator Section */}
         <section id="calc" className="container" style={{ padding: '60px 0' }}>
           <div className="calc-grid">
             <div>
               <span className="section-tag" style={isFestivalStyle ? {} : { background: 'rgba(59, 130, 246, 0.1)', borderColor: 'var(--glow-blue)', color: 'var(--glow-blue)' }}>
-                {isFestivalStyle ? 'REVENUE FORECAST' : 'ROI CALCULATOR'}
+                {isFestivalStyle ? 'REVENUE FORECAST' : 'REVENUE CALCULATOR'}
               </span>
               <h2 style={{ fontSize: '2.5rem', lineHeight: '1.1', marginBottom: '20px' }}>
                 {isFestivalStyle ? (
