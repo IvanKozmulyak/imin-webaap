@@ -184,7 +184,11 @@ function HomeContent() {
                 </>
               ) : (
                 <>
-                  24% of your traffic leaves because they have &quot;no one to go with.&quot; We act as the &quot;Social Infrastructure&quot; that bundles them into squads and drives them to your checkout.
+                  <span style={{ color: 'white' }}>
+                    <strong>24%</strong> of your traffic leaves because they have{' '}
+                    <span className="text-green">&quot;no one to go with.&quot;</span> We provide the platform that bundles them into{' '}
+                    <span className="text-green">squads</span> and drives them to <span className="text-green">your checkout</span>.
+                  </span>
                 </>
               )}
             </p>
@@ -319,7 +323,7 @@ function HomeContent() {
                   </>
                 )}
               </h2>
-              <p style={{ color: 'var(--text-muted)' }}>
+              <p style={{ color: isFestivalStyle ? 'var(--text-muted)' : 'white' }}>
                 {isFestivalStyle ? (
                   <>
                     Move the slider to match your annual attendance. See how much money is walking away because people don&apos;t want to handle logistics alone.
@@ -369,7 +373,7 @@ function HomeContent() {
         <section className="flow-section">
           <div className="container">
             <div className="flow-header">
-              <span className="section-tag">{'// THE MECHANIC'}</span>
+              <span className="section-tag">{'THE MECHANIC'}</span>
               <h2 style={{ fontSize: '3rem', color: isFestivalStyle ? 'var(--text-dark)' : undefined }}>
                 {isFestivalStyle ? 'From Solo to Squad in 4 Steps' : 'How We Fill The Floor.'}
               </h2>
@@ -398,7 +402,7 @@ function HomeContent() {
               <div className="flow-text">
                 <div className="flow-step-num">01</div>
                 <h3 className="flow-title">The Smart Link</h3>
-                <p className="flow-desc">No complex integration. You simply place a unique IMIN link in your social bio or email blast.</p>
+                <p className="flow-desc">No complex integration. You simply place a unique IMIN link in your socials, email blast or simple widget in your website.</p>
               </div>
             </div>
 
@@ -427,8 +431,8 @@ function HomeContent() {
                 <h3 className="flow-title">The Vibe Check</h3>
                 <p className="flow-desc">
                   {isFestivalStyle 
-                    ? 'We capture user data (Age, Music Taste, Vibe) and perform a social verification. Our AI matches them with compatible festival-goers.'
-                    : 'We capture user data (Age, Music Taste, Vibe) and perform a social verification.'}
+                    ? 'We capture user data in simple form and use for the best group matching.'
+                    : 'We capture user data in simple form and use for the best group matching.'}
                 </p>
               </div>
             </div>
@@ -492,7 +496,11 @@ function HomeContent() {
                 <p className="flow-desc">
                   {isFestivalStyle 
                     ? 'Logistics solved, entry anxiety gone. They buy the ticket and arrive as a cohesive unit, ready to spend the weekend together (and spend more on-site).'
-                    : 'Attendees arrive together, reducing entry anxiety. Squads stay longer and spend more.'}
+                    : (
+                      <>
+                        Attendees arrive together, reducing entry anxiety. Squads <strong>stay longer and spend more</strong>.
+                      </>
+                    )}
                 </p>
               </div>
             </div>
@@ -509,7 +517,18 @@ function HomeContent() {
           </div>
           <div className="bento-grid">
             <div className="glass-card">
-              <span className="section-tag" style={isFestivalStyle ? { background: 'rgba(20, 184, 166, 0.1)', borderColor: 'var(--ocean-teal)', color: 'var(--ocean-teal)' } : { background: 'rgba(0, 255, 148, 0.1)', borderColor: 'var(--glow-green)' }}>
+              <span
+                className="section-tag"
+                style={{
+                  ...(isFestivalStyle
+                    ? { background: 'rgba(20, 184, 166, 0.1)', borderColor: 'var(--ocean-teal)', color: 'var(--ocean-teal)' }
+                    : { background: 'rgba(0, 255, 148, 0.1)', borderColor: 'var(--glow-green)' }),
+                  fontSize: '1.12rem',
+                  padding: '8px 17px',
+                  borderRadius: '6px',
+                  letterSpacing: '1.4px',
+                }}
+              >
                 PRIORITY #1
               </span>
               <h2 style={{ fontSize: '2.5rem', marginBottom: '20px', color: isFestivalStyle ? 'var(--text-dark)' : undefined }}>Ticket Sales.</h2>
@@ -527,7 +546,18 @@ function HomeContent() {
               </div>
             </div>
             <div className="glass-card">
-              <span className="section-tag" style={isFestivalStyle ? { background: 'rgba(139, 92, 246, 0.1)', borderColor: 'var(--primary-purple)', color: 'var(--primary-purple)' } : { background: 'rgba(139, 92, 246, 0.1)', borderColor: 'var(--glow-purple)', color: 'var(--glow-purple)' }}>
+              <span
+                className="section-tag"
+                style={{
+                  ...(isFestivalStyle
+                    ? { background: 'rgba(139, 92, 246, 0.1)', borderColor: 'var(--primary-purple)', color: 'var(--primary-purple)' }
+                    : { background: 'rgba(139, 92, 246, 0.1)', borderColor: 'var(--glow-purple)', color: 'var(--glow-purple)' }),
+                  fontSize: '1.12rem',
+                  padding: '8px 17px',
+                  borderRadius: '6px',
+                  letterSpacing: '1.4px',
+                }}
+              >
                 PRIORITY #2
               </span>
               <h2 style={{ fontSize: '2.5rem', marginBottom: '20px', color: isFestivalStyle ? 'var(--text-dark)' : undefined }}>On-Site Spend.</h2>
@@ -643,7 +673,16 @@ function HomeContent() {
               </div>
             )}
             <div id="contact-form-card" className="glass-card form-target" style={{ maxWidth: '900px', margin: '0 auto', border: isFestivalStyle ? '1px solid var(--glass-border)' : '1px solid var(--glow-green)', textAlign: 'center' }}>
-              <span className="section-tag" style={isFestivalStyle ? { background: 'var(--text-dark)', color: 'white' } : { background: 'var(--glow-green)', color: 'black' }}>
+              <span
+                className="section-tag"
+                style={{
+                  ...(isFestivalStyle ? { background: 'var(--text-dark)', color: 'white' } : { background: 'var(--glow-green)', color: 'black' }),
+                  fontSize: '1.12rem',
+                  padding: '8px 17px',
+                  borderRadius: '6px',
+                  letterSpacing: '1.4px',
+                }}
+              >
                 FOUNDING PARTNER PROGRAM
               </span>
               <h2 style={{ fontSize: '3rem', fontWeight: 800, lineHeight: '1', marginBottom: '20px', color: isFestivalStyle ? 'var(--text-dark)' : undefined }}>

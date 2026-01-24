@@ -114,8 +114,8 @@ function ContactContent() {
             <div className="contact-meta">
               <div className="contact-meta-block">
                 <div className="contact-meta-label">EMAIL US</div>
-                <a className="contact-meta-value" href="mailto:hello@imin.app">
-                  hello@imin.app
+                <a className="contact-meta-value" href="mailto:contact@imin.support">
+                  contact@imin.support
                 </a>
               </div>
 
