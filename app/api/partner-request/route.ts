@@ -7,6 +7,7 @@ interface PartnerRequestData {
   organization: string;
   email: string;
   annualAttendees: string;
+  message?: string;
 }
 
 export async function POST(request: NextRequest) {
@@ -36,6 +37,7 @@ export async function POST(request: NextRequest) {
         organization: body.organization.trim(),
         email: body.email.trim().toLowerCase(),
         annualAttendees: body.annualAttendees.trim(),
+        message: body.message?.trim() ? body.message.trim() : null,
       },
     });
 

@@ -5,6 +5,8 @@ import { useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
 import CustomDropdown, { DropdownOption } from './components/CustomDropdown';
+import SiteHeader from './components/SiteHeader';
+import SiteFooter from './components/SiteFooter';
 
 function HomeContent() {
   const searchParams = useSearchParams();
@@ -23,9 +25,13 @@ function HomeContent() {
   const [attendees, setAttendees] = useState(50000);
   const [revenue, setRevenue] = useState(600000);
   const masterFlowWrapperRef = useRef<HTMLDivElement>(null);
-  const [activeFaq, setActiveFaq] = useState<number | null>(null);
   const [annualAttendees, setAnnualAttendees] = useState<string>('');
   const [showSuccess, setShowSuccess] = useState(false);
+  const [partnerFieldErrors, setPartnerFieldErrors] = useState<{
+    organization?: string;
+    email?: string;
+    annualAttendees?: string;
+  }>({});
 
   const attendeeOptions: DropdownOption[] = [
     { value: '10k - 50k Attendees', label: '10k - 50k Attendees' },
@@ -116,10 +122,6 @@ function HomeContent() {
     };
   }, [isFestivalStyle]);
 
-  const toggleFaq = (index: number) => {
-    setActiveFaq(activeFaq === index ? null : index);
-  };
-
   const formatRevenue = (value: number) => {
     if (value >= 1000000) {
       return '$' + (value / 1000000).toFixed(1) + 'M';
@@ -155,26 +157,7 @@ function HomeContent() {
         </>
       )}
 
-      {/* Header */}
-      <header style={{ padding: '20px 0', position: 'absolute', width: '100%', top: 0, zIndex: 10 }}>
-        <div className="container" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <Link href="/" className="logo">
-            <Image
-              src="/assets/logo.svg"
-              alt="IMIN Logo"
-              width={60}
-              height={30}
-              priority
-              style={{ height: 'auto' }}
-            />
-          </Link>
-          <div style={{ display: 'flex', gap: '20px', alignItems: 'center' }}>
-            <a href="#partner" className="btn-gradient" style={{ fontSize: '0.9rem', padding: '12px 28px' }}>
-              Partner Access
-            </a>
-          </div>
-        </div>
-      </header>
+      <SiteHeader />
 
       <div className="container">
         {/* Hero Section */}
@@ -618,60 +601,6 @@ function HomeContent() {
           </div>
         </section>
 
-        {/* FAQ Section */}
-        <section id="faq" className="faq-section">
-          <div className="container faq-container">
-            <div style={{ textAlign: 'center', marginBottom: '60px' }}>
-              <span className="section-tag">COMMON QUESTIONS</span>
-              <h2 style={{ fontSize: '2.5rem', fontWeight: 800, color: isFestivalStyle ? 'var(--text-dark)' : undefined }}>Everything You Need To Know</h2>
-            </div>
-
-            <div className={`faq-item ${activeFaq === 0 ? 'faq-active' : ''}`} onClick={() => toggleFaq(0)}>
-              <div className="faq-question">
-                <span>{isFestivalStyle ? 'Do you handle international travel?' : 'How does the integration work?'}</span>
-                <span className="faq-icon">+</span>
-              </div>
-              <div className="faq-answer">
-                {isFestivalStyle 
-                  ? 'Yes. Our concierge can suggest flight options and organize airport transfers for destination festivals.'
-                  : 'We provide a unique URL (Smart Link) that you place in your Instagram bio or email campaigns. There is no technical installation required on your website. We handle the entire squad formation and payment process on our platform, then redirect the final squad to your checkout.'}
-              </div>
-            </div>
-
-            <div className={`faq-item ${activeFaq === 1 ? 'faq-active' : ''}`} onClick={() => toggleFaq(1)}>
-              <div className="faq-question">
-                <span>{isFestivalStyle ? 'How does the integration work?' : 'Does this work for small events?'}</span>
-                <span className="faq-icon">+</span>
-              </div>
-              <div className="faq-answer">
-                {isFestivalStyle 
-                  ? 'We provide a unique URL (Smart Link) that you place in your Instagram bio or email campaigns. No technical installation required.'
-                  : 'Yes. While our system is optimized for festivals and large club nights (1000+ capacity), it works effectively for any event where "going solo" is a friction point. Our Founding Partner program, however, is prioritized for venues with 10k+ annual attendees.'}
-              </div>
-            </div>
-
-            <div className={`faq-item ${activeFaq === 2 ? 'faq-active' : ''}`} onClick={() => toggleFaq(2)}>
-              <div className="faq-question">
-                <span>Is the data secure?</span>
-                <span className="faq-icon">+</span>
-              </div>
-              <div className="faq-answer">
-                Absolutely. We are fully GDPR compliant. We only collect necessary data to form squads (age, gender, music preference) and verify identity. We do not sell user data to third parties.
-              </div>
-            </div>
-
-            <div className={`faq-item ${activeFaq === 3 ? 'faq-active' : ''}`} onClick={() => toggleFaq(3)}>
-              <div className="faq-question">
-                <span>What is the pricing model?</span>
-                <span className="faq-icon">+</span>
-              </div>
-              <div className="faq-answer">
-                We operate on a performance basis. We take a small commission only on the *incremental* tickets sold through our platform. If we don&apos;t sell, you don&apos;t pay.
-              </div>
-            </div>
-          </div>
-        </section>
-
         {/* Partner Form Section */}
         <section id="partner" style={{ padding: '60px 0 80px 0' }}>
           <div className="container">
@@ -726,18 +655,33 @@ function HomeContent() {
                   : 'We are opening 50 spots for our Launch Cohort (Q1 2026).'}
               </p>
               <form
+                noValidate
                 onSubmit={async (e) => {
                   e.preventDefault();
-                  const formData = new FormData(e.currentTarget);
-                  const data = {
-                    organization: formData.get('organization') as string,
-                    email: formData.get('email') as string,
-                    annualAttendees: annualAttendees,
-                  };
-                  if (!annualAttendees) {
-                    alert('Please select annual attendees.');
+                  const form = e.currentTarget as HTMLFormElement;
+                  const formData = new FormData(form);
+                  const organization = ((formData.get('organization') as string) || '').trim();
+                  const email = ((formData.get('email') as string) || '').trim();
+
+                  const nextErrors: typeof partnerFieldErrors = {};
+                  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+                  if (!organization) nextErrors.organization = 'Please enter your organization name.';
+                  if (!email || !emailRegex.test(email)) nextErrors.email = 'Please enter a valid email address.';
+                  if (!annualAttendees) nextErrors.annualAttendees = 'Please select annual attendees.';
+
+                  if (Object.keys(nextErrors).length > 0) {
+                    setPartnerFieldErrors(nextErrors);
                     return;
                   }
+
+                  setPartnerFieldErrors({});
+
+                  const data = {
+                    organization,
+                    email,
+                    annualAttendees,
+                  };
                   try {
                     const response = await fetch('/api/partner-request', {
                       method: 'POST',
@@ -745,14 +689,16 @@ function HomeContent() {
                       body: JSON.stringify(data),
                     });
                     if (response.ok) {
-                      (e.target as HTMLFormElement).reset();
+                      form.reset();
                       setAnnualAttendees('');
+                      setPartnerFieldErrors({});
                       setShowSuccess(true);
                     } else {
-                      alert('Failed to send request. Please try again.');
+                      const res = await response.json().catch(() => null);
+                      setPartnerFieldErrors({ email: res?.error || 'Failed to send request. Please try again.' });
                     }
                   } catch (error) {
-                    alert('An error occurred. Please try again.');
+                    setPartnerFieldErrors({ email: 'An error occurred. Please try again.' });
                   }
                 }}
                 style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', textAlign: 'left' }}
@@ -764,11 +710,16 @@ function HomeContent() {
                   <input 
                     type="text" 
                     id="organization"
-                    className="form-input" 
+                    className={`form-input ${partnerFieldErrors.organization ? 'error' : ''}`}
                     placeholder={isFestivalStyle ? 'e.g., Coachella, Tomorrowland, Electric Daisy Carnival' : 'e.g., Your Venue Name'} 
                     name="organization" 
-                    required 
+                    aria-required="true"
+                    aria-invalid={partnerFieldErrors.organization ? 'true' : 'false'}
+                    onChange={() => {
+                      if (partnerFieldErrors.organization) setPartnerFieldErrors((p) => ({ ...p, organization: undefined }));
+                    }}
                   />
+                  {partnerFieldErrors.organization && <div className="form-error-text">{partnerFieldErrors.organization}</div>}
                 </div>
                 <div>
                   <label htmlFor="email" style={{ display: 'block', marginBottom: '8px', fontSize: '0.9rem', fontWeight: 600, color: isFestivalStyle ? 'var(--text-dark)' : 'white' }}>
@@ -777,11 +728,16 @@ function HomeContent() {
                   <input 
                     type="email" 
                     id="email"
-                    className="form-input" 
+                    className={`form-input ${partnerFieldErrors.email ? 'error' : ''}`}
                     placeholder="your.email@organization.com" 
                     name="email" 
-                    required 
+                    aria-required="true"
+                    aria-invalid={partnerFieldErrors.email ? 'true' : 'false'}
+                    onChange={() => {
+                      if (partnerFieldErrors.email) setPartnerFieldErrors((p) => ({ ...p, email: undefined }));
+                    }}
                   />
+                  {partnerFieldErrors.email && <div className="form-error-text">{partnerFieldErrors.email}</div>}
                 </div>
                 <div>
                   <label htmlFor="annualAttendees" style={{ display: 'block', marginBottom: '8px', fontSize: '0.9rem', fontWeight: 600, color: isFestivalStyle ? 'var(--text-dark)' : 'white' }}>
@@ -790,12 +746,16 @@ function HomeContent() {
                   <CustomDropdown
                     options={attendeeOptions}
                     value={annualAttendees}
-                    onChange={setAnnualAttendees}
+                    onChange={(val) => {
+                      setAnnualAttendees(val);
+                      if (partnerFieldErrors.annualAttendees) setPartnerFieldErrors((p) => ({ ...p, annualAttendees: undefined }));
+                    }}
                     placeholder="Select Annual Attendees"
-                    required
                     isFestivalStyle={isFestivalStyle}
+                    className={partnerFieldErrors.annualAttendees ? 'error' : ''}
                   />
-                  <input type="hidden" name="annualAttendees" value={annualAttendees} required />
+                  <input type="hidden" name="annualAttendees" value={annualAttendees} />
+                  {partnerFieldErrors.annualAttendees && <div className="form-error-text">{partnerFieldErrors.annualAttendees}</div>}
                 </div>
                 <div style={{ gridColumn: 'span 2', marginTop: '10px' }}>
                   <button type="submit" className="btn-gradient" style={{ width: '100%', fontSize: '1.1rem', padding: '16px' }}>
@@ -808,68 +768,7 @@ function HomeContent() {
         </section>
       </div>
 
-      {/* Footer */}
-      <footer>
-        <div className="container">
-          <div className="footer-grid">
-            <div className="footer-col footer-col-main">
-              <a href="#" className="footer-logo" style={{ color: isFestivalStyle ? 'var(--text-dark)' : undefined }}>
-                IM{isFestivalStyle ? <span className="text-gradient">IN</span> : <span className="text-green">IN</span>}
-              </a>
-              <p className="footer-desc">
-                The social infrastructure layer for the experience economy. We turn solo traffic into squad sales.
-              </p>
-              <div className="social-links">
-                <a href="https://www.instagram.com/imin.wtf/" target="_blank" rel="noopener noreferrer" className="social-icon" aria-label="Instagram">
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.98-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.98-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z" fill="currentColor"/>
-                  </svg>
-                </a>
-              </div>
-            </div>
-            <div className="footer-col">
-              <h4>PRODUCT</h4>
-              <ul>
-                <li><a href="#calc">ROI Calculator</a></li>
-                <li><a href="#economics">Economics</a></li>
-                <li><a href="#bot">AI Agent</a></li>
-                <li><a href="#faq">FAQ</a></li>
-                <li><a href="#partner">Partner Program</a></li>
-              </ul>
-            </div>
-            <div className="footer-col">
-              <h4>SOLUTIONS</h4>
-              <ul>
-                <li>
-                  <button 
-                    onClick={() => router.push('/')}
-                    className={`footer-switcher-link ${!isFestivalStyle ? 'active' : ''}`}
-                  >
-                    Nightlife & Clubs
-                  </button>
-                </li>
-                <li>
-                  <button 
-                    onClick={() => router.push('/?style=festival')}
-                    className={`footer-switcher-link ${isFestivalStyle ? 'active' : ''}`}
-                  >
-                    Festivals & Travel
-                  </button>
-                </li>
-              </ul>
-            </div>
-            <div className="footer-col">
-              <h4>LEGAL</h4>
-              <ul>
-                <li><Link href="/terms">Terms of Use</Link></li>
-              </ul>
-            </div>
-          </div>
-          <div className="footer-bottom">
-            <div>© 2026 IMIN Partners Inc. All rights reserved.</div>
-          </div>
-        </div>
-      </footer>
+      <SiteFooter />
     </div>
   );
 }
