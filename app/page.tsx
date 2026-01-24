@@ -236,24 +236,24 @@ function HomeContent() {
               {isFestivalStyle ? (
                 <>
                   <div className="market-card" key="festival-card-1">
-                    <Image key="festival-img-1" src="https://images.unsplash.com/photo-1470225620780-dba8ba36b745?q=80&w=800&auto=format&fit=crop" alt="Music Festival Crowd" width={800} height={200} className="market-img" unoptimized />
+                    <Image key="festival-img-1" src="/assets/placeholders/who-we-serve-1.jpg" alt="Placeholder image 1" width={800} height={200} className="market-img" unoptimized />
                     <div className="market-content">
                       <h3>Major Music Festivals</h3>
                       <p>For large-scale events where organizing camping and travel is a major friction point for solo attendees.</p>
                     </div>
                   </div>
                   <div className="market-card" key="festival-card-2">
-                    <Image key="festival-img-2" src="https://images.unsplash.com/photo-1545128485-c400e7702796?q=80&w=800&auto=format&fit=crop" alt="Dance Festival" width={800} height={200} className="market-img" unoptimized />
+                    <Image key="festival-img-2" src="/assets/placeholders/who-we-serve-2.jpg" alt="Placeholder image 2" width={800} height={200} className="market-img" unoptimized />
                     <div className="market-content">
-                      <h3>Dance & Bachata Congresses</h3>
+                      <h3>Dance Congresses</h3>
                       <p>Community-driven events where connection is key. We help dancers find roommates and travel buddies.</p>
                     </div>
                   </div>
                   <div className="market-card" key="festival-card-3">
-                    <Image key="festival-img-3" src="https://images.unsplash.com/photo-1596394516093-501ba68a0ba6?q=80&w=800&auto=format&fit=crop" alt="Beach Festival" width={800} height={200} className="market-img" unoptimized />
+                    <Image key="festival-img-3" src="/assets/placeholders/who-we-serve-3.jpg" alt="Placeholder image 3" width={800} height={200} className="market-img" unoptimized />
                     <div className="market-content">
-                      <h3>Destination & Resort Events</h3>
-                      <p>Build belonging effortlessly. Our AI groups guests into sets of five, ensuring every attendee has a curated group to join and explore with.</p>
+                      <h3>Concerts And Live Events</h3>
+                      <p>We segments your audience into intimate groups of five that increases long-term loyalty and onsite spend.</p>
                     </div>
                   </div>
                 </>
@@ -329,15 +329,9 @@ function HomeContent() {
                 )}
               </h2>
               <p style={{ color: isFestivalStyle ? 'var(--text-muted)' : 'white' }}>
-                {isFestivalStyle ? (
-                  <>
-                    Move the slider to match your annual attendance. See how much money is walking away because people don&apos;t want to handle logistics alone.
-                  </>
-                ) : (
                   <>
                     Move the slider to match your annual attendance. See exactly how much money is walking away because they have &quot;no one to go with.&quot;
                   </>
-                )}
               </p>
               <label style={{ fontFamily: 'var(--font-mono)', color: 'var(--text-muted)', display: 'block', marginTop: '40px', fontSize: '0.9rem', letterSpacing: '1px' }}>
                 ANNUAL ATTENDEES
@@ -567,9 +561,7 @@ function HomeContent() {
               </span>
               <h2 style={{ fontSize: '2.5rem', marginBottom: '20px', color: isFestivalStyle ? 'var(--text-dark)' : undefined }}>On-Site Spend.</h2>
               <p style={{ color: 'var(--text-muted)', marginBottom: '30px' }}>
-                {isFestivalStyle 
-                  ? 'Solo attendees leave early. Squads stay late and utilize upsells (Glamping, Shuttles, VIP upgrades).'
-                  : 'Solo attendees leave early. Squads stay late, buy rounds of drinks, and utilize upsells.'}
+                Solo attendees leave early and spend less. Squads stay late, drink a lot and utilize upsells (Glamping, Shuttles, VIP upgrades).
               </p>
               <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
                 <div style={{ fontSize: '3rem' }}>🍹</div>

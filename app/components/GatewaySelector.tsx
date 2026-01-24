@@ -135,7 +135,7 @@ export default function GatewaySelector() {
                 For multi-day experiences requiring travel logistics.
                 <ul className="desc-list">
                   <li>Major Music Festivals</li>
-                  <li>Bachata & Dance Congresses</li>
+                  <li>Dance Congresses</li>
                   <li>Destination Events</li>
                 </ul>
               </div>
