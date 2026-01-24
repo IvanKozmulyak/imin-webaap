@@ -732,6 +732,13 @@ nav {
   color: var(--text-white);
 }
 
+.hero-nowrap-line {
+  display: inline-block;
+  white-space: nowrap;
+  /* Shrink smoothly on small screens so it stays one line */
+  font-size: clamp(1.4rem, 5.5vw, 4.5rem);
+}
+
 .hero p {
   font-size: 1.2rem;
   color: var(--text-muted);

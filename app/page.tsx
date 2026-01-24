@@ -189,7 +189,7 @@ function HomeContent() {
                 </>
               ) : (
                 <>
-                  UNITING PEOPLE TO<br />
+                  <span className="hero-nowrap-line">UNITING PEOPLE TO</span><br />
                   <span className="text-green">POWER YOUR EVENT.</span>
                 </>
               )}
