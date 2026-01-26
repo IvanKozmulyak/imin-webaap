@@ -5,6 +5,7 @@ import { useSearchParams, useRouter } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
 import { EventDto } from '@/lib/types/event';
+import EventsSplashScreen from '@/app/components/EventsSplashScreen';
 
 type ViewMode = 'grid' | 'map';
 
@@ -19,8 +20,14 @@ function EventsContent() {
   const [searchQuery, setSearchQuery] = useState('');
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
   const [filteredEvents, setFilteredEvents] = useState<EventDto[]>([]);
+  const [showSplash, setShowSplash] = useState(false);
 
   useEffect(() => {
+    // Check if user has already accepted the splash screen
+    const splashAccepted = localStorage.getItem('events-splash-accepted');
+    if (!splashAccepted) {
+      setShowSplash(true);
+    }
     fetchEvents();
   }, []);
 
@@ -138,8 +145,20 @@ function EventsContent() {
   };
 
 
+  const handleSplashAgree = () => {
+    setShowSplash(false);
+  };
+
   return (
     <div className={isFestivalStyle ? 'festival-style' : ''}>
+      {/* Splash Screen */}
+      {showSplash && (
+        <EventsSplashScreen 
+          onAgree={handleSplashAgree} 
+          isFestivalStyle={isFestivalStyle}
+        />
+      )}
+
       {/* Mode Switcher */}
       <button 
         onClick={switchMode}
@@ -445,7 +464,7 @@ function EventCard({
 
   return (
     <Link 
-      href={`/register?eventId=${event.id}${isFestivalStyle ? '&style=festival' : ''}`}
+      href={`/register?eventId=${event.id}${isFestivalStyle ? '&style=festival' : ''}&fromEvents=true`}
       className="event-card-link"
       style={{ textDecoration: 'none' }}
     >
@@ -619,7 +638,7 @@ function EventCard({
             }}
             onClick={(e) => {
               e.preventDefault();
-              window.location.href = `/register?eventId=${event.id}${isFestivalStyle ? '&style=festival' : ''}`;
+              window.location.href = `/register?eventId=${event.id}${isFestivalStyle ? '&style=festival' : ''}&fromEvents=true`;
             }}
           >
             I&apos;m In

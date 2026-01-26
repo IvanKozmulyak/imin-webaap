@@ -7,13 +7,16 @@ import Link from 'next/link';
 import { EventDto } from '@/lib/types/event';
 import { LanguageDto } from '@/lib/types/language';
 import { EventRegistrationRequestDto } from '@/lib/types/registration';
+import EventsSplashScreen from '@/app/components/EventsSplashScreen';
 
 function RegisterContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const eventId = searchParams?.get('eventId');
   const style = searchParams?.get('style');
+  const fromEvents = searchParams?.get('fromEvents');
   const isFestivalStyle = style === 'festival';
+  const [showSplash, setShowSplash] = useState(false);
 
   const switchMode = () => {
     if (!eventId) return;
@@ -47,13 +50,20 @@ function RegisterContent() {
   }, [submitSuccess, telegramInviteLink]);
 
   useEffect(() => {
+    // Check if user has already accepted the splash screen
+    const splashAccepted = localStorage.getItem('events-splash-accepted');
+    // Only show splash if user didn't come from events page and hasn't accepted before
+    if (!splashAccepted && !fromEvents) {
+      setShowSplash(true);
+    }
+    
     if (eventId) {
       fetchEventData();
       fetchLanguages();
     } else {
       setLoading(false);
     }
-  }, [eventId]);
+  }, [eventId, fromEvents]);
 
   useEffect(() => {
     // Parallax blob animation with performance optimization
@@ -316,11 +326,22 @@ function RegisterContent() {
     );
   }
 
+  const handleSplashAgree = () => {
+    setShowSplash(false);
+  };
+
   const dateInfo = formatDate(event.fromDateTime);
   const timeRange = getTimeRange(event.fromDateTime, event.toDateTime);
 
   return (
     <div className={isFestivalStyle ? 'festival-style' : ''}>
+      {/* Splash Screen */}
+      {showSplash && (
+        <EventsSplashScreen 
+          onAgree={handleSplashAgree} 
+          isFestivalStyle={isFestivalStyle}
+        />
+      )}
       {/* Mode Switcher */}
       {eventId && (
         <button
