@@ -30,6 +30,7 @@ export default function SiteHeader() {
 
   const pageLinks: HeaderLink[] = [
     { label: 'Home', href: '/' },
+    { label: 'Events', href: '/events' },
     { label: 'About', href: '/about' },
     { label: 'FAQ', href: '/faq' },
     { label: 'Terms', href: '/terms' },

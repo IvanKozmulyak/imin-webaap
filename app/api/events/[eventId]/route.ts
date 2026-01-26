@@ -22,6 +22,7 @@ export async function GET(
       eventDateTime: event.eventDateTime.toISOString(),
       location: event.location,
       ticketUrl: event.ticketUrl,
+      imageUrl: event.imageUrl,
       isActive: event.isActive,
       createdAt: event.createdAt.toISOString(),
     };
