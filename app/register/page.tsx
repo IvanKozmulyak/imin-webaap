@@ -27,7 +27,6 @@ function RegisterContent() {
 
   const [event, setEvent] = useState<EventDto | null>(null);
   const [languages, setLanguages] = useState<LanguageDto[]>([]);
-  const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   
   const [formData, setFormData] = useState<EventRegistrationRequestDto>({
@@ -60,8 +59,6 @@ function RegisterContent() {
     if (eventId) {
       fetchEventData();
       fetchLanguages();
-    } else {
-      setLoading(false);
     }
   }, [eventId, fromEvents]);
 
@@ -103,8 +100,6 @@ function RegisterContent() {
     } catch (error) {
       console.error('Error fetching event:', error);
       setSubmitError('Failed to load event information');
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -265,22 +260,6 @@ function RegisterContent() {
       setSubmitting(false);
     }
   };
-
-  if (loading) {
-    return (
-      <div
-        style={{
-          minHeight: '100vh',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          color: isFestivalStyle ? 'var(--text-dark)' : 'white',
-        }}
-      >
-        Loading...
-      </div>
-    );
-  }
 
   if (!eventId || !event) {
     return (
@@ -1071,21 +1050,7 @@ function RegisterContent() {
 
 export default function RegisterPage() {
   return (
-    <Suspense
-      fallback={
-        <div
-          style={{
-            minHeight: '100vh',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            color: 'white',
-          }}
-        >
-          Loading...
-        </div>
-      }
-    >
+    <Suspense fallback={null}>
       <RegisterContent />
     </Suspense>
   );

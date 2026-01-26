@@ -16,7 +16,6 @@ function EventsContent() {
   const isFestivalStyle = style === 'festival';
 
   const [events, setEvents] = useState<EventDto[]>([]);
-  const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
   const [filteredEvents, setFilteredEvents] = useState<EventDto[]>([]);
@@ -82,8 +81,6 @@ function EventsContent() {
       }
     } catch (error) {
       console.error('Error fetching events:', error);
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -360,11 +357,7 @@ function EventsContent() {
           </div>
 
           {/* Events Feed */}
-          {loading ? (
-            <div style={{ textAlign: 'center', padding: '60px 0', color: isFestivalStyle ? 'var(--text-dark)' : 'white' }}>
-              Loading events...
-            </div>
-          ) : viewMode === 'grid' ? (
+          {viewMode === 'grid' ? (
             <div className="events-feed">
               {/* Upcoming Events */}
               {filteredEvents.length > 0 ? (
@@ -651,17 +644,7 @@ function EventCard({
 
 export default function EventsPage() {
   return (
-    <Suspense fallback={
-      <div style={{ 
-        display: 'flex', 
-        alignItems: 'center', 
-        justifyContent: 'center', 
-        minHeight: '100vh',
-        color: 'white'
-      }}>
-        Loading...
-      </div>
-    }>
+    <Suspense fallback={null}>
       <EventsContent />
     </Suspense>
   );
