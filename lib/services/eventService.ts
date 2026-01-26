@@ -6,17 +6,18 @@ export async function getUpcomingEvents(): Promise<EventDto[]> {
   const now = new Date();
   const events = await prisma.event.findMany({
     where: {
-      eventDateTime: { gt: now },
+      toDateTime: { gt: now },
       isActive: true,
     },
-    orderBy: { eventDateTime: 'asc' },
+    orderBy: { fromDateTime: 'asc' },
   });
 
   return events.map(event => ({
     id: event.id,
     name: event.name,
     description: event.description,
-    eventDateTime: event.eventDateTime.toISOString(),
+    fromDateTime: event.fromDateTime.toISOString(),
+    toDateTime: event.toDateTime.toISOString(),
     location: event.location,
     ticketUrl: event.ticketUrl,
     imageUrl: event.imageUrl,
@@ -34,14 +35,15 @@ export async function getAllActiveEvents(): Promise<EventDto[]> {
     where: {
       isActive: true,
     },
-    orderBy: { eventDateTime: 'asc' },
+    orderBy: { fromDateTime: 'asc' },
   });
 
   return events.map(event => ({
     id: event.id,
     name: event.name,
     description: event.description,
-    eventDateTime: event.eventDateTime.toISOString(),
+    fromDateTime: event.fromDateTime.toISOString(),
+    toDateTime: event.toDateTime.toISOString(),
     location: event.location,
     ticketUrl: event.ticketUrl,
     imageUrl: event.imageUrl,

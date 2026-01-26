@@ -251,14 +251,18 @@ export default function RegisterPage() {
 
   const selectedEvent = events.find(e => e.id === formData.eventId);
   const formatEventDisplay = (event: EventDto) => {
-    const date = new Date(event.eventDateTime);
-    const month = date.toLocaleString('en-US', { month: 'long' });
-    const year = date.getFullYear();
-    const day = date.getDate();
-    const hours = date.getHours().toString().padStart(2, '0');
-    const minutes = date.getMinutes().toString().padStart(2, '0');
-    const time = `${hours}:${minutes}`;
-    return `${event.name}  |  ${month} ${day}, ${year} at ${time}`;
+    const fromDate = new Date(event.fromDateTime);
+    const toDate = new Date(event.toDateTime);
+    const fromMonth = fromDate.toLocaleString('en-US', { month: 'long' });
+    const fromYear = fromDate.getFullYear();
+    const fromDay = fromDate.getDate();
+    const fromHours = fromDate.getHours().toString().padStart(2, '0');
+    const fromMinutes = fromDate.getMinutes().toString().padStart(2, '0');
+    const fromTime = `${fromHours}:${fromMinutes}`;
+    const toHours = toDate.getHours().toString().padStart(2, '0');
+    const toMinutes = toDate.getMinutes().toString().padStart(2, '0');
+    const toTime = `${toHours}:${toMinutes}`;
+    return `${event.name}  |  ${fromMonth} ${fromDay}, ${fromYear} ${fromTime} - ${toTime}`;
   };
 
   const eventOptions: DropdownOption[] = events.map((event) => ({

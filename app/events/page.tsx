@@ -88,8 +88,8 @@ function EventsContent() {
     }
   };
 
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
+  const formatDate = (fromDateTime: string) => {
+    const date = new Date(fromDateTime);
     return {
       day: date.getDate().toString().padStart(2, '0'),
       month: date.toLocaleDateString('en-US', { month: 'short' }).toUpperCase(),
@@ -107,17 +107,15 @@ function EventsContent() {
     };
   };
 
-  const getTimeRange = (dateString: string) => {
-    const date = new Date(dateString);
-    // Assuming events are typically 8 hours (22:00 - 06:00)
-    const startTime = date.toLocaleTimeString('en-US', { 
+  const getTimeRange = (fromDateTime: string, toDateTime: string) => {
+    const fromDate = new Date(fromDateTime);
+    const toDate = new Date(toDateTime);
+    const startTime = fromDate.toLocaleTimeString('en-US', { 
       hour: '2-digit', 
       minute: '2-digit',
       hour12: false 
     });
-    const endDate = new Date(date);
-    endDate.setHours(endDate.getHours() + 8);
-    const endTime = endDate.toLocaleTimeString('en-US', { 
+    const endTime = toDate.toLocaleTimeString('en-US', { 
       hour: '2-digit', 
       minute: '2-digit',
       hour12: false 
@@ -372,7 +370,7 @@ function EventsContent() {
                         event={event} 
                         isFestivalStyle={isFestivalStyle}
                         formatDate={formatDate}
-                        getTimeRange={getTimeRange}
+                        getTimeRange={(from: string, to: string) => getTimeRange(from, to)}
                         getInterestedCount={getInterestedCount}
                         getEventAvatars={getEventAvatars}
                       />
@@ -437,11 +435,11 @@ function EventCard({
   event: EventDto;
   isFestivalStyle: boolean;
   formatDate: (dateString: string) => { day: string; month: string; full: string; time: string };
-  getTimeRange: (dateString: string) => string;
+  getTimeRange: (from: string, to: string) => string;
   getInterestedCount: (eventId: string) => number;
   getEventAvatars: (count: number) => Array<{ id: number; url: string }>;
 }) {
-  const dateInfo = formatDate(event.eventDateTime);
+  const dateInfo = formatDate(event.fromDateTime);
   const interestedCount = getInterestedCount(event.id);
   const avatars = getEventAvatars(interestedCount);
 
@@ -544,7 +542,7 @@ function EventCard({
             fontSize: '0.9rem',
           }}>
             <span>🕐</span>
-            <span>{getTimeRange(event.eventDateTime)}</span>
+            <span>{getTimeRange(event.fromDateTime, event.toDateTime)}</span>
           </div>
         </div>
 

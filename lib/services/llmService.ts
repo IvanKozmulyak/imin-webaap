@@ -14,7 +14,8 @@ export interface LLMResponse {
 export interface EventInfo {
   name: string;
   description?: string | null;
-  eventDateTime: Date;
+  fromDateTime: Date;
+  toDateTime: Date;
   location: string;
   ticketUrl?: string | null;
 }
@@ -81,7 +82,14 @@ You are "ImIn Bot," the cheeky, confident, and helpful assistant for the ImIn pl
 
   // Add event data section if available
   if (eventInfo) {
-    const eventDate = new Date(eventInfo.eventDateTime).toLocaleString('en-US', {
+    const fromDate = new Date(eventInfo.fromDateTime).toLocaleString('en-US', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+      hour: 'numeric',
+      minute: '2-digit',
+    });
+    const toDate = new Date(eventInfo.toDateTime).toLocaleString('en-US', {
       year: 'numeric',
       month: 'long',
       day: 'numeric',
@@ -96,7 +104,7 @@ You are "ImIn Bot," the cheeky, confident, and helpful assistant for the ImIn pl
       systemPrompt += `\n- Details: ${eventInfo.description}`;
     }
     
-    systemPrompt += `\n- Time: ${eventDate}`;
+    systemPrompt += `\n- Time: ${fromDate} to ${toDate}`;
     systemPrompt += `\n- Place: ${eventInfo.location}`;
     
     if (eventInfo.ticketUrl) {

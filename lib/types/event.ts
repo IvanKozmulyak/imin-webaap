@@ -2,7 +2,8 @@ export interface EventDto {
   id: string;
   name: string;
   description: string | null;
-  eventDateTime: string; // ISO 8601 timestamp
+  fromDateTime: string; // ISO 8601 timestamp
+  toDateTime: string; // ISO 8601 timestamp
   location: string;
   ticketUrl: string | null;
   imageUrl: string | null;

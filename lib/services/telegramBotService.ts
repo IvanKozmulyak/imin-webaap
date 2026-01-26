@@ -460,7 +460,8 @@ async function handleMessage(message: any): Promise<void> {
     const eventInfo = telegramGroup?.event ? {
       name: telegramGroup.event.name,
       description: telegramGroup.event.description,
-      eventDateTime: telegramGroup.event.eventDateTime,
+      fromDateTime: telegramGroup.event.fromDateTime,
+      toDateTime: telegramGroup.event.toDateTime,
       location: telegramGroup.event.location,
       ticketUrl: telegramGroup.event.ticketUrl,
     } : null;
