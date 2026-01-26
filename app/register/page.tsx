@@ -1,80 +1,177 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useEffect, useState, Suspense } from 'react';
+import { useSearchParams, useRouter } from 'next/navigation';
 import Image from 'next/image';
+import Link from 'next/link';
 import { EventDto } from '@/lib/types/event';
-import CustomDropdown, { DropdownOption } from '../components/CustomDropdown';
-import SplashScreen from '../components/SplashScreen';
+import { LanguageDto } from '@/lib/types/language';
+import { EventRegistrationRequestDto } from '@/lib/types/registration';
 
-const LANGUAGES = [
-  { code: 'EN', name: 'English' },
-  { code: 'NL', name: 'Dutch' },
-  { code: 'FR', name: 'French' },
-  { code: 'UA', name: 'Ukrainian' },
-];
-
-export default function RegisterPage() {
+function RegisterContent() {
+  const searchParams = useSearchParams();
   const router = useRouter();
-  const [showSplash, setShowSplash] = useState(true);
-  const [events, setEvents] = useState<EventDto[]>([]);
+  const eventId = searchParams?.get('eventId');
+  const style = searchParams?.get('style');
+  const isFestivalStyle = style === 'festival';
+
+  const switchMode = () => {
+    if (!eventId) return;
+    const newStyle = isFestivalStyle ? '' : 'festival';
+    const newUrl = `/register?eventId=${eventId}${newStyle ? `&style=${newStyle}` : ''}`;
+    router.push(newUrl);
+  };
+
+  const [event, setEvent] = useState<EventDto | null>(null);
+  const [languages, setLanguages] = useState<LanguageDto[]>([]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   
-  const [formData, setFormData] = useState({
-    eventId: '',
+  const [formData, setFormData] = useState<EventRegistrationRequestDto>({
     name: '',
     email: '',
-    age: '',
+    age: 0,
     sex: '',
-    languagesISpeak: [] as string[],
+    languagesISpeak: [],
   });
 
-  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+  const [submitError, setSubmitError] = useState<string | null>(null);
+  const [submitSuccess, setSubmitSuccess] = useState(false);
+  const [telegramInviteLink, setTelegramInviteLink] = useState<string | null>(null);
+
+  // Debug: Log state changes
+  useEffect(() => {
+    console.log('Submit success state:', submitSuccess);
+    console.log('Telegram invite link state:', telegramInviteLink);
+  }, [submitSuccess, telegramInviteLink]);
 
   useEffect(() => {
-    async function fetchData() {
-      try {
-        const eventsRes = await fetch('/api/events/upcoming');
-        
-        if (!eventsRes.ok) {
-          throw new Error(`HTTP error! status: ${eventsRes.status}`);
-        }
-        
-        const eventsData = await eventsRes.json();
-
-        // Handle both wrapped response { success: true, data: [...] } and direct array
-        if (Array.isArray(eventsData)) {
-          setEvents(eventsData);
-        } else if (eventsData.success && Array.isArray(eventsData.data)) {
-          setEvents(eventsData.data);
-        } else {
-          console.error('Invalid events response format:', eventsData);
-          setEvents([]);
-        }
-        } catch (err) {
-        console.error('Error fetching events:', err);
-        setError('Failed to load events');
-        setEvents([]);
-      } finally {
-        setLoading(false);
-      }
+    if (eventId) {
+      fetchEventData();
+      fetchLanguages();
+    } else {
+      setLoading(false);
     }
+  }, [eventId]);
 
-    fetchData();
+  useEffect(() => {
+    // Parallax blob animation with performance optimization
+    let ticking = false;
+    let rafId: number | null = null;
+
+    const handleScroll = () => {
+      if (!ticking) {
+        rafId = requestAnimationFrame(() => {
+          const scrollPos = window.scrollY;
+          const blob1 = document.getElementById('blob1');
+          const blob2 = document.getElementById('blob2');
+          if (blob1) blob1.style.transform = `translate3d(0, ${scrollPos * 0.2}px, 0)`;
+          if (blob2) blob2.style.transform = `translate3d(0, ${scrollPos * 0.15}px, 0)`;
+          ticking = false;
+        });
+        ticking = true;
+      }
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+      if (rafId !== null) cancelAnimationFrame(rafId);
+    };
   }, []);
 
-  const handleLanguageToggle = (code: string) => {
-    setFormData(prev => ({
+  const fetchEventData = async () => {
+    try {
+      const response = await fetch(`/api/events/${eventId}`);
+      if (response.ok) {
+        const data = await response.json();
+        setEvent(data);
+      } else {
+        setSubmitError('Event not found');
+      }
+    } catch (error) {
+      console.error('Error fetching event:', error);
+      setSubmitError('Failed to load event information');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchLanguages = async () => {
+    try {
+      const response = await fetch('/api/languages');
+      if (response.ok) {
+        const data = await response.json();
+        setLanguages(data);
+      }
+    } catch (error) {
+      console.error('Error fetching languages:', error);
+    }
+  };
+
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return {
+      day: date.getDate().toString().padStart(2, '0'),
+      month: date.toLocaleDateString('en-US', { month: 'short' }).toUpperCase(),
+      full: date.toLocaleDateString('en-US', {
+        weekday: 'long',
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+      }),
+      time: date.toLocaleTimeString('en-US', {
+        hour: 'numeric',
+        minute: '2-digit',
+      }),
+    };
+  };
+
+  const getTimeRange = (from: string, to: string) => {
+    const fromDate = new Date(from);
+    const toDate = new Date(to);
+    const fromTime = fromDate.toLocaleTimeString('en-US', {
+      hour: 'numeric',
+      minute: '2-digit',
+    });
+    const toTime = toDate.toLocaleTimeString('en-US', {
+      hour: 'numeric',
+      minute: '2-digit',
+    });
+    return `${fromTime} - ${toTime}`;
+  };
+
+  const handleInputChange = (field: keyof EventRegistrationRequestDto, value: string | number) => {
+    setFormData((prev) => ({
       ...prev,
-      languagesISpeak: prev.languagesISpeak.includes(code)
-        ? prev.languagesISpeak.filter(l => l !== code)
-        : [...prev.languagesISpeak, code],
+      [field]: value,
     }));
-    // Clear error when user selects a language
-    if (errors.languagesISpeak) {
-      setErrors(prev => {
+    // Clear field error when user starts typing
+    if (fieldErrors[field]) {
+      setFieldErrors((prev) => {
+        const newErrors = { ...prev };
+        delete newErrors[field];
+        return newErrors;
+      });
+    }
+  };
+
+  const toggleLanguage = (languageCode: string) => {
+    setFormData((prev) => {
+      const currentLanguages = prev.languagesISpeak;
+      const newLanguages = currentLanguages.includes(languageCode)
+        ? currentLanguages.filter((lang) => lang !== languageCode)
+        : [...currentLanguages, languageCode];
+      
+      return {
+        ...prev,
+        languagesISpeak: newLanguages,
+      };
+    });
+    // Clear field error when user selects a language
+    if (fieldErrors.languagesISpeak) {
+      setFieldErrors((prev) => {
         const newErrors = { ...prev };
         delete newErrors.languagesISpeak;
         return newErrors;
@@ -82,443 +179,893 @@ export default function RegisterPage() {
     }
   };
 
-  const validateField = (fieldName: string, value: string | number | string[]) => {
-    const newErrors: Record<string, string> = { ...errors };
-    
-    switch (fieldName) {
-      case 'eventId':
-        if (!value || value === '') {
-          newErrors.eventId = 'Please select an event';
-        } else {
-          delete newErrors.eventId;
-        }
-        break;
-      case 'name':
-        if (!value || (typeof value === 'string' && value.trim() === '')) {
-          newErrors.name = 'Name is required';
-        } else {
-          delete newErrors.name;
-        }
-        break;
-      case 'email':
-        if (!value || (typeof value === 'string' && value.trim() === '')) {
-          newErrors.email = 'Email is required';
-        } else if (typeof value === 'string' && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
-          newErrors.email = 'Please enter a valid email address';
-        } else {
-          delete newErrors.email;
-        }
-        break;
-      case 'age':
-        if (!value || value === '') {
-          newErrors.age = 'Age is required';
-        } else if (typeof value === 'string') {
-          const ageNum = Number(value);
-          if (isNaN(ageNum)) {
-            newErrors.age = 'Please enter a valid age';
-          } else if (ageNum < 18) {
-            newErrors.age = 'Age must be at least 18';
-          } else if (ageNum > 99) {
-            newErrors.age = 'Age must be at most 99';
-          } else {
-            delete newErrors.age;
-          }
-        } else {
-          delete newErrors.age;
-        }
-        break;
-      case 'languagesISpeak':
-        if (!value || (Array.isArray(value) && value.length === 0)) {
-          newErrors.languagesISpeak = 'Please select at least one language';
-        } else {
-          delete newErrors.languagesISpeak;
-        }
-        break;
-      case 'sex':
-        if (!value || (typeof value === 'string' && value.trim() === '')) {
-          newErrors.sex = 'Sex is required';
-        } else {
-          delete newErrors.sex;
-        }
-        break;
-    }
-    
-    setErrors(newErrors);
-  };
-
-  const validateForm = (): boolean => {
-    const newErrors: Record<string, string> = {};
-    
-    if (!formData.eventId || formData.eventId === '') {
-      newErrors.eventId = 'Please select an event';
-    }
-    if (!formData.name || formData.name.trim() === '') {
-      newErrors.name = 'Name is required';
-    }
-    if (!formData.email || formData.email.trim() === '') {
-      newErrors.email = 'Email is required';
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-      newErrors.email = 'Please enter a valid email address';
-    }
-    if (!formData.age || formData.age === '') {
-      newErrors.age = 'Age is required';
-    } else {
-      const ageNum = Number(formData.age);
-      if (isNaN(ageNum)) {
-        newErrors.age = 'Please enter a valid age';
-      } else if (ageNum < 18) {
-        newErrors.age = 'Age must be at least 18';
-      } else if (ageNum > 99) {
-        newErrors.age = 'Age must be at most 99';
-      }
-    }
-    if (!formData.sex || formData.sex.trim() === '') {
-      newErrors.sex = 'Sex is required';
-    }
-    if (!formData.languagesISpeak || formData.languagesISpeak.length === 0) {
-      newErrors.languagesISpeak = 'Please select at least one language';
-    }
-    
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError(null);
+    setSubmitError(null);
+    setFieldErrors({});
 
-    // Validate form before submitting
-    if (!validateForm()) {
+    // Validate form
+    const errors: Record<string, string> = {};
+    if (!formData.name.trim()) {
+      errors.name = 'Name is required';
+    }
+    if (!formData.email.trim()) {
+      errors.email = 'Email is required';
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+      errors.email = 'Email must be valid';
+    }
+    if (!formData.age || formData.age < 1) {
+      errors.age = 'Age must be a positive number';
+    }
+    if (!formData.sex.trim()) {
+      errors.sex = 'Sex is required';
+    }
+    if (formData.languagesISpeak.length === 0) {
+      errors.languagesISpeak = 'Please select at least one language';
+    }
+
+    if (Object.keys(errors).length > 0) {
+      setFieldErrors(errors);
       return;
     }
 
     setSubmitting(true);
 
     try {
-      const response = await fetch(`/api/events/${formData.eventId}/registrations`, {
+      const response = await fetch(`/api/events/${eventId}/registrations`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          name: formData.name,
-          email: formData.email,
-          age: parseInt(formData.age),
-          sex: formData.sex,
-          languagesISpeak: formData.languagesISpeak,
-        }),
+        body: JSON.stringify(formData),
       });
 
-      const data = await response.json();
+      const responseData = await response.json();
+      console.log('Full registration response:', responseData);
+      console.log('Response status:', response.status);
+      console.log('Response ok:', response.ok);
 
-      // Check if response is successful (200 or 201 status) and doesn't have error field
-      if (response.ok && !data.error) {
-        // Extract data from response (handle both wrapped and direct responses)
-        const registrationData = data.data || data;
-        const eventId = formData.eventId || registrationData.eventId;
-        const telegramInviteLink = registrationData.telegramInviteLink;
+      if (response.ok) {
+        // The API returns the registration object directly
+        const registration = responseData;
+        console.log('Registration data:', registration);
+        console.log('Telegram invite link from response:', registration?.telegramInviteLink);
+        console.log('Type of telegramInviteLink:', typeof registration?.telegramInviteLink);
         
-        // Build success URL with eventId and optional invite link
-        const params = new URLSearchParams();
-        if (eventId) {
-          params.set('eventId', eventId);
-        }
-        if (telegramInviteLink) {
-          params.set('telegramInviteLink', telegramInviteLink);
-        }
-        
-        const successUrl = params.toString() 
-          ? `/success?${params.toString()}`
-          : '/success';
-        router.push(successUrl);
+        setSubmitSuccess(true);
+        // Set telegram link - handle null, undefined, and empty string
+        const link = registration?.telegramInviteLink;
+        const validLink = link && typeof link === 'string' && link.trim() !== '' ? link : null;
+        console.log('Valid telegram link:', validLink);
+        setTelegramInviteLink(validLink);
       } else {
-        // Handle error response
-        if (data.fieldErrors) {
-          setErrors(data.fieldErrors);
-        } else if (data.error) {
-          setError(data.error);
+        // Handle API validation errors
+        if (responseData.errors && typeof responseData.errors === 'object') {
+          setFieldErrors(responseData.errors);
+        } else if (responseData.fieldErrors && typeof responseData.fieldErrors === 'object') {
+          setFieldErrors(responseData.fieldErrors);
         } else {
-          setError('Registration failed');
+          setSubmitError(responseData.message || responseData.error || 'Failed to submit registration');
         }
       }
-    } catch (err) {
-      console.error('Registration error:', err);
-      setError('An error occurred. Please try again.');
+    } catch (error) {
+      console.error('Error submitting registration:', error);
+      setSubmitError('Failed to submit registration. Please try again.');
     } finally {
       setSubmitting(false);
     }
   };
 
-  const selectedEvent = events.find(e => e.id === formData.eventId);
-  const formatEventDisplay = (event: EventDto) => {
-    const fromDate = new Date(event.fromDateTime);
-    const toDate = new Date(event.toDateTime);
-    const fromMonth = fromDate.toLocaleString('en-US', { month: 'long' });
-    const fromYear = fromDate.getFullYear();
-    const fromDay = fromDate.getDate();
-    const fromHours = fromDate.getHours().toString().padStart(2, '0');
-    const fromMinutes = fromDate.getMinutes().toString().padStart(2, '0');
-    const fromTime = `${fromHours}:${fromMinutes}`;
-    const toHours = toDate.getHours().toString().padStart(2, '0');
-    const toMinutes = toDate.getMinutes().toString().padStart(2, '0');
-    const toTime = `${toHours}:${toMinutes}`;
-    return `${event.name}  |  ${fromMonth} ${fromDay}, ${fromYear} ${fromTime} - ${toTime}`;
-  };
+  if (loading) {
+    return (
+      <div
+        style={{
+          minHeight: '100vh',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          color: isFestivalStyle ? 'var(--text-dark)' : 'white',
+        }}
+      >
+        Loading...
+      </div>
+    );
+  }
 
-  const eventOptions: DropdownOption[] = events.map((event) => ({
-    value: event.id,
-    label: formatEventDisplay(event),
-  }));
+  if (!eventId || !event) {
+    return (
+      <div className={isFestivalStyle ? 'festival-style' : ''}>
+        <div
+          style={{
+            minHeight: '100vh',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '40px 20px',
+            color: isFestivalStyle ? 'var(--text-dark)' : 'white',
+            textAlign: 'center',
+            background: isFestivalStyle
+              ? 'var(--bg-base)'
+              : 'linear-gradient(180deg, var(--bg-dark) 0%, #0a0a1a 100%)',
+          }}
+        >
+          <h1 style={{ fontSize: '2rem', marginBottom: '20px', fontWeight: 800 }}>
+            Event Not Found
+          </h1>
+          <p style={{ marginBottom: '30px', opacity: 0.8 }}>
+            {submitError || 'Please select an event to register.'}
+          </p>
+          <Link
+            href={`/events${isFestivalStyle ? '?style=festival' : ''}`}
+            style={{
+              padding: '12px 24px',
+              background: isFestivalStyle
+                ? 'linear-gradient(135deg, var(--primary-purple), var(--vivid-pink))'
+                : 'linear-gradient(135deg, var(--glow-purple), var(--glow-blue))',
+              color: 'white',
+              borderRadius: '12px',
+              textDecoration: 'none',
+              fontWeight: 600,
+            }}
+          >
+            Browse Events
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
+  const dateInfo = formatDate(event.fromDateTime);
+  const timeRange = getTimeRange(event.fromDateTime, event.toDateTime);
 
   return (
-    <div className="relative min-h-screen bg-black overflow-hidden">
-      {/* Splash Screen */}
-      {showSplash && <SplashScreen onAgree={() => setShowSplash(false)} />}
-
-      {/* Background Image */}
-      <Image
-        src="/assets/background.png"
-        alt=""
-        fill
-        className="object-cover pointer-events-none"
-        style={{
-          zIndex: 0
-        }}
-        priority
-        quality={90}
-      />
-
-      {/* Content */}
-      <div className="relative z-10 flex flex-col items-center pt-20 px-6">
-        {/* Logo */}
-        <svg
-          width="77"
-          height="102"
-          viewBox="0 0 77 102"
-          fill="none"
-          xmlns="http://www.w3.org/2000/svg"
-          className="mb-16"
+    <div className={isFestivalStyle ? 'festival-style' : ''}>
+      {/* Mode Switcher */}
+      {eventId && (
+        <button
+          onClick={switchMode}
+          className="mode-switcher"
+          aria-label={isFestivalStyle ? 'Switch to Nightlife' : 'Switch to Festival'}
         >
-          <path
-            d="M20.9239 47.2449V1.24693C20.9239 0.554192 21.6817 0 22.8725 0H37.7034C38.4612 0 39.219 0.277095 39.4355 0.831288L47.5546 14.409C47.8794 14.8939 48.4207 15.4481 48.962 15.4481C49.6115 15.4481 50.0445 14.8939 50.3693 14.409L58.2719 0.831288C58.7049 0.277095 59.3544 0 60.2205 0H75.0514C76.134 0 77 0.554192 77 1.24693V47.2449C77 48.0069 76.134 48.4918 75.0514 48.4918H62.1691C61.0865 48.4918 60.2205 48.0069 60.2205 47.2449V26.2548C60.1122 25.7007 59.6792 25.6314 59.3544 26.1856L50.5858 38.7242C49.2867 40.1789 47.7711 39.3476 47.3381 38.7242L38.5695 26.1856C38.2447 25.6314 37.7034 25.7007 37.7034 26.2548V47.2449C37.7034 48.0069 36.7291 48.4918 35.7548 48.4918H22.8725C21.6817 48.4918 20.9239 48.0069 20.9239 47.2449Z"
-            fill="white"
-          />
-          <path
-            d="M0 54.7336V99.9385C0 100.619 0.755958 101.164 1.8359 101.164H14.7952C15.9832 101.164 16.7391 100.619 16.7391 99.9385V54.7336C16.7391 54.0528 15.9832 53.5082 14.7952 53.5082H1.8359C0.755958 53.5082 0 54.0528 0 54.7336Z"
-            fill="white"
-          />
-          <path
-            d="M42.3419 82.4647L57.6589 101.169C58.0484 101.654 59.0868 102 59.9954 102H74.5337C75.8317 102 77 101.446 77 100.753V54.7551C77 54.0624 75.8317 53.5082 74.5337 53.5082H59.0868C57.6589 53.5082 56.6205 54.0624 56.6205 54.7551V73.6669C56.3609 74.2904 55.3224 74.3597 55.0628 73.8055L40.7842 54.3395C40.3948 53.7853 39.4861 53.5082 38.4477 53.5082H23.6498C22.222 53.5082 20.9239 54.0624 20.9239 54.7551V100.753C20.9239 101.446 22.222 102 23.6498 102H38.5775C39.8756 102 41.0438 101.446 41.0438 100.753V82.6033C41.1736 82.0491 41.9524 81.9105 42.3419 82.4647Z"
-            fill="white"
-          />
-          <path
-            d="M0 1.24693V47.2449C0 47.9376 0.755958 48.4918 1.8359 48.4918H14.7952C15.9832 48.4918 16.7391 47.9376 16.7391 47.2449V1.24693C16.7391 0.554192 15.9832 0 14.7952 0H1.8359C0.755958 0 0 0.554192 0 1.24693Z"
-            fill="white"
-          />
-        </svg>
+          <span className="switcher-indicator"></span>
+          <span className="switcher-text">
+            {isFestivalStyle ? 'Switch to Nightlife' : 'Switch to Festival'}
+          </span>
+        </button>
+      )}
 
-        {/* Form */}
-        <form onSubmit={handleSubmit} className="w-full max-w-[526px]">
-          {/* Error Message */}
-          {error && (
-            <div className="mb-6 p-4 rounded-[27px] border border-red-500 bg-red-500/10 backdrop-blur-[15px]">
-              <p className="text-white text-center text-sm">{error}</p>
+      {/* Ambient Background with Blobs */}
+      <div className="ambient-light" aria-hidden="true">
+        <div className="blob blob-1" id="blob1"></div>
+        <div className="blob blob-2" id="blob2"></div>
+      </div>
+
+      {/* Festival Background Layer */}
+      {isFestivalStyle && (
+        <>
+          <div className="hero-bg-layer"></div>
+          <div className="hero-overlay"></div>
+        </>
+      )}
+
+      <main
+        style={{
+          minHeight: '100vh',
+          paddingTop: '40px',
+          paddingBottom: '40px',
+          background: isFestivalStyle
+            ? 'var(--bg-base)'
+            : 'linear-gradient(180deg, var(--bg-dark) 0%, #0a0a1a 100%)',
+        }}
+      >
+        <div
+          style={{
+            maxWidth: '1200px',
+            margin: '0 auto',
+            padding: '0 20px',
+          }}
+        >
+          {/* Event Information Section */}
+          <div
+            style={{
+              marginBottom: '60px',
+              background: isFestivalStyle
+                ? 'white'
+                : 'rgba(255, 255, 255, 0.03)',
+              borderRadius: '24px',
+              overflow: 'hidden',
+              border: isFestivalStyle
+                ? '1px solid rgba(0, 0, 0, 0.1)'
+                : '1px solid rgba(255, 255, 255, 0.08)',
+              boxShadow: isFestivalStyle
+                ? '0 20px 40px rgba(124, 58, 237, 0.05)'
+                : '0 8px 32px rgba(0, 0, 0, 0.3)',
+            }}
+          >
+            {/* Event Image */}
+            {event.imageUrl && (
+              <div
+                style={{
+                  position: 'relative',
+                  width: '100%',
+                  height: '400px',
+                  overflow: 'hidden',
+                }}
+              >
+                <Image
+                  src={event.imageUrl}
+                  alt={event.name}
+                  fill
+                  style={{ objectFit: 'cover' }}
+                  unoptimized
+                />
+              </div>
+            )}
+
+            {/* Event Details */}
+            <div style={{ padding: '40px' }}>
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '16px',
+                  marginBottom: '24px',
+                }}
+              >
+                <div
+                  style={{
+                    background: isFestivalStyle
+                      ? 'linear-gradient(135deg, var(--primary-purple), var(--vivid-pink))'
+                      : 'linear-gradient(135deg, var(--glow-purple), var(--glow-blue))',
+                    borderRadius: '16px',
+                    padding: '16px 20px',
+                    color: 'white',
+                    fontWeight: 700,
+                    textAlign: 'center',
+                    minWidth: '80px',
+                  }}
+                >
+                  <div style={{ fontSize: '1.5rem', lineHeight: 1 }}>
+                    {dateInfo.day}
+                  </div>
+                  <div style={{ fontSize: '0.75rem', opacity: 0.9 }}>
+                    {dateInfo.month}
+                  </div>
+                </div>
+                <div>
+                  <h1
+                    style={{
+                      fontSize: '2rem',
+                      fontWeight: 800,
+                      marginBottom: '8px',
+                      color: isFestivalStyle ? 'var(--text-dark)' : 'white',
+                    }}
+                  >
+                    {event.name}
+                  </h1>
+                  <p
+                    style={{
+                      color: isFestivalStyle ? 'var(--text-muted)' : 'rgba(255, 255, 255, 0.7)',
+                      fontSize: '0.9rem',
+                    }}
+                  >
+                    {dateInfo.full} • {timeRange}
+                  </p>
+                </div>
+              </div>
+
+              {event.location && (
+                <div
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                    marginBottom: '20px',
+                    color: isFestivalStyle ? 'var(--text-dark)' : 'rgba(255, 255, 255, 0.8)',
+                  }}
+                >
+                  <svg
+                    width="20"
+                    height="20"
+                    viewBox="0 0 20 20"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      d="M10 10C11.3807 10 12.5 8.88071 12.5 7.5C12.5 6.11929 11.3807 5 10 5C8.61929 5 7.5 6.11929 7.5 7.5C7.5 8.88071 8.61929 10 10 10Z"
+                      stroke="currentColor"
+                      strokeWidth="1.5"
+                    />
+                    <path
+                      d="M10 18.3333C13.3333 13.3333 16.6667 10.1515 16.6667 7.5C16.6667 4.57143 14.4286 2.33333 11.5 2.33333C8.57143 2.33333 6.33333 4.57143 6.33333 7.5C6.33333 10.1515 9.66667 13.3333 13 18.3333"
+                      stroke="currentColor"
+                      strokeWidth="1.5"
+                    />
+                  </svg>
+                  <span>{event.location}</span>
+                </div>
+              )}
+
+              {event.description && (
+                <p
+                  style={{
+                    color: isFestivalStyle ? 'var(--text-dark)' : 'rgba(255, 255, 255, 0.8)',
+                    lineHeight: 1.6,
+                    marginTop: '20px',
+                  }}
+                >
+                  {event.description}
+                </p>
+              )}
+            </div>
+          </div>
+
+          {/* Registration Form */}
+          {submitSuccess ? (
+            <div
+              style={{
+                background: isFestivalStyle
+                  ? 'white'
+                  : 'rgba(255, 255, 255, 0.03)',
+                borderRadius: '24px',
+                padding: '60px 40px',
+                textAlign: 'center',
+                border: isFestivalStyle
+                  ? '1px solid rgba(0, 0, 0, 0.1)'
+                  : '1px solid rgba(255, 255, 255, 0.08)',
+              }}
+            >
+              <div
+                style={{
+                  fontSize: '3rem',
+                  marginBottom: '20px',
+                  color: isFestivalStyle ? 'var(--primary-purple)' : 'var(--glow-green)',
+                }}
+              >
+                ✓
+              </div>
+              <h2
+                style={{
+                  fontSize: '1.5rem',
+                  fontWeight: 800,
+                  marginBottom: '12px',
+                  color: isFestivalStyle ? 'var(--text-dark)' : 'white',
+                }}
+              >
+                Registration Successful!
+              </h2>
+              <p
+                style={{
+                  color: isFestivalStyle ? 'var(--text-muted)' : 'rgba(255, 255, 255, 0.7)',
+                  marginBottom: telegramInviteLink ? '32px' : '0',
+                }}
+              >
+                {telegramInviteLink
+                  ? 'Join your event group on Telegram to connect with other attendees!'
+                  : 'Your registration has been confirmed.'}
+              </p>
+              {telegramInviteLink ? (
+                <a
+                  href={telegramInviteLink}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{
+                    display: 'inline-block',
+                    padding: '16px 32px',
+                    background: isFestivalStyle
+                      ? 'linear-gradient(135deg, var(--primary-purple), var(--vivid-pink))'
+                      : 'linear-gradient(135deg, var(--glow-purple), var(--glow-blue))',
+                    color: 'white',
+                    borderRadius: '12px',
+                    textDecoration: 'none',
+                    fontSize: '1rem',
+                    fontWeight: 700,
+                    transition: 'all 0.2s',
+                    boxShadow: isFestivalStyle
+                      ? '0 10px 25px rgba(236, 72, 153, 0.3)'
+                      : '0 8px 20px rgba(139, 92, 246, 0.3)',
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.transform = 'translateY(-2px)';
+                    e.currentTarget.style.boxShadow = isFestivalStyle
+                      ? '0 15px 35px rgba(236, 72, 153, 0.4)'
+                      : '0 12px 28px rgba(139, 92, 246, 0.4)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.transform = 'translateY(0)';
+                    e.currentTarget.style.boxShadow = isFestivalStyle
+                      ? '0 10px 25px rgba(236, 72, 153, 0.3)'
+                      : '0 8px 20px rgba(139, 92, 246, 0.3)';
+                  }}
+                >
+                  Join Telegram Group
+                </a>
+              ) : (
+                <div
+                  style={{
+                    marginTop: '24px',
+                    padding: '12px 24px',
+                    background: isFestivalStyle
+                      ? 'rgba(124, 58, 237, 0.1)'
+                      : 'rgba(139, 92, 246, 0.1)',
+                    borderRadius: '8px',
+                    color: isFestivalStyle ? 'var(--primary-purple)' : 'rgba(255, 255, 255, 0.8)',
+                    fontSize: '0.9rem',
+                  }}
+                >
+                  Telegram group link will be available soon.
+                </div>
+              )}
+            </div>
+          ) : (
+            <div
+              style={{
+                background: isFestivalStyle
+                  ? 'white'
+                  : 'rgba(255, 255, 255, 0.03)',
+                borderRadius: '24px',
+                padding: '40px',
+                border: isFestivalStyle
+                  ? '1px solid rgba(0, 0, 0, 0.1)'
+                  : '1px solid rgba(255, 255, 255, 0.08)',
+                boxShadow: isFestivalStyle
+                  ? '0 20px 40px rgba(124, 58, 237, 0.05)'
+                  : '0 8px 32px rgba(0, 0, 0, 0.3)',
+              }}
+            >
+              <h2
+                style={{
+                  fontSize: '1.75rem',
+                  fontWeight: 800,
+                  marginBottom: '32px',
+                  color: isFestivalStyle ? 'var(--text-dark)' : 'white',
+                }}
+              >
+                Register for Event
+              </h2>
+
+              {submitError && (
+                <div
+                  style={{
+                    background: 'rgba(239, 68, 68, 0.1)',
+                    border: '1px solid rgba(239, 68, 68, 0.3)',
+                    borderRadius: '12px',
+                    padding: '16px',
+                    marginBottom: '24px',
+                    color: '#ef4444',
+                  }}
+                >
+                  {submitError}
+                </div>
+              )}
+
+              <form onSubmit={handleSubmit}>
+                {/* Name Field */}
+                <div style={{ marginBottom: '24px' }}>
+                  <label
+                    htmlFor="name"
+                    style={{
+                      display: 'block',
+                      marginBottom: '8px',
+                      fontSize: '0.9rem',
+                      fontWeight: 600,
+                      color: isFestivalStyle ? 'var(--text-dark)' : 'white',
+                    }}
+                  >
+                    Name <span style={{ color: '#ef4444' }}>*</span>
+                  </label>
+                  <input
+                    id="name"
+                    type="text"
+                    value={formData.name}
+                    onChange={(e) => handleInputChange('name', e.target.value)}
+                    style={{
+                      width: '100%',
+                      padding: '14px 18px',
+                      background: isFestivalStyle
+                        ? 'rgba(0, 0, 0, 0.03)'
+                        : 'rgba(255, 255, 255, 0.05)',
+                      border: fieldErrors.name
+                        ? '1px solid #ef4444'
+                        : isFestivalStyle
+                        ? '1px solid rgba(0, 0, 0, 0.1)'
+                        : '1px solid rgba(255, 255, 255, 0.1)',
+                      borderRadius: '12px',
+                      color: isFestivalStyle ? 'var(--text-dark)' : 'white',
+                      fontSize: '0.95rem',
+                      outline: 'none',
+                      transition: 'all 0.2s',
+                    }}
+                    onFocus={(e) => {
+                      e.currentTarget.style.borderColor = isFestivalStyle
+                        ? 'var(--primary-purple)'
+                        : 'var(--glow-purple)';
+                    }}
+                    onBlur={(e) => {
+                      e.currentTarget.style.borderColor = fieldErrors.name
+                        ? '#ef4444'
+                        : isFestivalStyle
+                        ? 'rgba(0, 0, 0, 0.1)'
+                        : 'rgba(255, 255, 255, 0.1)';
+                    }}
+                    placeholder="Enter your name"
+                    disabled={submitting}
+                  />
+                  {fieldErrors.name && (
+                    <div
+                      style={{
+                        marginTop: '6px',
+                        fontSize: '0.85rem',
+                        color: '#ef4444',
+                      }}
+                    >
+                      {fieldErrors.name}
+                    </div>
+                  )}
+                </div>
+
+                {/* Email Field */}
+                <div style={{ marginBottom: '24px' }}>
+                  <label
+                    htmlFor="email"
+                    style={{
+                      display: 'block',
+                      marginBottom: '8px',
+                      fontSize: '0.9rem',
+                      fontWeight: 600,
+                      color: isFestivalStyle ? 'var(--text-dark)' : 'white',
+                    }}
+                  >
+                    Email <span style={{ color: '#ef4444' }}>*</span>
+                  </label>
+                  <input
+                    id="email"
+                    type="email"
+                    value={formData.email}
+                    onChange={(e) => handleInputChange('email', e.target.value)}
+                    style={{
+                      width: '100%',
+                      padding: '14px 18px',
+                      background: isFestivalStyle
+                        ? 'rgba(0, 0, 0, 0.03)'
+                        : 'rgba(255, 255, 255, 0.05)',
+                      border: fieldErrors.email
+                        ? '1px solid #ef4444'
+                        : isFestivalStyle
+                        ? '1px solid rgba(0, 0, 0, 0.1)'
+                        : '1px solid rgba(255, 255, 255, 0.1)',
+                      borderRadius: '12px',
+                      color: isFestivalStyle ? 'var(--text-dark)' : 'white',
+                      fontSize: '0.95rem',
+                      outline: 'none',
+                      transition: 'all 0.2s',
+                    }}
+                    onFocus={(e) => {
+                      e.currentTarget.style.borderColor = isFestivalStyle
+                        ? 'var(--primary-purple)'
+                        : 'var(--glow-purple)';
+                    }}
+                    onBlur={(e) => {
+                      e.currentTarget.style.borderColor = fieldErrors.email
+                        ? '#ef4444'
+                        : isFestivalStyle
+                        ? 'rgba(0, 0, 0, 0.1)'
+                        : 'rgba(255, 255, 255, 0.1)';
+                    }}
+                    placeholder="you@example.com"
+                    disabled={submitting}
+                  />
+                  {fieldErrors.email && (
+                    <div
+                      style={{
+                        marginTop: '6px',
+                        fontSize: '0.85rem',
+                        color: '#ef4444',
+                      }}
+                    >
+                      {fieldErrors.email}
+                    </div>
+                  )}
+                </div>
+
+                {/* Age Field */}
+                <div style={{ marginBottom: '24px' }}>
+                  <label
+                    htmlFor="age"
+                    style={{
+                      display: 'block',
+                      marginBottom: '8px',
+                      fontSize: '0.9rem',
+                      fontWeight: 600,
+                      color: isFestivalStyle ? 'var(--text-dark)' : 'white',
+                    }}
+                  >
+                    Age <span style={{ color: '#ef4444' }}>*</span>
+                  </label>
+                  <input
+                    id="age"
+                    type="number"
+                    min="1"
+                    value={formData.age || ''}
+                    onChange={(e) =>
+                      handleInputChange('age', parseInt(e.target.value) || 0)
+                    }
+                    style={{
+                      width: '100%',
+                      padding: '14px 18px',
+                      background: isFestivalStyle
+                        ? 'rgba(0, 0, 0, 0.03)'
+                        : 'rgba(255, 255, 255, 0.05)',
+                      border: fieldErrors.age
+                        ? '1px solid #ef4444'
+                        : isFestivalStyle
+                        ? '1px solid rgba(0, 0, 0, 0.1)'
+                        : '1px solid rgba(255, 255, 255, 0.1)',
+                      borderRadius: '12px',
+                      color: isFestivalStyle ? 'var(--text-dark)' : 'white',
+                      fontSize: '0.95rem',
+                      outline: 'none',
+                      transition: 'all 0.2s',
+                    }}
+                    onFocus={(e) => {
+                      e.currentTarget.style.borderColor = isFestivalStyle
+                        ? 'var(--primary-purple)'
+                        : 'var(--glow-purple)';
+                    }}
+                    onBlur={(e) => {
+                      e.currentTarget.style.borderColor = fieldErrors.age
+                        ? '#ef4444'
+                        : isFestivalStyle
+                        ? 'rgba(0, 0, 0, 0.1)'
+                        : 'rgba(255, 255, 255, 0.1)';
+                    }}
+                    placeholder="Enter your age"
+                    disabled={submitting}
+                  />
+                  {fieldErrors.age && (
+                    <div
+                      style={{
+                        marginTop: '6px',
+                        fontSize: '0.85rem',
+                        color: '#ef4444',
+                      }}
+                    >
+                      {fieldErrors.age}
+                    </div>
+                  )}
+                </div>
+
+                {/* Sex Field */}
+                <div style={{ marginBottom: '24px' }}>
+                  <label
+                    htmlFor="sex"
+                    style={{
+                      display: 'block',
+                      marginBottom: '8px',
+                      fontSize: '0.9rem',
+                      fontWeight: 600,
+                      color: isFestivalStyle ? 'var(--text-dark)' : 'white',
+                    }}
+                  >
+                    Sex <span style={{ color: '#ef4444' }}>*</span>
+                  </label>
+                  <select
+                    id="sex"
+                    value={formData.sex}
+                    onChange={(e) => handleInputChange('sex', e.target.value)}
+                    style={{
+                      width: '100%',
+                      padding: '14px 18px',
+                      background: isFestivalStyle
+                        ? 'rgba(0, 0, 0, 0.03)'
+                        : 'rgba(255, 255, 255, 0.05)',
+                      border: fieldErrors.sex
+                        ? '1px solid #ef4444'
+                        : isFestivalStyle
+                        ? '1px solid rgba(0, 0, 0, 0.1)'
+                        : '1px solid rgba(255, 255, 255, 0.1)',
+                      borderRadius: '12px',
+                      color: isFestivalStyle ? 'var(--text-dark)' : 'white',
+                      fontSize: '0.95rem',
+                      outline: 'none',
+                      transition: 'all 0.2s',
+                      cursor: 'pointer',
+                    }}
+                    onFocus={(e) => {
+                      e.currentTarget.style.borderColor = isFestivalStyle
+                        ? 'var(--primary-purple)'
+                        : 'var(--glow-purple)';
+                    }}
+                    onBlur={(e) => {
+                      e.currentTarget.style.borderColor = fieldErrors.sex
+                        ? '#ef4444'
+                        : isFestivalStyle
+                        ? 'rgba(0, 0, 0, 0.1)'
+                        : 'rgba(255, 255, 255, 0.1)';
+                    }}
+                    disabled={submitting}
+                  >
+                    <option value="">Select sex</option>
+                    <option value="male">Male</option>
+                    <option value="female">Female</option>
+                    <option value="other">Other</option>
+                    <option value="prefer-not-to-say">Prefer not to say</option>
+                  </select>
+                  {fieldErrors.sex && (
+                    <div
+                      style={{
+                        marginTop: '6px',
+                        fontSize: '0.85rem',
+                        color: '#ef4444',
+                      }}
+                    >
+                      {fieldErrors.sex}
+                    </div>
+                  )}
+                </div>
+
+                {/* Languages Field */}
+                <div style={{ marginBottom: '32px' }}>
+                  <label
+                    style={{
+                      display: 'block',
+                      marginBottom: '12px',
+                      fontSize: '0.9rem',
+                      fontWeight: 600,
+                      color: isFestivalStyle ? 'var(--text-dark)' : 'white',
+                    }}
+                  >
+                    Language(s) I speak <span style={{ color: '#ef4444' }}>*</span>
+                  </label>
+                  <div
+                    style={{
+                      display: 'flex',
+                      flexWrap: 'wrap',
+                      gap: '12px',
+                    }}
+                  >
+                    {languages.map((language) => {
+                      const isSelected = formData.languagesISpeak.includes(
+                        language.code
+                      );
+                      return (
+                        <button
+                          key={language.id}
+                          type="button"
+                          onClick={() => toggleLanguage(language.code)}
+                          disabled={submitting}
+                          style={{
+                            padding: '10px 20px',
+                            borderRadius: '12px',
+                            border: isSelected
+                              ? isFestivalStyle
+                                ? '2px solid var(--primary-purple)'
+                                : '2px solid var(--glow-purple)'
+                              : isFestivalStyle
+                              ? '1px solid rgba(0, 0, 0, 0.1)'
+                              : '1px solid rgba(255, 255, 255, 0.2)',
+                            background: isSelected
+                              ? isFestivalStyle
+                                ? 'rgba(124, 58, 237, 0.1)'
+                                : 'rgba(139, 92, 246, 0.2)'
+                              : isFestivalStyle
+                              ? 'rgba(0, 0, 0, 0.03)'
+                              : 'rgba(255, 255, 255, 0.05)',
+                            color: isSelected
+                              ? isFestivalStyle
+                                ? 'var(--primary-purple)'
+                                : 'white'
+                              : isFestivalStyle
+                              ? 'var(--text-dark)'
+                              : 'rgba(255, 255, 255, 0.8)',
+                            fontWeight: isSelected ? 600 : 500,
+                            fontSize: '0.9rem',
+                            cursor: submitting ? 'not-allowed' : 'pointer',
+                            transition: 'all 0.2s',
+                            opacity: submitting ? 0.6 : 1,
+                          }}
+                          onMouseEnter={(e) => {
+                            if (!submitting && !isSelected) {
+                              e.currentTarget.style.background = isFestivalStyle
+                                ? 'rgba(124, 58, 237, 0.05)'
+                                : 'rgba(255, 255, 255, 0.1)';
+                            }
+                          }}
+                          onMouseLeave={(e) => {
+                            if (!isSelected) {
+                              e.currentTarget.style.background = isFestivalStyle
+                                ? 'rgba(0, 0, 0, 0.03)'
+                                : 'rgba(255, 255, 255, 0.05)';
+                            }
+                          }}
+                        >
+                          {language.name}
+                        </button>
+                      );
+                    })}
+                  </div>
+                  {fieldErrors.languagesISpeak && (
+                    <div
+                      style={{
+                        marginTop: '6px',
+                        fontSize: '0.85rem',
+                        color: '#ef4444',
+                      }}
+                    >
+                      {fieldErrors.languagesISpeak}
+                    </div>
+                  )}
+                </div>
+
+                {/* Submit Button */}
+                <button
+                  type="submit"
+                  disabled={submitting}
+                  style={{
+                    width: '100%',
+                    padding: '16px',
+                    background: isFestivalStyle
+                      ? 'linear-gradient(135deg, var(--primary-purple), var(--vivid-pink))'
+                      : 'linear-gradient(135deg, var(--glow-purple), var(--glow-blue))',
+                    color: 'white',
+                    borderRadius: '12px',
+                    fontSize: '1rem',
+                    fontWeight: 700,
+                    border: 'none',
+                    cursor: submitting ? 'not-allowed' : 'pointer',
+                    transition: 'all 0.2s',
+                    opacity: submitting ? 0.7 : 1,
+                    boxShadow: isFestivalStyle
+                      ? '0 10px 25px rgba(236, 72, 153, 0.3)'
+                      : '0 8px 20px rgba(139, 92, 246, 0.3)',
+                  }}
+                  onMouseEnter={(e) => {
+                    if (!submitting) {
+                      e.currentTarget.style.transform = 'translateY(-2px)';
+                      e.currentTarget.style.boxShadow = isFestivalStyle
+                        ? '0 15px 35px rgba(236, 72, 153, 0.4)'
+                        : '0 12px 28px rgba(139, 92, 246, 0.4)';
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (!submitting) {
+                      e.currentTarget.style.transform = 'translateY(0)';
+                      e.currentTarget.style.boxShadow = isFestivalStyle
+                        ? '0 10px 25px rgba(236, 72, 153, 0.3)'
+                        : '0 8px 20px rgba(139, 92, 246, 0.3)';
+                    }
+                  }}
+                >
+                  {submitting ? 'Submitting...' : 'Submit Registration'}
+                </button>
+              </form>
             </div>
           )}
-
-          {/* Event Selection */}
-          <div className="mb-[26px]">
-            <label className="block mb-2 text-white text-xs font-normal">
-              Choose an Event <span className="text-[#CC0000]">*</span>
-            </label>
-            <CustomDropdown
-              options={eventOptions}
-              value={formData.eventId}
-              onChange={(value) => {
-                setFormData({ ...formData, eventId: value });
-                validateField('eventId', value);
-              }}
-              placeholder={loading ? 'Loading events...' : events.length === 0 ? 'No events available' : 'Select an event'}
-              disabled={loading || events.length === 0}
-              variant="register"
-              className={errors.eventId ? 'error' : ''}
-            />
-            {errors.eventId && (
-              <div className="mt-1 flex items-center gap-1">
-                <svg className="w-3 h-3 text-red-500" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-                </svg>
-                <p className="text-red-500 text-xs">{errors.eventId}</p>
-              </div>
-            )}
-          </div>
-
-          {/* Name */}
-          <div className="mb-[26px]">
-            <label className="block mb-2 text-white text-xs font-normal">
-              Name <span className="text-[#CC0000]">*</span>
-            </label>
-            <input
-              type="text"
-              value={formData.name}
-              onChange={(e) => {
-                setFormData({ ...formData, name: e.target.value });
-                if (errors.name) validateField('name', e.target.value);
-              }}
-              onBlur={(e) => validateField('name', e.target.value)}
-              placeholder="John"
-              className={`w-full h-[45px] px-5 rounded-[27px] border bg-white/5 backdrop-blur-[15px] text-white text-[13px] font-medium placeholder:text-white/25 focus:outline-none focus:ring-2 focus:ring-white/50 ${
-                errors.name ? 'border-red-500' : 'border-white/30'
-              }`}
-            />
-            {errors.name && (
-              <div className="mt-1 flex items-center gap-1">
-                <svg className="w-3 h-3 text-red-500" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-                </svg>
-                <p className="text-red-500 text-xs">{errors.name}</p>
-              </div>
-            )}
-          </div>
-
-          {/* Email */}
-          <div className="mb-[26px]">
-            <label className="block mb-2 text-white text-xs font-normal">
-              Email <span className="text-[#CC0000]">*</span>
-            </label>
-            <input
-              type="email"
-              value={formData.email}
-              onChange={(e) => {
-                setFormData({ ...formData, email: e.target.value });
-                if (errors.email) validateField('email', e.target.value);
-              }}
-              onBlur={(e) => validateField('email', e.target.value)}
-              placeholder="johnblack@gmail.com"
-              className={`w-full h-[45px] px-5 rounded-[27px] border bg-white/5 backdrop-blur-[15px] text-white text-[13px] font-medium placeholder:text-white/25 focus:outline-none focus:ring-2 focus:ring-white/50 ${
-                errors.email ? 'border-red-500' : 'border-white/30'
-              }`}
-            />
-            {errors.email && (
-              <div className="mt-1 flex items-center gap-1">
-                <svg className="w-3 h-3 text-red-500" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-                </svg>
-                <p className="text-red-500 text-xs">{errors.email}</p>
-              </div>
-            )}
-          </div>
-
-          {/* Age and Sex in one row */}
-          <div className="mb-[26px] flex gap-4">
-            {/* Age */}
-            <div className="flex-1">
-              <label className="block mb-2 text-white text-xs font-normal">
-                Your Age <span className="text-[#CC0000]">*</span>
-              </label>
-              <input
-                type="number"
-                value={formData.age}
-                onChange={(e) => {
-                  setFormData({ ...formData, age: e.target.value });
-                  if (errors.age) validateField('age', e.target.value);
-                }}
-                onBlur={(e) => validateField('age', e.target.value)}
-                placeholder="28"
-                min={18}
-                max={99}
-                className={`w-full h-[45px] px-5 rounded-[27px] border bg-white/5 backdrop-blur-[15px] text-white text-[13px] font-medium placeholder:text-white/25 focus:outline-none focus:ring-2 focus:ring-white/50 ${
-                  errors.age ? 'border-red-500' : 'border-white/30'
-                }`}
-              />
-              {errors.age && (
-                <div className="mt-1 flex items-center gap-1">
-                  <svg className="w-3 h-3 text-red-500" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-                  </svg>
-                  <p className="text-red-500 text-xs">{errors.age}</p>
-                </div>
-              )}
-            </div>
-
-            {/* Sex */}
-            <div className="flex-1">
-              <label className="block mb-2 text-white text-xs font-normal">
-                Sex <span className="text-[#CC0000]">*</span>
-              </label>
-              <CustomDropdown
-                options={[
-                  { value: 'Male', label: 'Male' },
-                  { value: 'Female', label: 'Female' },
-                  { value: 'Other', label: 'Other' },
-                ]}
-                value={formData.sex}
-                onChange={(value) => {
-                  setFormData({ ...formData, sex: value });
-                  validateField('sex', value);
-                }}
-                placeholder="Select sex"
-                variant="register"
-                className={errors.sex ? 'error' : ''}
-              />
-              {errors.sex && (
-                <div className="mt-1 flex items-center gap-1">
-                  <svg className="w-3 h-3 text-red-500" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-                  </svg>
-                  <p className="text-red-500 text-xs">{errors.sex}</p>
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Languages */}
-          <div className="mb-[75px]">
-            <label className="block mb-4 text-white text-xs font-normal">
-              Language(s) I speak <span className="text-[#CC0000]">*</span>
-            </label>
-            <div className={`flex gap-6 w-full ${errors.languagesISpeak ? 'mb-1' : ''}`}>
-              {LANGUAGES.map((language) => (
-                <button
-                  key={language.code}
-                  type="button"
-                  onClick={() => handleLanguageToggle(language.code)}
-                  className={`flex-1 h-[45px] px-4 rounded-[27px] border text-[13px] font-normal transition-all backdrop-blur-[15px] ${
-                    formData.languagesISpeak.includes(language.code)
-                      ? 'border-white bg-white/20 text-white'
-                      : errors.languagesISpeak
-                      ? 'border-red-500 bg-white/5 text-white hover:bg-white/10'
-                      : 'border-white/30 bg-white/5 text-white hover:bg-white/10'
-                  }`}
-                >
-                  {language.code}
-                </button>
-              ))}
-            </div>
-            {errors.languagesISpeak && (
-              <div className="mt-1 flex items-center gap-1">
-                <svg className="w-3 h-3 text-red-500" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-                </svg>
-                <p className="text-red-500 text-xs">{errors.languagesISpeak}</p>
-              </div>
-            )}
-          </div>
-
-          {/* Submit Button */}
-          <button
-            type="submit"
-            disabled={submitting}
-            className={`w-full h-[45px] rounded-[30px] border text-[15px] font-medium transition-all ${
-              submitting
-                ? 'border-white/30 bg-white/35 text-black/50 cursor-not-allowed'
-                : 'border-white/30 bg-white text-black hover:bg-white/90'
-            } backdrop-blur-[15px]`}
-          >
-            {submitting ? 'SUBMITTING...' : 'SUBMIT'}
-          </button>
-        </form>
-      </div>
+        </div>
+      </main>
     </div>
+  );
+}
+
+export default function RegisterPage() {
+  return (
+    <Suspense
+      fallback={
+        <div
+          style={{
+            minHeight: '100vh',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            color: 'white',
+          }}
+        >
+          Loading...
+        </div>
+      }
+    >
+      <RegisterContent />
+    </Suspense>
   );
 }
