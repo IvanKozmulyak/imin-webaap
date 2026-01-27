@@ -242,7 +242,7 @@ export default function LandingPage() {
                   <div className="iphone-frame"></div>
                   <div className="iphone-screen">
                     <Image
-                      src="/assets/placeholder.jpg"
+                      src="/assets/choose.jpg"
                       alt="Choose your festival"
                       className="screen-content"
                       fill
