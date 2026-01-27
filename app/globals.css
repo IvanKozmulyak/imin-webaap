@@ -1949,6 +1949,44 @@ footer {
     text-align: center;
     gap: 40px;
   }
+  
+  /* Landing hero mobile layout */
+  .landing-hero {
+    grid-template-columns: 1fr !important;
+    grid-template-rows: auto 500px !important;
+    display: grid !important;
+    overflow: visible !important;
+    min-height: auto !important;
+    align-items: start !important;
+    grid-auto-rows: min-content !important;
+  }
+  
+  section.landing-hero {
+    min-height: auto !important;
+    height: auto !important;
+    overflow: visible !important;
+  }
+  
+  .landing-hero .hero-content {
+    grid-row: 1;
+    width: 100%;
+    margin-bottom: 40px;
+    min-height: auto !important;
+  }
+  
+  .landing-hero .phone-perspective {
+    grid-row: 2 !important;
+    min-height: 500px !important;
+    height: 500px !important;
+    max-height: 500px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    flex-shrink: 0 !important;
+    flex-grow: 0 !important;
+  }
 
   .hero-content {
     display: flex;
@@ -1993,7 +2031,132 @@ footer {
   }
 
   .phone-perspective {
-    height: 500px;
+    height: 500px !important;
+    min-height: 500px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    position: relative !important;
+    width: 100% !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    overflow: visible !important;
+  }
+  
+  .phone-perspective .iphone-wrapper {
+    position: relative !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+  }
+  
+  .phone-perspective .iphone-body,
+  .phone-perspective .iphone-frame {
+    display: block !important;
+    visibility: visible !important;
+  }
+  
+  .phone-perspective .iphone-screen {
+    position: absolute !important;
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+  }
+  
+  .phone-perspective .iphone-screen > * {
+    position: relative !important;
+    width: 100% !important;
+    height: 100% !important;
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+  }
+  
+  /* Ensure landing-hero phone-perspective inherits all these styles */
+  .landing-hero .phone-perspective {
+    height: 500px !important;
+    min-height: 500px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    position: relative !important;
+    width: 100% !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    overflow: visible !important;
+    margin: 0 auto !important;
+  }
+  
+  .landing-hero .phone-perspective .iphone-wrapper {
+    position: relative !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    transform: none !important;
+    max-width: 260px !important;
+    width: 260px !important;
+    height: 530px !important;
+    min-height: 530px !important;
+    margin-bottom: 40px !important;
+  }
+  
+  .landing-hero .phone-perspective .iphone-body {
+    display: block !important;
+    visibility: visible !important;
+    position: absolute !important;
+    inset: 6px !important;
+  }
+  
+  .landing-hero .phone-perspective .iphone-frame {
+    display: block !important;
+    visibility: visible !important;
+    position: absolute !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    z-index: 10 !important;
+  }
+  
+  .landing-hero .phone-perspective .iphone-screen {
+    position: absolute !important;
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    top: 17px !important;
+    left: 17px !important;
+    right: 17px !important;
+    bottom: 17px !important;
+    border-radius: 42px !important;
+    z-index: 1 !important;
+    background: #000 !important;
+    overflow: hidden !important;
+    width: calc(100% - 34px) !important;
+    height: calc(100% - 34px) !important;
+  }
+  
+  .landing-hero .phone-perspective .iphone-screen > * {
+    position: relative !important;
+    width: 100% !important;
+    height: 100% !important;
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+  }
+  
+  .landing-hero .phone-perspective .iphone-screen img,
+  .landing-hero .phone-perspective .iphone-screen .screen-content {
+    position: relative !important;
+    width: 100% !important;
+    height: 100% !important;
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    object-fit: cover !important;
   }
 
   /* Calculator Section */
@@ -3542,6 +3705,12 @@ footer {
   overflow: hidden;
 }
 
+.iphone-screen > * {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
 .screen-content {
   width: 100%;
   height: 100%;
@@ -4999,13 +5168,49 @@ footer {
   align-items: center;
 }
 
+.landing-hero .phone-perspective {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  width: 100%;
+}
+
 /* Landing Page Responsive Styles */
 @media (max-width: 900px) {
   .landing-hero {
     grid-template-columns: 1fr !important;
+    grid-template-rows: auto 500px !important;
     text-align: center !important;
     padding-top: 160px !important;
+    padding-bottom: 60px !important;
     min-height: auto !important;
+    overflow: visible !important;
+    display: grid !important;
+    align-items: start !important;
+    grid-auto-rows: min-content !important;
+  }
+  
+  section.landing-hero {
+    min-height: auto !important;
+    height: auto !important;
+  }
+  
+  .container .landing-hero {
+    overflow: visible !important;
+  }
+  
+  section.landing-hero {
+    overflow: visible !important;
+  }
+  
+  .container {
+    overflow: visible !important;
+  }
+  
+  section#hero.landing-hero {
+    overflow: visible !important;
+    position: relative !important;
   }
   
   .landing-hero h1 {
@@ -5013,24 +5218,112 @@ footer {
   }
   
   .landing-hero .hero-content {
-    order: 1;
     width: 100%;
-    margin-bottom: 30px;
-  }
-  
-  .landing-hero .phone-perspective {
-    order: 2;
-    width: 100%;
-    margin-top: 0;
-    height: 500px;
-  }
-  
-  .landing-hero .iphone-wrapper {
-    transform: none !important;
-    max-width: 260px;
-    height: 530px;
     margin-bottom: 40px;
-    width: auto;
+    grid-row: 1 !important;
+    grid-column: 1 !important;
+    min-height: auto !important;
+    order: 1 !important;
+  }
+  
+  /* Use exact same styles as main page - complete styles */
+  .landing-hero .phone-perspective {
+    grid-row: 2 !important;
+    grid-column: 1 !important;
+    height: 500px !important;
+    min-height: 500px !important;
+    max-height: 500px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    position: relative !important;
+    width: 100% !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    overflow: visible !important;
+    margin: 0 auto !important;
+    margin-top: 20px !important;
+    margin-bottom: 0 !important;
+    z-index: 10 !important;
+    flex-shrink: 0 !important;
+    flex-grow: 0 !important;
+    order: 2 !important;
+  }
+  
+  .landing-hero .phone-perspective .hero-glow {
+    display: block !important;
+    visibility: visible !important;
+  }
+  
+  .landing-hero .phone-perspective .iphone-wrapper {
+    position: relative !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    transform: none !important;
+    max-width: 260px !important;
+    width: 260px !important;
+    height: 530px !important;
+    min-height: 530px !important;
+    margin-bottom: 40px !important;
+    z-index: 2 !important;
+  }
+  
+  .landing-hero .phone-perspective .iphone-body {
+    display: block !important;
+    visibility: visible !important;
+    position: absolute !important;
+    inset: 6px !important;
+  }
+  
+  .landing-hero .phone-perspective .iphone-frame {
+    display: block !important;
+    visibility: visible !important;
+    position: absolute !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    z-index: 10 !important;
+  }
+  
+  .landing-hero .phone-perspective .iphone-screen {
+    position: absolute !important;
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    top: 17px !important;
+    left: 17px !important;
+    right: 17px !important;
+    bottom: 17px !important;
+    border-radius: 42px !important;
+    z-index: 1 !important;
+    background: #000 !important;
+    overflow: hidden !important;
+    width: calc(100% - 34px) !important;
+    height: calc(100% - 34px) !important;
+  }
+  
+  .landing-hero .phone-perspective .iphone-screen > * {
+    position: relative !important;
+    width: 100% !important;
+    height: 100% !important;
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+  }
+  
+  .landing-hero .phone-perspective .iphone-screen img,
+  .landing-hero .phone-perspective .iphone-screen .screen-content {
+    position: relative !important;
+    width: 100% !important;
+    height: 100% !important;
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    object-fit: cover !important;
   }
   
   .landing-hero .iphone-body {
@@ -5041,26 +5334,36 @@ footer {
 @media (max-width: 600px) {
   .landing-hero {
     padding-top: 180px !important;
+    padding-bottom: 60px !important;
+    overflow: visible !important;
+    grid-template-rows: auto 500px !important;
+    align-items: start !important;
   }
   
+  /* Use exact same styles as main page */
   .landing-hero .phone-perspective {
-    height: 500px;
+    grid-row: 2 !important;
+    height: 500px !important;
+    min-height: 500px !important;
+    max-height: 500px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    position: relative !important;
+    width: 100% !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    overflow: visible !important;
+    margin: 0 auto !important;
+    flex-shrink: 0 !important;
+    flex-grow: 0 !important;
   }
   
-  .landing-hero .iphone-wrapper {
+  .landing-hero .phone-perspective .iphone-wrapper {
     transform: none !important;
-    max-width: 260px;
-    height: 530px;
-    margin-bottom: 40px;
-    width: auto;
-  }
-  
-  .landing-hero .iphone-body {
-    box-shadow: inset 0 0 15px rgba(0, 0, 0, 1) !important;
-  }
-  
-  .landing-hero .iphone-frame {
-    filter: drop-shadow(0 15px 30px rgba(0, 0, 0, 0.3)) !important;
+    max-width: 260px !important;
+    height: 530px !important;
+    margin-bottom: 40px !important;
   }
 }
 

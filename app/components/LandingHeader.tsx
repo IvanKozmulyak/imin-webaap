@@ -17,7 +17,7 @@ export default function LandingHeader() {
             style={{ height: 'auto' }}
           />
         </Link>
-        <Link href="/events" className="btn-outline" style={{ fontSize: '0.85rem', padding: '10px 24px' }}>
+        <Link href="/events?style=festival" className="btn-outline" style={{ fontSize: '0.85rem', padding: '10px 24px' }}>
           Join Squad
         </Link>
       </div>
