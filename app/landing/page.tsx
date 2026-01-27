@@ -255,7 +255,7 @@ export default function LandingPage() {
               <div className="flow-text" style={{ maxWidth: '450px' }}>
                 <div className="flow-step-num">01</div>
                 <h3 className="flow-title">Choose your festival</h3>
-                <p className="flow-desc">Select the festival you're hesitating to go to and proceed to next step.</p>
+                <p className="flow-desc">Select the festival you&apos;re hesitating to go to and proceed to next step.</p>
               </div>
             </div>
 
@@ -279,7 +279,7 @@ export default function LandingPage() {
               </div>
               <div className="flow-text" style={{ maxWidth: '450px' }}>
                 <div className="flow-step-num">02</div>
-                <h3 className="flow-title">Tell us what's your needs</h3>
+                <h3 className="flow-title">Tell us what&apos;s your needs</h3>
                 <p className="flow-desc">A ride or a place to stay? A pre-party, or class partners? We collect your needs to find the right squad.</p>
               </div>
             </div>
@@ -351,7 +351,7 @@ export default function LandingPage() {
             <div className="why-this-works-grid">
               <div className="why-this-works-text">
                 <span className="section-tag" style={{ background: '#E879F9', color: 'white', border: 'none' }}>WHY IT WORKS</span>
-                <h2 style={{ fontSize: '2.5rem', marginBottom: '20px', marginTop: '10px', lineHeight: '1.2' }}>This isn't just another group chat.</h2>
+                <h2 style={{ fontSize: '2.5rem', marginBottom: '20px', marginTop: '10px', lineHeight: '1.2' }}>This isn&apos;t just another group chat.</h2>
               </div>
               <div className="why-this-works-list">
                 <div style={{ background: '#E879F9', color: 'white', display: 'inline-block', padding: '8px 16px', borderRadius: '8px', fontWeight: 700, marginBottom: '20px', fontSize: '0.9rem' }}>Our groups are:</div>

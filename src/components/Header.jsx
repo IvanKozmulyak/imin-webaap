@@ -17,6 +17,7 @@ function Header() {
         </svg>
       </button>
       <div className="flex flex-col items-center">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
         <img 
           src="/assets/logo.svg" 
           alt="IM IN" 

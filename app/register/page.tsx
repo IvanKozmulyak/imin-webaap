@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, Suspense } from 'react';
+import { useEffect, useState, Suspense, useCallback } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -49,6 +49,37 @@ function RegisterContent() {
     console.log('Telegram invite link state:', telegramInviteLink);
   }, [submitSuccess, telegramInviteLink]);
 
+  const fetchEventData = useCallback(async () => {
+    if (!eventId) return;
+    setIsLoadingEvent(true);
+    try {
+      const response = await fetch(`/api/events/${eventId}`);
+      if (response.ok) {
+        const data = await response.json();
+        setEvent(data);
+      } else {
+        setSubmitError('Event not found');
+      }
+    } catch (error) {
+      console.error('Error fetching event:', error);
+      setSubmitError('Failed to load event information');
+    } finally {
+      setIsLoadingEvent(false);
+    }
+  }, [eventId]);
+
+  const fetchLanguages = useCallback(async () => {
+    try {
+      const response = await fetch('/api/languages');
+      if (response.ok) {
+        const data = await response.json();
+        setLanguages(data);
+      }
+    } catch (error) {
+      console.error('Error fetching languages:', error);
+    }
+  }, []);
+
   useEffect(() => {
     // Check if user has already accepted the splash screen
     const splashAccepted = localStorage.getItem('events-splash-accepted');
@@ -61,7 +92,7 @@ function RegisterContent() {
       fetchEventData();
       fetchLanguages();
     }
-  }, [eventId, fromEvents]);
+  }, [eventId, fromEvents, fetchEventData, fetchLanguages]);
 
   useEffect(() => {
     // Parallax blob animation with performance optimization
@@ -88,36 +119,6 @@ function RegisterContent() {
       if (rafId !== null) cancelAnimationFrame(rafId);
     };
   }, []);
-
-  const fetchEventData = async () => {
-    setIsLoadingEvent(true);
-    try {
-      const response = await fetch(`/api/events/${eventId}`);
-      if (response.ok) {
-        const data = await response.json();
-        setEvent(data);
-      } else {
-        setSubmitError('Event not found');
-      }
-    } catch (error) {
-      console.error('Error fetching event:', error);
-      setSubmitError('Failed to load event information');
-    } finally {
-      setIsLoadingEvent(false);
-    }
-  };
-
-  const fetchLanguages = async () => {
-    try {
-      const response = await fetch('/api/languages');
-      if (response.ok) {
-        const data = await response.json();
-        setLanguages(data);
-      }
-    } catch (error) {
-      console.error('Error fetching languages:', error);
-    }
-  };
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
