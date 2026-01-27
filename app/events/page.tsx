@@ -20,6 +20,7 @@ function EventsContent() {
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
   const [filteredEvents, setFilteredEvents] = useState<EventDto[]>([]);
   const [showSplash, setShowSplash] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     // Check if user has already accepted the splash screen
@@ -66,6 +67,7 @@ function EventsContent() {
   }, []);
 
   const fetchEvents = async () => {
+    setIsLoading(true);
     try {
       const response = await fetch('/api/events/upcoming');
       if (response.ok) {
@@ -81,6 +83,8 @@ function EventsContent() {
       }
     } catch (error) {
       console.error('Error fetching events:', error);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -264,6 +268,7 @@ function EventsContent() {
               boxShadow: isFestivalStyle 
                 ? '0 1px 3px rgba(0, 0, 0, 0.1)' 
                 : '0 4px 20px rgba(0, 0, 0, 0.1)',
+              minWidth: '200px',
             }}>
               <button
                 onClick={() => setViewMode('grid')}
@@ -360,7 +365,32 @@ function EventsContent() {
           {viewMode === 'grid' ? (
             <div className="events-feed">
               {/* Upcoming Events */}
-              {filteredEvents.length > 0 ? (
+              {isLoading ? (
+                <div style={{ 
+                  textAlign: 'center', 
+                  padding: '80px 0',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  gap: '20px'
+                }}>
+                  <div style={{
+                    width: '60px',
+                    height: '60px',
+                    border: `4px solid ${isFestivalStyle ? 'rgba(124, 58, 237, 0.2)' : 'rgba(255, 255, 255, 0.2)'}`,
+                    borderTop: `4px solid ${isFestivalStyle ? 'var(--primary-purple)' : 'var(--glow-green)'}`,
+                    borderRadius: '50%',
+                    animation: 'spin 1s linear infinite',
+                  }} />
+                  <p style={{ 
+                    color: isFestivalStyle ? 'var(--text-dark)' : 'white',
+                    fontSize: '1.1rem',
+                    fontWeight: 500,
+                  }}>
+                    Loading events...
+                  </p>
+                </div>
+              ) : filteredEvents.length > 0 ? (
                 <section style={{ marginBottom: '60px' }}>
                   <h2 style={{
                     fontSize: 'clamp(1.75rem, 4vw, 2.5rem)',

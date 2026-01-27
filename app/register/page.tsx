@@ -28,6 +28,7 @@ function RegisterContent() {
   const [event, setEvent] = useState<EventDto | null>(null);
   const [languages, setLanguages] = useState<LanguageDto[]>([]);
   const [submitting, setSubmitting] = useState(false);
+  const [isLoadingEvent, setIsLoadingEvent] = useState(true);
   
   const [formData, setFormData] = useState<EventRegistrationRequestDto>({
     name: '',
@@ -89,6 +90,7 @@ function RegisterContent() {
   }, []);
 
   const fetchEventData = async () => {
+    setIsLoadingEvent(true);
     try {
       const response = await fetch(`/api/events/${eventId}`);
       if (response.ok) {
@@ -100,6 +102,8 @@ function RegisterContent() {
     } catch (error) {
       console.error('Error fetching event:', error);
       setSubmitError('Failed to load event information');
+    } finally {
+      setIsLoadingEvent(false);
     }
   };
 
@@ -261,7 +265,7 @@ function RegisterContent() {
     }
   };
 
-  if (!eventId || !event) {
+  if (!eventId) {
     return (
       <div className={isFestivalStyle ? 'festival-style' : ''}>
         <div
@@ -283,7 +287,104 @@ function RegisterContent() {
             Event Not Found
           </h1>
           <p style={{ marginBottom: '30px', opacity: 0.8 }}>
-            {submitError || 'Please select an event to register.'}
+            Please select an event to register.
+          </p>
+          <Link
+            href={`/events${isFestivalStyle ? '?style=festival' : ''}`}
+            style={{
+              padding: '12px 24px',
+              background: isFestivalStyle
+                ? 'linear-gradient(135deg, var(--primary-purple), var(--vivid-pink))'
+                : 'linear-gradient(135deg, var(--glow-purple), var(--glow-blue))',
+              color: 'white',
+              borderRadius: '12px',
+              textDecoration: 'none',
+              fontWeight: 600,
+            }}
+          >
+            Browse Events
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
+  if (isLoadingEvent) {
+    return (
+      <div className={isFestivalStyle ? 'festival-style' : ''}>
+        {/* Ambient Background with Blobs */}
+        <div className="ambient-light" aria-hidden="true">
+          <div className="blob blob-1" id="blob1"></div>
+          <div className="blob blob-2" id="blob2"></div>
+        </div>
+        
+        {/* Festival Background Layer */}
+        {isFestivalStyle && (
+          <>
+            <div className="hero-bg-layer"></div>
+            <div className="hero-overlay"></div>
+          </>
+        )}
+
+        <div
+          style={{
+            minHeight: '100vh',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '40px 20px',
+            color: isFestivalStyle ? 'var(--text-dark)' : 'white',
+            textAlign: 'center',
+            background: isFestivalStyle
+              ? 'var(--bg-base)'
+              : 'linear-gradient(180deg, var(--bg-dark) 0%, #0a0a1a 100%)',
+          }}
+        >
+          <div style={{
+            width: '60px',
+            height: '60px',
+            border: `4px solid ${isFestivalStyle ? 'rgba(124, 58, 237, 0.2)' : 'rgba(255, 255, 255, 0.2)'}`,
+            borderTop: `4px solid ${isFestivalStyle ? 'var(--primary-purple)' : 'var(--glow-green)'}`,
+            borderRadius: '50%',
+            animation: 'spin 1s linear infinite',
+            marginBottom: '20px',
+          }} />
+          <p style={{ 
+            color: isFestivalStyle ? 'var(--text-dark)' : 'white',
+            fontSize: '1.1rem',
+            fontWeight: 500,
+          }}>
+            Loading event information...
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!event) {
+    return (
+      <div className={isFestivalStyle ? 'festival-style' : ''}>
+        <div
+          style={{
+            minHeight: '100vh',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '40px 20px',
+            color: isFestivalStyle ? 'var(--text-dark)' : 'white',
+            textAlign: 'center',
+            background: isFestivalStyle
+              ? 'var(--bg-base)'
+              : 'linear-gradient(180deg, var(--bg-dark) 0%, #0a0a1a 100%)',
+          }}
+        >
+          <h1 style={{ fontSize: '2rem', marginBottom: '20px', fontWeight: 800 }}>
+            Event Not Found
+          </h1>
+          <p style={{ marginBottom: '30px', opacity: 0.8 }}>
+            {submitError || 'The event you are looking for could not be found.'}
           </p>
           <Link
             href={`/events${isFestivalStyle ? '?style=festival' : ''}`}
