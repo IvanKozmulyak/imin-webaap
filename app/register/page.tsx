@@ -880,12 +880,7 @@ function RegisterContent() {
                     fontWeight: 800,
                     marginBottom: '8px',
                     marginTop: '0',
-                    background: isFestivalStyle
-                      ? 'linear-gradient(135deg, var(--primary-purple), var(--vivid-pink))'
-                      : 'linear-gradient(135deg, var(--glow-purple), var(--glow-blue))',
-                    WebkitBackgroundClip: 'text',
-                    WebkitTextFillColor: 'transparent',
-                    backgroundClip: 'text',
+                    color: isFestivalStyle ? 'var(--text-dark)' : 'white',
                     letterSpacing: '-0.02em',
                   }}
                 >
