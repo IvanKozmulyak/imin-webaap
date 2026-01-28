@@ -34,6 +34,8 @@ model EventRegistration {
   email           String   @db.VarChar(255)
   age             Int
   sex             String   @db.VarChar(50)
+  country         String?  @db.VarChar(255)
+  city            String?  @db.VarChar(255)
   createdAt       DateTime @default(now()) @map("created_at")
   telegramGroupId String?  @map("telegram_group_id")
 
