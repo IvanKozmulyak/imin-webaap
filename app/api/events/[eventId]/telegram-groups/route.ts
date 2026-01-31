@@ -11,6 +11,7 @@ interface CreateGroupsRequest {
   numberOfGroups?: number;
   maxMembersPerGroup?: number;
   botUsername?: string;
+  createFestivalGroups?: boolean; // If true, creates 4 groups (one for each festival join option)
 }
 
 /**
@@ -18,9 +19,10 @@ interface CreateGroupsRequest {
  * Creates Telegram groups for an event
  * 
  * Request body (optional):
- * - numberOfGroups: number of groups to create (default: 10)
+ * - numberOfGroups: number of groups to create (default: 10) - ignored if createFestivalGroups is true
  * - maxMembersPerGroup: maximum members per group (default: 5)
  * - botUsername: bot username to add as admin (default: 'imin_squad_bot')
+ * - createFestivalGroups: if true, creates 4 groups (one for each festival join option: pre_party, class_buddies, accommodation, travel)
  */
 export async function POST(
   request: NextRequest,
@@ -44,13 +46,21 @@ export async function POST(
       body = {};
     }
 
+    const createFestivalGroups = body.createFestivalGroups ?? false;
     const numberOfGroups = body.numberOfGroups ?? 10;
     const maxMembersPerGroup = body.maxMembersPerGroup ?? 5;
     const botUsername = body.botUsername ?? 'imin_squad_bot';
 
+    // Validate createFestivalGroups only works for events with useFestivalRegistration
+    if (createFestivalGroups && !event.useFestivalRegistration) {
+      return createErrorResponse('createFestivalGroups can only be used for events with useFestivalRegistration enabled', 400);
+    }
+
     // Validate parameters
-    if (numberOfGroups < 1 || numberOfGroups > 100) {
-      return createErrorResponse('numberOfGroups must be between 1 and 100', 400);
+    if (!createFestivalGroups) {
+      if (numberOfGroups < 1 || numberOfGroups > 100) {
+        return createErrorResponse('numberOfGroups must be between 1 and 100', 400);
+      }
     }
     if (maxMembersPerGroup < 1 || maxMembersPerGroup > 200) {
       return createErrorResponse('maxMembersPerGroup must be between 1 and 200', 400);
@@ -60,21 +70,24 @@ export async function POST(
     const createdGroups = await createTelegramGroupsForEvent(
       eventId,
       event.name,
-      numberOfGroups,
+      createFestivalGroups ? 4 : numberOfGroups,
       maxMembersPerGroup,
-      botUsername
+      botUsername,
+      createFestivalGroups
     );
 
     return createSuccessResponse({
       eventId: event.id,
       eventName: event.name,
-      requestedGroups: numberOfGroups,
+      requestedGroups: createFestivalGroups ? 4 : numberOfGroups,
       createdGroups: createdGroups.length,
+      createFestivalGroups,
       groups: createdGroups.map(g => ({
         id: g.id,
         groupNumber: g.groupNumber,
         inviteLink: g.inviteLink,
         chatId: g.chatId,
+        groupType: g.groupType,
       })),
     }, 201);
   } catch (error: any) {

@@ -122,6 +122,7 @@ model TelegramGroup {
   memberCount    Int      @default(0) @map("member_count")
   maxMembers     Int      @default(5) @map("max_members")
   isFull         Boolean  @default(false) @map("is_full")
+  groupType      String?  @map("group_type") @db.VarChar(50) // pre_party | class_buddies | accommodation | travel (for festival events)
   createdAt      DateTime @default(now()) @map("created_at")
   updatedAt      DateTime @updatedAt @map("updated_at")
 
@@ -130,6 +131,7 @@ model TelegramGroup {
 
   @@index([eventId])
   @@index([isFull])
+  @@index([eventId, groupType])
   @@map("telegram_group")
 }
 

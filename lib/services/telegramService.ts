@@ -540,6 +540,7 @@ export async function addBotAsAdmin(
  * @param numberOfGroups Number of groups to create (default: 10)
  * @param maxMembersPerGroup Maximum members per group (default: 5)
  * @param botUsername Bot username to add as admin (default: 'imin_squad_bot')
+ * @param createFestivalGroups If true, creates 4 groups (one for each festival join option)
  * @returns Array of created groups with their details
  */
 export async function createTelegramGroupsForEvent(
@@ -547,12 +548,14 @@ export async function createTelegramGroupsForEvent(
   eventName: string,
   numberOfGroups: number = 10,
   maxMembersPerGroup: number = 5,
-  botUsername: string = 'imin_squad_bot'
+  botUsername: string = 'imin_squad_bot',
+  createFestivalGroups: boolean = false
 ): Promise<Array<{
   id: string;
   chatId: string;
   inviteLink: string;
   groupNumber: number;
+  groupType?: string;
 }>> {
   const { prisma } = await import('@/lib/db/client');
   const createdGroups = [];
@@ -560,9 +563,24 @@ export async function createTelegramGroupsForEvent(
   // Get available group images
   const groupImages = getGroupImages();
 
+  // Define festival group types if creating festival groups
+  const festivalGroupTypes = createFestivalGroups 
+    ? ['pre_party', 'class_buddies', 'accommodation', 'travel']
+    : [];
+
+  const festivalGroupNames: Record<string, string> = {
+    pre_party: 'Pre-Party',
+    class_buddies: 'Class Buddies',
+    accommodation: 'Accommodation',
+    travel: 'Travel',
+  };
+
   for (let i = 1; i <= numberOfGroups; i++) {
     try {
-      const groupName = `${eventName} ${i}`;
+      const groupType = createFestivalGroups ? festivalGroupTypes[i - 1] : undefined;
+      const groupName = createFestivalGroups 
+        ? `${eventName} - ${festivalGroupNames[groupType!]}`
+        : `${eventName} ${i}`;
       
       // Cycle through available images (use modulo to wrap around)
       const imageIndex = (i - 1) % groupImages.length;
@@ -594,6 +612,7 @@ export async function createTelegramGroupsForEvent(
           maxMembers: maxMembersPerGroup,
           memberCount: 0,
           isFull: false,
+          groupType,
         },
       });
 
@@ -602,6 +621,7 @@ export async function createTelegramGroupsForEvent(
         chatId,
         inviteLink,
         groupNumber: i,
+        groupType,
       });
 
       // Add a small delay between requests to avoid rate limiting
