@@ -25,6 +25,7 @@ export async function GET(
       ticketUrl: event.ticketUrl,
       imageUrl: event.imageUrl,
       isActive: event.isActive,
+      useFestivalRegistration: event.useFestivalRegistration,
       createdAt: event.createdAt.toISOString(),
     };
     

@@ -22,6 +22,7 @@ export async function getUpcomingEvents(): Promise<EventDto[]> {
     ticketUrl: event.ticketUrl,
     imageUrl: event.imageUrl,
     isActive: event.isActive,
+    useFestivalRegistration: event.useFestivalRegistration,
     createdAt: event.createdAt.toISOString(),
   }));
 }
@@ -48,6 +49,7 @@ export async function getAllActiveEvents(): Promise<EventDto[]> {
     ticketUrl: event.ticketUrl,
     imageUrl: event.imageUrl,
     isActive: event.isActive,
+    useFestivalRegistration: event.useFestivalRegistration,
     createdAt: event.createdAt.toISOString(),
   }));
 }

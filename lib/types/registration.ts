@@ -1,14 +1,23 @@
+/** Festival join option keys */
+export type FestivalJoinOption = 'pre_party' | 'class_buddies' | 'accommodation' | 'travel';
+
 export interface EventRegistrationRequestDto {
   name: string;
   email: string;
   age: number;
   sex: string;
-  languagesISpeak: string[]; // Array of language codes
-  // Optional location fields collected on the registration page.
-  // These are currently used on the frontend only and are not yet
-  // persisted in the database.
+  languagesISpeak?: string[]; // Array of language codes (optional)
   country?: string;
   city?: string;
+  // Festival registration flow (when event.useFestivalRegistration is true)
+  festivalJoinOption?: FestivalJoinOption;
+  travelMethod?: string;
+  hasCar?: string;
+  carSeatsAvailable?: number;
+  accommodationPreference?: string;
+  danceStyle?: string;
+  danceLevel?: string;
+  hasTicket?: string;
 }
 
 export interface EventRegistrationResponseDto {

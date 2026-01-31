@@ -41,8 +41,6 @@ export async function createEventRegistration(
   // Create registration with languages and Telegram group assignment
   const registration = await prisma.$transaction(async (tx) => {
     const newRegistration = await tx.eventRegistration.create({
-      // Cast to any to allow newly added fields (country, city)
-      // until Prisma client types are regenerated.
       data: {
         eventId,
         name: data.name,
@@ -52,8 +50,16 @@ export async function createEventRegistration(
         country: data.country,
         city: data.city,
         telegramGroupId: telegramGroup?.id,
+        festivalJoinOption: data.festivalJoinOption,
+        travelMethod: data.travelMethod,
+        hasCar: data.hasCar,
+        carSeatsAvailable: data.carSeatsAvailable,
+        accommodationPreference: data.accommodationPreference,
+        danceStyle: data.danceStyle,
+        danceLevel: data.danceLevel,
+        hasTicket: data.hasTicket,
         languages: {
-          create: data.languagesISpeak.map((langCode: string) => ({
+          create: (data.languagesISpeak ?? []).map((langCode: string) => ({
             languageCode: langCode,
           })),
         },
@@ -61,7 +67,7 @@ export async function createEventRegistration(
       include: {
         languages: true,
       },
-    } as any);
+    });
 
     return newRegistration;
   });

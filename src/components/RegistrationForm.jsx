@@ -7,22 +7,12 @@ function RegistrationForm() {
     email: 'johnblack@...',
     telegram: '@ ...',
     age: '-',
-    languages: []
   })
 
   const handleInputChange = (field, value) => {
     setFormData(prev => ({
       ...prev,
       [field]: value
-    }))
-  }
-
-  const toggleLanguage = (lang) => {
-    setFormData(prev => ({
-      ...prev,
-      languages: prev.languages.includes(lang)
-        ? prev.languages.filter(l => l !== lang)
-        : [...prev.languages, lang]
     }))
   }
 
@@ -109,28 +99,6 @@ function RegistrationForm() {
           onChange={(e) => handleInputChange('age', e.target.value)}
           className="w-full bg-gray-900/60 border border-red-500/60 rounded-lg px-4 py-3 text-white placeholder-gray-400 focus:outline-none focus:border-red-400 focus:ring-1 focus:ring-red-400 shadow-[0_0_8px_rgba(239,68,68,0.3)]"
         />
-      </div>
-
-      <div>
-        <label className="block text-white text-sm mb-2">
-          Language(s) I speak
-        </label>
-        <div className="flex flex-wrap gap-3">
-          {['EN', 'NL', 'FR', 'UA'].map((lang) => (
-            <button
-              key={lang}
-              type="button"
-              onClick={() => toggleLanguage(lang)}
-              className={`px-6 py-2 rounded-lg text-white font-medium transition-colors ${
-                formData.languages.includes(lang)
-                  ? 'bg-purple-600 border-2 border-purple-400'
-                  : 'bg-gray-900/60 border border-gray-700'
-              }`}
-            >
-              {lang}
-            </button>
-          ))}
-        </div>
       </div>
 
       <button

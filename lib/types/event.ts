@@ -8,5 +8,6 @@ export interface EventDto {
   ticketUrl: string | null;
   imageUrl: string | null;
   isActive: boolean;
+  useFestivalRegistration: boolean;
   createdAt: string; // ISO 8601 timestamp
 }

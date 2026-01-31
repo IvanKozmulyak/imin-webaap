@@ -5,9 +5,33 @@ import { useSearchParams, useRouter } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
 import { EventDto } from '@/lib/types/event';
-import { LanguageDto } from '@/lib/types/language';
-import { EventRegistrationRequestDto } from '@/lib/types/registration';
+import { EventRegistrationRequestDto, FestivalJoinOption } from '@/lib/types/registration';
 import EventsSplashScreen from '@/app/components/EventsSplashScreen';
+
+const FESTIVAL_JOIN_OPTIONS: { value: FestivalJoinOption; label: string; emoji: string }[] = [
+  { value: 'pre_party', label: 'A pre-party crew', emoji: '🥂' },
+  { value: 'class_buddies', label: 'Class buddies', emoji: '💃' },
+  { value: 'accommodation', label: 'People to share accommodation with', emoji: '🏠' },
+  { value: 'travel', label: 'Travel / carpool coordination', emoji: '🚗' },
+];
+const TRAVEL_METHODS = ['Car', 'Flight', 'Train', 'Other'];
+const HAS_CAR_OPTIONS = [
+  { value: 'yes', label: 'Yes, I can drive' },
+  { value: 'no', label: 'No, I need a ride' },
+  { value: 'maybe', label: 'Maybe / open to renting' },
+];
+const ACCOMMODATION_OPTIONS = [
+  { value: 'women_only', label: 'Women only' },
+  { value: 'men_only', label: 'Men only' },
+  { value: 'mixed', label: 'Mixed' },
+  { value: 'depends', label: 'Depends / open' },
+];
+const DANCE_STYLES = ['Salsa', 'Bachata', 'Kizomba', 'Mixed'];
+const DANCE_LEVELS = ['Beginner', 'Improver', 'Advanced', 'Mixed / not sure'];
+const HAS_TICKET_OPTIONS = [
+  { value: 'yes', label: 'Yes, I have a ticket', emoji: '✅' },
+  { value: 'not_yet', label: 'Not yet', emoji: '⏳' },
+];
 
 function RegisterContent() {
   const searchParams = useSearchParams();
@@ -26,7 +50,6 @@ function RegisterContent() {
   };
 
   const [event, setEvent] = useState<EventDto | null>(null);
-  const [languages, setLanguages] = useState<LanguageDto[]>([]);
   const [submitting, setSubmitting] = useState(false);
   const [isLoadingEvent, setIsLoadingEvent] = useState(true);
   
@@ -39,6 +62,19 @@ function RegisterContent() {
     country: '',
     city: '',
   });
+
+  const useFestivalFlow = (event?.useFestivalRegistration === true);
+  const [festivalStep, setFestivalStep] = useState(0);
+  const [festivalJoinOption, setFestivalJoinOption] = useState<FestivalJoinOption | null>(null);
+  const [festivalDetails, setFestivalDetails] = useState<{
+    travelMethod?: string;
+    hasCar?: string;
+    carSeatsAvailable?: number;
+    accommodationPreference?: string;
+    danceStyle?: string;
+    danceLevel?: string;
+  }>({});
+  const [festivalHasTicket, setFestivalHasTicket] = useState<string>('');
 
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [submitError, setSubmitError] = useState<string | null>(null);
@@ -99,18 +135,6 @@ function RegisterContent() {
     }
   }, [eventId]);
 
-  const fetchLanguages = useCallback(async () => {
-    try {
-      const response = await fetch('/api/languages');
-      if (response.ok) {
-        const data = await response.json();
-        setLanguages(data);
-      }
-    } catch (error) {
-      console.error('Error fetching languages:', error);
-    }
-  }, []);
-
   useEffect(() => {
     // Check if user has already accepted the splash screen
     const splashAccepted = localStorage.getItem('events-splash-accepted');
@@ -121,9 +145,8 @@ function RegisterContent() {
     
     if (eventId) {
       fetchEventData();
-      fetchLanguages();
     }
-  }, [eventId, fromEvents, fetchEventData, fetchLanguages]);
+  }, [eventId, fromEvents, fetchEventData]);
 
   useEffect(() => {
     // Parallax blob animation with performance optimization
@@ -300,26 +323,8 @@ function RegisterContent() {
     return genderOptions.find(opt => opt.value === value)?.label || 'Select...';
   };
 
-  const toggleLanguage = (languageCode: string) => {
-    setFormData((prev) => {
-      const currentLanguages = prev.languagesISpeak;
-      const newLanguages = currentLanguages.includes(languageCode)
-        ? currentLanguages.filter((lang) => lang !== languageCode)
-        : [...currentLanguages, languageCode];
-      
-      return {
-        ...prev,
-        languagesISpeak: newLanguages,
-      };
-    });
-    // Clear field error when user selects a language
-    if (fieldErrors.languagesISpeak) {
-      setFieldErrors((prev) => {
-        const newErrors = { ...prev };
-        delete newErrors.languagesISpeak;
-        return newErrors;
-      });
-    }
+  const selectFestivalJoin = (opt: FestivalJoinOption) => {
+    setFestivalJoinOption((prev) => (prev === opt ? null : opt));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -343,10 +348,6 @@ function RegisterContent() {
     if (!formData.sex.trim()) {
       errors.sex = 'Sex is required';
     }
-    if (formData.languagesISpeak.length === 0) {
-      errors.languagesISpeak = 'Please select at least one language';
-    }
-
     if (Object.keys(errors).length > 0) {
       setFieldErrors(errors);
       return;
@@ -354,13 +355,27 @@ function RegisterContent() {
 
     setSubmitting(true);
 
+    const payload: EventRegistrationRequestDto = useFestivalFlow
+      ? {
+          ...formData,
+          festivalJoinOption: festivalJoinOption ?? undefined,
+          travelMethod: festivalDetails.travelMethod,
+          hasCar: festivalDetails.hasCar,
+          carSeatsAvailable: festivalDetails.carSeatsAvailable,
+          accommodationPreference: festivalDetails.accommodationPreference,
+          danceStyle: festivalDetails.danceStyle,
+          danceLevel: festivalDetails.danceLevel,
+          hasTicket: festivalHasTicket || undefined,
+        }
+      : formData;
+
     try {
       const response = await fetch(`/api/events/${eventId}/registrations`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(payload),
       });
 
       const responseData = await response.json();
@@ -833,6 +848,196 @@ function RegisterContent() {
                 </div>
               )}
             </div>
+          ) : useFestivalFlow && festivalStep < 3 ? (
+            <div
+              style={{
+                background: isFestivalStyle ? '#FFFBF7' : 'rgba(255, 255, 255, 0.03)',
+                borderRadius: '32px',
+                padding: '48px',
+                paddingTop: '52px',
+                border: isFestivalStyle ? '1px solid rgba(124, 58, 237, 0.15)' : '1px solid rgba(255, 255, 255, 0.12)',
+                boxShadow: isFestivalStyle ? '0 25px 50px rgba(124, 58, 237, 0.08), 0 0 0 1px rgba(124, 58, 237, 0.05)' : '0 20px 60px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(139, 92, 246, 0.1)',
+                backdropFilter: 'blur(20px)',
+                position: 'relative',
+                overflow: 'hidden',
+                isolation: 'isolate',
+              }}
+            >
+              <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '4px', maxHeight: '4px', background: isFestivalStyle ? 'linear-gradient(90deg, var(--primary-purple), var(--vivid-pink), var(--sunset-orange))' : 'linear-gradient(90deg, var(--glow-purple), var(--glow-blue), var(--glow-green))', borderRadius: '32px 32px 0 0', zIndex: 1 }} aria-hidden="true" />
+              <div style={{ position: 'relative', zIndex: 2 }}>
+                {festivalStep === 0 && (
+                  <>
+                    <h2 style={{ fontSize: '1.75rem', fontWeight: 800, marginBottom: '8px', color: isFestivalStyle ? 'var(--text-dark)' : 'white' }}>
+                      What would you like to join at this event?
+                    </h2>
+                    <p style={{ fontSize: '0.95rem', color: isFestivalStyle ? 'var(--text-muted)' : 'rgba(255,255,255,0.7)', marginBottom: '24px' }}>
+                      Choose one
+                    </p>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '32px' }}>
+                      {FESTIVAL_JOIN_OPTIONS.map((opt) => {
+                        const selected = festivalJoinOption === opt.value;
+                        return (
+                          <button
+                            key={opt.value}
+                            type="button"
+                            onClick={() => selectFestivalJoin(opt.value)}
+                            style={{
+                              padding: '16px 20px',
+                              borderRadius: '16px',
+                              border: selected ? (isFestivalStyle ? '2px solid var(--primary-purple)' : '2px solid var(--glow-purple)') : isFestivalStyle ? '2px solid rgba(124,58,237,0.2)' : '2px solid rgba(255,255,255,0.15)',
+                              background: selected ? (isFestivalStyle ? 'rgba(124,58,237,0.12)' : 'rgba(139,92,246,0.2)') : isFestivalStyle ? 'rgba(0,0,0,0.02)' : 'rgba(255,255,255,0.06)',
+                              color: isFestivalStyle ? 'var(--text-dark)' : 'white',
+                              fontSize: '1rem',
+                              fontWeight: 600,
+                              textAlign: 'left',
+                              cursor: 'pointer',
+                              transition: 'all 0.2s',
+                            }}
+                          >
+                            <span style={{ marginRight: '8px' }}>{opt.emoji}</span> {opt.label}
+                          </button>
+                        );
+                      })}
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (!festivalJoinOption) {
+                          setFieldErrors((p) => ({ ...p, festivalJoinOption: 'Please choose one option' }));
+                          return;
+                        }
+                        setFieldErrors((p) => ({ ...p, festivalJoinOption: '' }));
+                        setFestivalStep(festivalJoinOption === 'pre_party' ? 2 : 1);
+                      }}
+                      style={{
+                        width: '100%',
+                        padding: '16px 32px',
+                        background: isFestivalStyle ? 'linear-gradient(135deg, var(--primary-purple), var(--vivid-pink))' : 'linear-gradient(135deg, var(--glow-purple), var(--glow-blue))',
+                        color: 'white',
+                        borderRadius: '16px',
+                        fontSize: '1rem',
+                        fontWeight: 700,
+                        border: 'none',
+                        cursor: 'pointer',
+                      }}
+                    >
+                      Continue
+                    </button>
+                    {fieldErrors.festivalJoinOption && <p style={{ marginTop: '8px', fontSize: '0.875rem', color: '#ef4444' }}>{fieldErrors.festivalJoinOption}</p>}
+                  </>
+                )}
+                {festivalStep === 1 && (
+                  <>
+                    <h2 style={{ fontSize: '1.75rem', fontWeight: 800, marginBottom: '8px', color: isFestivalStyle ? 'var(--text-dark)' : 'white' }}>
+                      Only the details we actually need
+                    </h2>
+                    <p style={{ fontSize: '0.95rem', color: isFestivalStyle ? 'var(--text-muted)' : 'rgba(255,255,255,0.7)', marginBottom: '28px' }}>
+                      You&apos;ll only see questions related to what you chose.
+                    </p>
+                    {festivalJoinOption === 'travel' && (
+                      <div style={{ marginBottom: '28px' }}>
+                        <h3 style={{ fontSize: '1.1rem', fontWeight: 700, marginBottom: '12px', color: isFestivalStyle ? 'var(--text-dark)' : 'white', display: 'flex', alignItems: 'center', gap: '8px' }}><span>🚗</span> If you chose Getting there</h3>
+                        <div style={{ marginBottom: '12px' }}>
+                          <label style={{ display: 'block', marginBottom: '6px', fontSize: '0.875rem', fontWeight: 600, color: isFestivalStyle ? 'var(--text-dark)' : 'rgba(255,255,255,0.9)' }}>How are you planning to travel?</label>
+                          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                            {TRAVEL_METHODS.map((m) => (
+                              <button key={m} type="button" onClick={() => setFestivalDetails((d) => ({ ...d, travelMethod: m }))} style={{ padding: '10px 16px', borderRadius: '10px', border: festivalDetails.travelMethod === m ? (isFestivalStyle ? '2px solid var(--primary-purple)' : '2px solid var(--glow-purple)') : '1px solid ' + (isFestivalStyle ? 'rgba(124,58,237,0.2)' : 'rgba(255,255,255,0.2)'), background: festivalDetails.travelMethod === m ? (isFestivalStyle ? 'rgba(124,58,237,0.12)' : 'rgba(139,92,246,0.2)') : 'transparent', color: isFestivalStyle ? 'var(--text-dark)' : 'white', fontSize: '0.9rem', fontWeight: 600, cursor: 'pointer' }}>{m}</button>
+                            ))}
+                          </div>
+                        </div>
+                        {festivalDetails.travelMethod === 'Car' && (
+                          <>
+                            <div style={{ marginBottom: '12px' }}>
+                              <label style={{ display: 'block', marginBottom: '6px', fontSize: '0.875rem', fontWeight: 600, color: isFestivalStyle ? 'var(--text-dark)' : 'rgba(255,255,255,0.9)' }}>Do you have a car?</label>
+                              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                                {HAS_CAR_OPTIONS.map((o) => (
+                                  <button key={o.value} type="button" onClick={() => setFestivalDetails((d) => ({ ...d, hasCar: o.value }))} style={{ padding: '10px 16px', borderRadius: '10px', border: festivalDetails.hasCar === o.value ? (isFestivalStyle ? '2px solid var(--primary-purple)' : '2px solid var(--glow-purple)') : '1px solid ' + (isFestivalStyle ? 'rgba(124,58,237,0.2)' : 'rgba(255,255,255,0.2)'), background: festivalDetails.hasCar === o.value ? (isFestivalStyle ? 'rgba(124,58,237,0.12)' : 'rgba(139,92,246,0.2)') : 'transparent', color: isFestivalStyle ? 'var(--text-dark)' : 'white', fontSize: '0.9rem', fontWeight: 600, cursor: 'pointer' }}>{o.label}</button>
+                                ))}
+                              </div>
+                            </div>
+                            {festivalDetails.hasCar === 'yes' && (
+                              <div style={{ marginBottom: '12px' }}>
+                                <label style={{ display: 'block', marginBottom: '6px', fontSize: '0.875rem', fontWeight: 600, color: isFestivalStyle ? 'var(--text-dark)' : 'rgba(255,255,255,0.9)' }}>How many seats can you offer?</label>
+                                <input type="number" min={0} value={festivalDetails.carSeatsAvailable ?? ''} onChange={(e) => setFestivalDetails((d) => ({ ...d, carSeatsAvailable: e.target.value === '' ? undefined : parseInt(e.target.value, 10) }))} placeholder="Number" style={{ width: '120px', padding: '12px 16px', borderRadius: '12px', border: '1px solid ' + (isFestivalStyle ? 'rgba(124,58,237,0.2)' : 'rgba(255,255,255,0.2)'), background: isFestivalStyle ? '#fff' : 'rgba(255,255,255,0.06)', color: isFestivalStyle ? 'var(--text-dark)' : 'white', fontSize: '0.95rem' }} />
+                              </div>
+                            )}
+                          </>
+                        )}
+                      </div>
+                    )}
+                    {festivalJoinOption === 'accommodation' && (
+                      <div style={{ marginBottom: '28px' }}>
+                        <h3 style={{ fontSize: '1.1rem', fontWeight: 700, marginBottom: '12px', color: isFestivalStyle ? 'var(--text-dark)' : 'white', display: 'flex', alignItems: 'center', gap: '8px' }}><span>🏠</span> If you chose A place to stay</h3>
+                        <label style={{ display: 'block', marginBottom: '6px', fontSize: '0.875rem', fontWeight: 600, color: isFestivalStyle ? 'var(--text-dark)' : 'rgba(255,255,255,0.9)' }}>Who would you feel comfortable sharing accommodation with?</label>
+                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                          {ACCOMMODATION_OPTIONS.map((o) => (
+                            <button key={o.value} type="button" onClick={() => setFestivalDetails((d) => ({ ...d, accommodationPreference: o.value }))} style={{ padding: '10px 16px', borderRadius: '10px', border: festivalDetails.accommodationPreference === o.value ? (isFestivalStyle ? '2px solid var(--primary-purple)' : '2px solid var(--glow-purple)') : '1px solid ' + (isFestivalStyle ? 'rgba(124,58,237,0.2)' : 'rgba(255,255,255,0.2)'), background: festivalDetails.accommodationPreference === o.value ? (isFestivalStyle ? 'rgba(124,58,237,0.12)' : 'rgba(139,92,246,0.2)') : 'transparent', color: isFestivalStyle ? 'var(--text-dark)' : 'white', fontSize: '0.9rem', fontWeight: 600, cursor: 'pointer' }}>{o.label}</button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                    {festivalJoinOption === 'class_buddies' && (
+                      <div style={{ marginBottom: '28px' }}>
+                        <h3 style={{ fontSize: '1.1rem', fontWeight: 700, marginBottom: '12px', color: isFestivalStyle ? 'var(--text-dark)' : 'white', display: 'flex', alignItems: 'center', gap: '8px' }}><span>💃</span> If you chose Class buddies</h3>
+                        <div style={{ marginBottom: '12px' }}>
+                          <label style={{ display: 'block', marginBottom: '6px', fontSize: '0.875rem', fontWeight: 600, color: isFestivalStyle ? 'var(--text-dark)' : 'rgba(255,255,255,0.9)' }}>What do you mainly dance at festivals?</label>
+                          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                            {DANCE_STYLES.map((s) => (
+                              <button key={s} type="button" onClick={() => setFestivalDetails((d) => ({ ...d, danceStyle: s }))} style={{ padding: '10px 16px', borderRadius: '10px', border: festivalDetails.danceStyle === s ? (isFestivalStyle ? '2px solid var(--primary-purple)' : '2px solid var(--glow-purple)') : '1px solid ' + (isFestivalStyle ? 'rgba(124,58,237,0.2)' : 'rgba(255,255,255,0.2)'), background: festivalDetails.danceStyle === s ? (isFestivalStyle ? 'rgba(124,58,237,0.12)' : 'rgba(139,92,246,0.2)') : 'transparent', color: isFestivalStyle ? 'var(--text-dark)' : 'white', fontSize: '0.9rem', fontWeight: 600, cursor: 'pointer' }}>{s}</button>
+                            ))}
+                          </div>
+                        </div>
+                        <div>
+                          <label style={{ display: 'block', marginBottom: '6px', fontSize: '0.875rem', fontWeight: 600, color: isFestivalStyle ? 'var(--text-dark)' : 'rgba(255,255,255,0.9)' }}>Your usual level?</label>
+                          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                            {DANCE_LEVELS.map((l) => (
+                              <button key={l} type="button" onClick={() => setFestivalDetails((d) => ({ ...d, danceLevel: l }))} style={{ padding: '10px 16px', borderRadius: '10px', border: festivalDetails.danceLevel === l ? (isFestivalStyle ? '2px solid var(--primary-purple)' : '2px solid var(--glow-purple)') : '1px solid ' + (isFestivalStyle ? 'rgba(124,58,237,0.2)' : 'rgba(255,255,255,0.2)'), background: festivalDetails.danceLevel === l ? (isFestivalStyle ? 'rgba(124,58,237,0.12)' : 'rgba(139,92,246,0.2)') : 'transparent', color: isFestivalStyle ? 'var(--text-dark)' : 'white', fontSize: '0.9rem', fontWeight: 600, cursor: 'pointer' }}>{l}</button>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                    <div style={{ display: 'flex', gap: '12px', marginTop: '24px' }}>
+                      <button type="button" onClick={() => setFestivalStep(0)} style={{ padding: '16px 24px', borderRadius: '16px', border: isFestivalStyle ? '2px solid rgba(124,58,237,0.3)' : '2px solid rgba(255,255,255,0.2)', background: 'transparent', color: isFestivalStyle ? 'var(--text-dark)' : 'white', fontSize: '1rem', fontWeight: 600, cursor: 'pointer' }}>Back</button>
+                      <button type="button" onClick={() => setFestivalStep(2)} style={{ flex: 1, padding: '16px 32px', background: isFestivalStyle ? 'linear-gradient(135deg, var(--primary-purple), var(--vivid-pink))' : 'linear-gradient(135deg, var(--glow-purple), var(--glow-blue))', color: 'white', borderRadius: '16px', fontSize: '1rem', fontWeight: 700, border: 'none', cursor: 'pointer' }}>Continue</button>
+                    </div>
+                  </>
+                )}
+                {festivalStep === 2 && (
+                  <>
+                    <h2 style={{ fontSize: '1.75rem', fontWeight: 800, marginBottom: '8px', color: isFestivalStyle ? 'var(--text-dark)' : 'white' }}>Have you already bought a ticket?</h2>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '32px' }}>
+                      {HAS_TICKET_OPTIONS.map((o) => {
+                        const selected = festivalHasTicket === o.value;
+                        return (
+                          <button key={o.value} type="button" onClick={() => setFestivalHasTicket(o.value)} style={{ padding: '16px 20px', borderRadius: '16px', border: selected ? (isFestivalStyle ? '2px solid var(--primary-purple)' : '2px solid var(--glow-purple)') : isFestivalStyle ? '2px solid rgba(124,58,237,0.2)' : '2px solid rgba(255,255,255,0.15)', background: selected ? (isFestivalStyle ? 'rgba(124,58,237,0.12)' : 'rgba(139,92,246,0.2)') : isFestivalStyle ? 'rgba(0,0,0,0.02)' : 'rgba(255,255,255,0.06)', color: isFestivalStyle ? 'var(--text-dark)' : 'white', fontSize: '1rem', fontWeight: 600, textAlign: 'left', cursor: 'pointer', transition: 'all 0.2s' }}>
+                            <span style={{ marginRight: '8px' }}>{o.emoji}</span> {o.label}
+                          </button>
+                        );
+                      })}
+                    </div>
+                    <div style={{ display: 'flex', gap: '12px', marginTop: '8px' }}>
+                      <button type="button" onClick={() => setFestivalStep(festivalJoinOption === 'pre_party' ? 0 : 1)} style={{ padding: '16px 24px', borderRadius: '16px', border: isFestivalStyle ? '2px solid rgba(124,58,237,0.3)' : '2px solid rgba(255,255,255,0.2)', background: 'transparent', color: isFestivalStyle ? 'var(--text-dark)' : 'white', fontSize: '1rem', fontWeight: 600, cursor: 'pointer' }}>Back</button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (!festivalHasTicket) {
+                            setFieldErrors((p) => ({ ...p, hasTicket: 'Please choose an option' }));
+                            return;
+                          }
+                          setFieldErrors((p) => ({ ...p, hasTicket: '' }));
+                          setFestivalStep(3);
+                        }}
+                        style={{ flex: 1, padding: '16px 32px', background: isFestivalStyle ? 'linear-gradient(135deg, var(--primary-purple), var(--vivid-pink))' : 'linear-gradient(135deg, var(--glow-purple), var(--glow-blue))', color: 'white', borderRadius: '16px', fontSize: '1rem', fontWeight: 700, border: 'none', cursor: 'pointer' }}
+                      >
+                        Continue
+                      </button>
+                    </div>
+                    {fieldErrors.hasTicket && <p style={{ marginTop: '8px', fontSize: '0.875rem', color: '#ef4444' }}>{fieldErrors.hasTicket}</p>}
+                  </>
+                )}
+              </div>
+            </div>
           ) : (
             <div
               style={{
@@ -884,7 +1089,7 @@ function RegisterContent() {
                     letterSpacing: '-0.02em',
                   }}
                 >
-                  Register for Event
+                  {useFestivalFlow ? 'Your details' : 'Register for Event'}
                 </h2>
               <p
                 style={{
@@ -894,7 +1099,7 @@ function RegisterContent() {
                   fontWeight: 400,
                 }}
               >
-                Join the community and connect with fellow attendees
+                {useFestivalFlow ? 'Almost there — name, email, age, and gender' : 'Join the community and connect with fellow attendees'}
               </p>
 
               {submitError && (
@@ -1840,126 +2045,6 @@ function RegisterContent() {
                       </div>
                     )}
                   </div>
-                </div>
-
-                {/* Languages Field */}
-                <div style={{ marginBottom: '36px' }}>
-                  <label
-                    style={{
-                      display: 'block',
-                      marginBottom: '14px',
-                      fontSize: '0.95rem',
-                      fontWeight: 700,
-                      color: isFestivalStyle ? 'var(--text-dark)' : 'rgba(255, 255, 255, 0.95)',
-                      letterSpacing: '0.01em',
-                    }}
-                  >
-                    <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      <svg width="18" height="18" viewBox="0 0 20 20" fill="none">
-                        <path
-                          d="M10 2C5.58172 2 2 5.58172 2 10C2 14.4183 5.58172 18 10 18C14.4183 18 18 14.4183 18 10C18 5.58172 14.4183 2 10 2Z"
-                          stroke={isFestivalStyle ? 'var(--primary-purple)' : 'var(--glow-purple)'}
-                          strokeWidth="1.5"
-                        />
-                        <path
-                          d="M6 10L9 13L14 7"
-                          stroke={isFestivalStyle ? 'var(--primary-purple)' : 'var(--glow-purple)'}
-                          strokeWidth="2"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                        />
-                      </svg>
-                      Language(s) I speak <span style={{ color: '#ef4444', marginLeft: '2px' }}>*</span>
-                    </span>
-                  </label>
-                  <div
-                    style={{
-                      display: 'flex',
-                      flexWrap: 'wrap',
-                      gap: '12px',
-                    }}
-                  >
-                    {languages.map((language) => {
-                      const isSelected = formData.languagesISpeak.includes(
-                        language.code
-                      );
-                      return (
-                        <button
-                          key={language.id}
-                          type="button"
-                          onClick={() => toggleLanguage(language.code)}
-                          disabled={submitting}
-                          style={{
-                            padding: '12px 24px',
-                            borderRadius: '14px',
-                            border: isSelected
-                              ? isFestivalStyle
-                                ? '2px solid var(--primary-purple)'
-                                : '2px solid var(--glow-purple)'
-                              : isFestivalStyle
-                              ? '2px solid rgba(124, 58, 237, 0.2)'
-                              : '2px solid rgba(255, 255, 255, 0.15)',
-                            background: isSelected
-                              ? isFestivalStyle
-                                ? 'linear-gradient(135deg, rgba(124, 58, 237, 0.15), rgba(236, 72, 153, 0.1))'
-                                : 'linear-gradient(135deg, rgba(139, 92, 246, 0.25), rgba(59, 130, 246, 0.15))'
-                              : isFestivalStyle
-                              ? 'rgba(0, 0, 0, 0.02)'
-                              : 'rgba(255, 255, 255, 0.06)',
-                            color: isSelected
-                              ? isFestivalStyle
-                                ? 'var(--primary-purple)'
-                                : 'white'
-                              : isFestivalStyle
-                              ? 'var(--text-dark)'
-                              : 'rgba(255, 255, 255, 0.85)',
-                            fontWeight: isSelected ? 700 : 600,
-                            fontSize: '0.9rem',
-                            cursor: submitting ? 'not-allowed' : 'pointer',
-                            transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                            opacity: submitting ? 0.6 : 1,
-                            boxShadow: isSelected
-                              ? isFestivalStyle
-                                ? '0 4px 12px rgba(124, 58, 237, 0.2)'
-                                : '0 4px 12px rgba(139, 92, 246, 0.3)'
-                              : '0 2px 6px rgba(0, 0, 0, 0.05)',
-                            transform: isSelected ? 'scale(1.02)' : 'scale(1)',
-                          }}
-                          onMouseEnter={(e) => {
-                            if (!submitting && !isSelected) {
-                              e.currentTarget.style.background = isFestivalStyle
-                                ? 'rgba(124, 58, 237, 0.08)'
-                                : 'rgba(255, 255, 255, 0.1)';
-                              e.currentTarget.style.transform = 'scale(1.05)';
-                              e.currentTarget.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.1)';
-                            }
-                          }}
-                          onMouseLeave={(e) => {
-                            if (!isSelected) {
-                              e.currentTarget.style.background = isFestivalStyle
-                                ? 'rgba(0, 0, 0, 0.02)'
-                                : 'rgba(255, 255, 255, 0.06)';
-                              e.currentTarget.style.transform = 'scale(1)';
-                              e.currentTarget.style.boxShadow = '0 2px 6px rgba(0, 0, 0, 0.05)';
-                            }
-                          }}
-                        >
-                          {language.name}
-                        </button>
-                      );
-                    })}
-                  </div>
-                  {fieldErrors.languagesISpeak && (
-                    <div
-                      style={{
-                        marginTop: '6px',
-                        fontSize: '0.85rem',
-                        color: '#ef4444',
-                      }}
-                    >
-                      {fieldErrors.languagesISpeak}
-                    </div>
-                  )}
                 </div>
 
                 {/* Submit Button */}
