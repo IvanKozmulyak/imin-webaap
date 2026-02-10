@@ -1,184 +1,345 @@
-# Imin Event Matching System
+# ImIn Web App
 
-A Next.js application with TypeScript that implements an event matching system. This system allows users to register for events and automatically groups them based on common languages they speak.
+ImIn is a Next.js application for event discovery, social matching, and Telegram-based group coordination.  
+It helps event organizers convert solo attendees into small squads by matching people with shared preferences and routing them into Telegram groups.
 
-## Features
+The repository includes:
+- A marketing and partner landing experience
+- Event listing and registration flows (nightlife + festival modes)
+- Matching APIs and group assignment logic
+- Telegram group creation and webhook automation
+- Prisma migrations and seed data
 
-- Event management with upcoming events API
-- User registration for events with language preferences
-- Automatic matching algorithm that groups users by common languages
-- Telegram group creation and management
-- Automated welcome messages for new group members with event info and ticket links
-- PostgreSQL database with Prisma ORM
-- TypeScript for type safety
-- Zod for request validation
+## Table of Contents
 
-## Prerequisites
+- [Tech Stack](#tech-stack)
+- [Quick Start](#quick-start)
+- [Environment Variables](#environment-variables)
+- [Core Workflow](#core-workflow)
+- [API Reference](#api-reference)
+- [NPM Scripts](#npm-scripts)
+- [Project Structure](#project-structure)
+- [Deployment Notes](#deployment-notes)
+- [Troubleshooting](#troubleshooting)
 
-- Node.js 18+ 
+## Tech Stack
+
+- **Framework**: Next.js 14 (App Router), React 18, TypeScript
+- **Database**: PostgreSQL + Prisma ORM
+- **Validation**: Zod
+- **Styling**: Tailwind CSS + custom CSS
+- **Integrations**:
+  - Telegram Bot API + GramJS
+  - OpenRouter (LLM responses for bot interactions)
+  - Supabase Storage (event image uploads)
+  - Mapbox Geocoding (city autocomplete)
+
+## Quick Start
+
+### 1) Prerequisites
+
+- Node.js 18+
+- npm
 - PostgreSQL database
-- npm or yarn
 
-## Setup
+### 2) Install dependencies
 
-1. **Install dependencies:**
-   ```bash
-   npm install
-   ```
+```bash
+npm install
+```
 
-2. **Set up environment variables:**
-   Create a `.env` file in the root directory with the following variables:
-   ```env
-   # Database Configuration
-   DATABASE_URL="postgresql://user:password@localhost:5432/imin?schema=public"
-   
-   # Telegram API Configuration
-   # Get these from https://my.telegram.org/apps
-   TELEGRAM_API_ID=your_api_id_here
-   TELEGRAM_API_HASH=your_api_hash_here
-   
-   # Telegram Bot Token (optional but recommended)
-   # Get this from @BotFather on Telegram
-   TELEGRAM_BOT_TOKEN=your_bot_token_here
-   
-   # Telegram Session String (required for group creation)
-   # This is generated after first authentication. Leave empty for initial setup.
-   TELEGRAM_SESSION_STRING=
-   
-   # Telegram Phone Number (optional, only needed for initial authentication)
-   # Format: +1234567890 (include country code)
-   TELEGRAM_PHONE_NUMBER=
-   ```
-   
-   **How to get Telegram credentials:**
-   - **API ID & API Hash**: Go to https://my.telegram.org/apps and create a new application
-   - **Bot Token**: Message @BotFather on Telegram and create a new bot
-   - **Session String**: This will be generated automatically after first authentication. For initial setup, you may need to authenticate manually.
+### 3) Create local environment file
 
-5. **Set up Telegram Bot Webhook (for welcome messages):**
-   
-   After deploying your application, configure the Telegram webhook to receive updates:
-   ```bash
-   curl -X POST "https://api.telegram.org/bot<YOUR_BOT_TOKEN>/setWebhook" \
-     -H "Content-Type: application/json" \
-     -d '{"url": "https://your-domain.com/api/telegram/webhook"}'
-   ```
-   
-   Replace:
-   - `<YOUR_BOT_TOKEN>` with your actual bot token
-   - `https://your-domain.com` with your deployed application URL
-   
-   To remove the webhook (if needed):
-   ```bash
-   curl -X POST "https://api.telegram.org/bot<YOUR_BOT_TOKEN>/deleteWebhook"
-   ```
-   
-   To check webhook status:
-   ```bash
-   curl "https://api.telegram.org/bot<YOUR_BOT_TOKEN>/getWebhookInfo"
-   ```
+Create `.env.local` in the project root:
 
-3. **Set up the database:**
-   ```bash
-   # Generate Prisma client
-   npm run db:generate
-   
-   # Run migrations
-   npm run db:migrate
-   
-   # (Optional) Seed languages
-   npm run db:seed
-   ```
+```env
+# Required
+DATABASE_URL="postgresql://user:password@localhost:5432/imin?schema=public"
 
-4. **Run the development server:**
-   ```bash
-   npm run dev
-   ```
+# Telegram (required for Telegram group creation / webhook features)
+TELEGRAM_API_ID=
+TELEGRAM_API_HASH=
+TELEGRAM_SESSION_STRING=
+TELEGRAM_PHONE_NUMBER=
+TELEGRAM_BOT_TOKEN=
+TELEGRAM_BOT_USERNAME=imin_squad_bot
 
-   The API will be available at `http://localhost:3000`
+# LLM (required for bot AI responses)
+OPENROUTER_API_KEY=
+OPENROUTER_MODEL=anthropic/claude-sonnet-4.5
 
-## API Endpoints
+# Mapbox (optional, enables city autocomplete in registration form)
+NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN=
+
+# Supabase Storage (optional, required only for /api/events/upload-image)
+SUPABASE_PROJECT_REF=
+SUPABASE_REGION=us-east-1
+SUPABASE_ACCESS_KEY_ID=
+SUPABASE_SECRET_ACCESS_KEY=
+NEXT_PUBLIC_SUPABASE_URL=
+NEXT_PUBLIC_SUPABASE_ANON_KEY=
+```
+
+### 4) Setup database
+
+```bash
+# Generate Prisma client
+npm run db:generate
+
+# Run migrations
+npm run db:migrate
+
+# Seed initial languages (recommended)
+npm run db:seed
+```
+
+### 5) Start development server
+
+```bash
+npm run dev
+```
+
+App runs at `http://localhost:3000`.
+
+## Environment Variables
+
+| Variable | Required | Used By | Notes |
+| --- | --- | --- | --- |
+| `DATABASE_URL` | Yes | Prisma client, API routes | PostgreSQL connection string |
+| `TELEGRAM_API_ID` | For Telegram group creation | `lib/services/telegramService.ts` | From https://my.telegram.org/apps |
+| `TELEGRAM_API_HASH` | For Telegram group creation | `lib/services/telegramService.ts` | From https://my.telegram.org/apps |
+| `TELEGRAM_SESSION_STRING` | Recommended for Telegram group creation | `lib/services/telegramService.ts` | Persisted GramJS session; avoids interactive auth |
+| `TELEGRAM_PHONE_NUMBER` | Optional fallback | `lib/services/telegramService.ts` | Used only for first-time auth flows |
+| `TELEGRAM_BOT_TOKEN` | For webhook + bot messaging | `lib/services/telegramBotService.ts` | From @BotFather |
+| `TELEGRAM_BOT_USERNAME` | No | Bot mention detection | Defaults to `imin_squad_bot` |
+| `OPENROUTER_API_KEY` | For AI replies | `lib/services/llmService.ts` | Required for Telegram bot LLM responses |
+| `OPENROUTER_MODEL` | No | `lib/services/llmService.ts` | Defaults to `anthropic/claude-sonnet-4.5` |
+| `NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN` | No | `app/register/page.tsx` | Enables city autocomplete |
+| `SUPABASE_PROJECT_REF` | For image upload | `lib/services/supabaseService.ts` | Supabase project ref |
+| `SUPABASE_REGION` | No | `lib/services/supabaseService.ts` | Defaults to `us-east-1` |
+| `SUPABASE_ACCESS_KEY_ID` | For image upload | `lib/services/supabaseService.ts` | S3-compatible key |
+| `SUPABASE_SECRET_ACCESS_KEY` | For image upload | `lib/services/supabaseService.ts` | S3-compatible secret |
+| `NEXT_PUBLIC_SUPABASE_URL` | For image upload URL generation | `lib/services/supabaseService.ts` | Public project URL |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | For image upload URL generation | `lib/services/supabaseService.ts` | Public anon key |
+
+### Legacy/test-only LLM vars
+
+`/api/test/llm` still checks some legacy provider keys (`GEMINI_API_KEY`, `EDENAI_API_KEY`, `PINECONE_API_KEY`, `PINECONE_ASSISTANT_NAME`, plus related model vars).  
+Main bot response generation currently uses `OPENROUTER_API_KEY`.
+
+## Core Workflow
+
+### 1) Seed languages
+
+Run:
+
+```bash
+npm run db:seed
+```
+
+### 2) Add events
+
+There is no public `POST /api/events` endpoint yet.  
+Create events directly in PostgreSQL or through Prisma Studio:
+
+```bash
+npm run db:studio
+```
+
+### 3) (Optional) Pre-create Telegram groups for an event
+
+Use API:
+
+```bash
+curl -X POST "http://localhost:3000/api/events/<eventId>/telegram-groups" \
+  -H "Content-Type: application/json" \
+  -d '{"numberOfGroups":10,"maxMembersPerGroup":5,"botUsername":"imin_squad_bot"}'
+```
+
+For festival registration events (`useFestivalRegistration = true`), create one group per festival join option:
+
+```bash
+curl -X POST "http://localhost:3000/api/events/<eventId>/telegram-groups" \
+  -H "Content-Type: application/json" \
+  -d '{"createFestivalGroups":true}'
+```
+
+### 4) Collect registrations
+
+```bash
+curl -X POST "http://localhost:3000/api/events/<eventId>/registrations" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name":"Alex",
+    "email":"alex@example.com",
+    "age":29,
+    "sex":"male",
+    "languagesISpeak":["en","es"],
+    "country":"Spain",
+    "city":"Barcelona"
+  }'
+```
+
+### 5) Run matching
+
+```bash
+curl -X POST "http://localhost:3000/api/events/<eventId>/matching"
+```
+
+### 6) Configure Telegram webhook (for welcome messages and bot behavior)
+
+```bash
+curl -X POST "https://api.telegram.org/bot<YOUR_BOT_TOKEN>/setWebhook" \
+  -H "Content-Type: application/json" \
+  -d '{"url":"https://your-domain.com/api/telegram/webhook"}'
+```
+
+Check webhook:
+
+```bash
+curl "https://api.telegram.org/bot<YOUR_BOT_TOKEN>/getWebhookInfo"
+```
+
+Remove webhook:
+
+```bash
+curl -X POST "https://api.telegram.org/bot<YOUR_BOT_TOKEN>/deleteWebhook"
+```
+
+## API Reference
+
+All routes are under `app/api/**`.
 
 ### Events
 
-- `GET /api/events/upcoming` - Get all upcoming active events
+| Method | Endpoint | Description |
+| --- | --- | --- |
+| `GET` | `/api/events` | All active events (includes past active events) |
+| `GET` | `/api/events/upcoming` | Active events whose `toDateTime` is in the future |
+| `GET` | `/api/events/:eventId` | Event details by ID |
+| `POST` | `/api/events/upload-image` | Upload event image (multipart form) and persist URL |
 
-### Event Registrations
+### Registration + Matching
 
-- `POST /api/events/[eventId]/registrations` - Register a user for an event
-
-### Languages
-
-- `GET /api/languages` - Get all available languages
-
-### Matching
-
-- `POST /api/events/[eventId]/matching` - Perform matching algorithm for an event
-- `GET /api/events/[eventId]/matching` - Get existing matching results for an event
+| Method | Endpoint | Description |
+| --- | --- | --- |
+| `POST` | `/api/events/:eventId/registrations` | Register attendee for an event |
+| `POST` | `/api/events/:eventId/matching` | Rebuild matching groups for an event |
+| `GET` | `/api/events/:eventId/matching` | Fetch existing matching results |
 
 ### Telegram
 
-- `POST /api/events/[eventId]/telegram-groups` - Create Telegram groups for an event
-- `POST /api/telegram/webhook` - Telegram bot webhook endpoint (receives updates from Telegram)
+| Method | Endpoint | Description |
+| --- | --- | --- |
+| `POST` | `/api/events/:eventId/telegram-groups` | Create Telegram groups for an event |
+| `POST` | `/api/telegram/webhook` | Receive Telegram updates |
+| `GET` | `/api/telegram/webhook` | Webhook health check |
 
-## Database Schema
+### Other
 
-The application uses PostgreSQL with the following main tables:
-- `event` - Events
-- `event_registration` - User registrations
-- `event_registration_language` - Junction table for registration languages
-- `language` - Available languages
-- `matching_group` - Matching groups
-- `matching_group_language` - Junction table for group languages
-- `matching_group_member` - Junction table for group members
+| Method | Endpoint | Description |
+| --- | --- | --- |
+| `GET` | `/api/languages` | List language options |
+| `POST` | `/api/partner-request` | Submit partner lead form |
+| `POST` | `/api/test/llm` | LLM test endpoint |
+| `GET` | `/api/test/llm` | Get stored conversation history |
+| `DELETE` | `/api/test/llm` | Clear stored conversation history |
 
-## Matching Algorithm
+### Upload image endpoint example
 
-The matching algorithm groups users based on common languages:
-- Maximum group size: 5
-- Minimum group size: 2
-- Users are grouped by shared languages
-- Algorithm is deterministic (same input produces same output)
+```bash
+curl -X POST "http://localhost:3000/api/events/upload-image" \
+  -F "eventId=<eventId>" \
+  -F "fileName=poster.jpg" \
+  -F "file=@/absolute/path/to/poster.jpg"
+```
 
-## Development
+## NPM Scripts
 
-- `npm run dev` - Start development server
-- `npm run build` - Build for production (without migrations)
-- `npm run build:deploy` - Build for production with database migrations
-- `npm run start` - Start production server
-- `npm run lint` - Run linter
-- `npm run db:studio` - Open Prisma Studio
-- `npm run db:migrate` - Run pending migrations (development)
-- `npm run db:migrate:deploy` - Apply migrations in production
-- `npm run db:check-migrations` - Check migration status and apply pending migrations
-- `npm run db:seed` - Seed the database with initial data
-- `npm run create-telegram-groups` - Create 10 Telegram groups and save invite links to database
-
-## Database Migrations
-
-The project uses Prisma migrations. When deploying to production:
-
-1. **Local Development**: Use `npm run db:migrate` to create and apply migrations
-2. **Production Deployment**: The build process (`build:deploy`) automatically runs `prisma migrate deploy` to apply pending migrations
-3. **Manual Migration**: If needed, run `npm run db:migrate:deploy` manually in production
-
-### Current Migrations:
-- `20260108213425_` - Initial schema (Event, EventRegistration, Language, MatchingGroup tables)
-- `20260113135216_1` - Added TelegramGroup table and telegram_group_id to EventRegistration
+| Script | Purpose |
+| --- | --- |
+| `npm run dev` | Start local development server |
+| `npm run build` | Run Prisma deploy + generate, then Next build |
+| `npm run build:deploy` | Same as `build` |
+| `npm run start` | Start production server |
+| `npm run lint` | Run Next.js lint checks |
+| `npm run db:generate` | Generate Prisma client |
+| `npm run db:migrate` | Run development migrations |
+| `npm run db:migrate:deploy` | Apply migrations in deploy/prod mode |
+| `npm run db:push` | Push schema directly without migration files |
+| `npm run db:studio` | Open Prisma Studio |
+| `npm run db:seed` | Seed base language data |
+| `npm run create-telegram-groups -- <eventId>` | Create Telegram groups via script |
 
 ## Project Structure
 
-```
+```text
 app/
-  api/              # API routes
-  layout.tsx        # Root layout
-  page.tsx          # Home page
+  api/                         # HTTP API routes
+  components/                  # Shared UI components
+  events/                      # Events page
+  register/                    # Registration flow
+  page.tsx                     # Landing page
 lib/
-  db/               # Database configuration
-  services/         # Business logic
-  types/            # TypeScript types
-  utils/            # Utilities (validation, errors, etc.)
+  db/                          # Prisma client
+  services/                    # Domain + integration services
+  types/                       # DTOs and app types
+  utils/                       # Validation + response utilities
 prisma/
-  migrations/       # Database migrations
-  seed.ts           # Seed script
+  migrations/                  # Prisma migration history
+  schema.prisma               # Main Prisma schema
+  seed.ts                      # Seed script
+public/
+  assets/                      # Static assets
+scripts/
+  create-telegram-groups.ts    # Telegram group bootstrap script
 ```
+
+Note: `src/` also exists and appears to contain older prototype files; the active app runs from `app/`.
+
+## Deployment Notes
+
+- `npm run build` already runs:
+  1. `prisma migrate deploy`
+  2. `prisma generate`
+  3. `next build`
+- `vercel.json` uses:
+  - `installCommand: npm install`
+  - `buildCommand: npm run build`
+
+For production deployments, ensure all required environment variables are configured in your hosting platform.
+
+## Troubleshooting
+
+### Prisma client or migration issues
+
+```bash
+npm run db:generate
+npm run db:migrate
+```
+
+If schema and DB drift in local dev, `npm run db:push` can help during iteration.
+
+### Telegram group creation fails
+
+Check:
+- `TELEGRAM_API_ID` and `TELEGRAM_API_HASH` are set correctly
+- `TELEGRAM_SESSION_STRING` is valid (or provide phone number for first-time auth flow)
+- The bot has adequate permissions in target groups
+
+### No welcome messages in Telegram
+
+Check:
+- `TELEGRAM_BOT_TOKEN` is set
+- Webhook points to `/api/telegram/webhook`
+- `GET /api/telegram/webhook` returns health status
+
+### LLM responses are empty
+
+Check:
+- `OPENROUTER_API_KEY` is present
+- `OPENROUTER_MODEL` is valid for your OpenRouter account
+
+---
+
+If you are extending this project, start in `lib/services/*` for domain logic and `app/api/*` for route behavior.
