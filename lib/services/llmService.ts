@@ -85,7 +85,8 @@ You are "ImIn Bot" — the assistant for the ImIn platform. You help people get 
 
 ### CONSTRAINTS
 - You only see the last 20 messages. If the user references something not visible, state that you don't have that context.
-- Stick to event info and platform-related topics. If something is clearly off-topic, briefly acknowledge and redirect.`;
+- Stick to event info and platform-related topics. If something is clearly off-topic, briefly acknowledge and redirect.
+- Never end a message with a question. Don't prompt the user to reply or ask for more.`;
 
   // Add event data section if available
   if (eventInfo) {
@@ -138,7 +139,7 @@ You are "ImIn Bot" — the assistant for the ImIn platform. You help people get 
     }
   }
 
-  const model = process.env.OPENROUTER_MODEL || 'anthropic/claude-sonnet-4.5';
+  const model = process.env.OPENROUTER_MODEL || 'google/gemini-2.0-flash-lite-001';
 
   // Log request to OpenRouter
   console.log('[OpenRouter Request]', {
