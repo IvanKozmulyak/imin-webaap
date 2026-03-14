@@ -486,7 +486,7 @@ async function handleMessage(message: any): Promise<void> {
       console.error('LLM error:', llmResponse.error);
       const errorReply = userId != null
         ? formatReplyWithMention(userId, firstName, getBotErrorProcessing(msgLang))
-        : { text: getBotErrorProcessing(msgLang), parseMode: null as const };
+        : { text: getBotErrorProcessing(msgLang), parseMode: null };
       await sendTelegramMessage(chatId, errorReply.text, errorReply.parseMode);
       return;
     }
@@ -495,7 +495,7 @@ async function handleMessage(message: any): Promise<void> {
 
     const reply = userId != null
       ? formatReplyWithMention(userId, firstName, llmResponse.content)
-      : { text: llmResponse.content, parseMode: null as const };
+      : { text: llmResponse.content, parseMode: null };
     await sendTelegramMessage(chatId, reply.text, reply.parseMode);
 
     console.log(`[Telegram] Response sent to chat ${chatId}`);
@@ -508,7 +508,7 @@ async function handleMessage(message: any): Promise<void> {
         const firstName = from?.first_name || 'there';
         const reply = userId != null
           ? formatReplyWithMention(userId, firstName, getBotErrorGeneric(undefined))
-          : { text: getBotErrorGeneric(undefined), parseMode: null as const };
+          : { text: getBotErrorGeneric(undefined), parseMode: null };
         await sendTelegramMessage(chatId, reply.text, reply.parseMode);
       } catch (sendError) {
         console.error('Failed to send error message:', sendError);
