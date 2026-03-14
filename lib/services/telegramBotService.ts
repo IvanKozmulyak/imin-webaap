@@ -6,6 +6,13 @@
 import { prisma } from '@/lib/db/client';
 import { conversationMemory } from './conversationMemoryService';
 import { generateLLMResponse } from './llmService';
+import {
+  getWelcomeMessage,
+  getLeaveMessage,
+  getBotHelpPrompt,
+  getBotErrorProcessing,
+  getBotErrorGeneric,
+} from '@/lib/constants/telegramMessages';
 
 const TELEGRAM_API_BASE = 'https://api.telegram.org/bot';
 
@@ -18,6 +25,25 @@ function getBotToken(): string {
     throw new Error('TELEGRAM_BOT_TOKEN is not configured');
   }
   return token;
+}
+
+/** Escape text for Telegram HTML parse_mode so < > & don't break the message. */
+function escapeHtml(text: string): string {
+  return text
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+}
+
+/**
+ * Prefix reply with a mention of the user so they get tagged/notified.
+ * Returns message suitable for sendMessage with parse_mode: 'HTML'.
+ */
+function formatReplyWithMention(userId: number, firstName: string, replyText: string): { text: string; parseMode: 'HTML' } {
+  const safeName = escapeHtml(firstName || 'there');
+  const safeReply = escapeHtml(replyText);
+  const mention = `<a href="tg://user?id=${userId}">${safeName}</a>, ${safeReply}`;
+  return { text: mention, parseMode: 'HTML' };
 }
 
 /**
@@ -160,64 +186,42 @@ async function updateMemberCountFromTelegram(telegramGroupId: string, chatId: st
   }
 }
 
-/**
- * Creates a welcome message for new group members based on current member count
- * @param firstName First name of the new member
- * @param memberCount Current number of members in the group
- * @param ticketUrl Optional ticket URL
- * @param botUsername Bot username for tagging
- * @returns Object with message text and optional inline keyboard
- */
-function createWelcomeMessage(
-    firstName: string,
-    memberCount: number,
-    ticketUrl?: string | null,
-    botUsername: string = 'imin_squad_bot'
-): { message: string; inlineKeyboard?: Array<Array<{ text: string; url: string }>> } {
-
-    let message = `⚡️ **${firstName}, you’re in.**\n\n`;
-
-    if (memberCount <= 3) {
-        message +=
-            `⏳ **Group is forming**\n` +
-            `Waiting for more members to join.\n` +
-            `You’ll be notified when things start.`;
-    } else {
-        message +=
-            `🎉 **Group is active**\n` +
-            `Say hi, introduce yourself, or start a conversation.`;
-    }
-
-    message +=
-        `\n\n💡 **Need info?**\n` +
-        `Mention @${botUsername} to get event details or help.`;
-
-    if (ticketUrl) {
-        message += `\n\n*Heads up: You need a ticket to get past the bouncer.*`;
-    }
-
-    const result: {
-        message: string;
-        inlineKeyboard?: Array<Array<{ text: string; url: string }>>;
-    } = { message };
-
-    if (ticketUrl) {
-        result.inlineKeyboard = [
-            [{ text: 'Buy Ticket', url: ticketUrl }],
-        ];
-    }
-
-    return result;
+/** Escape user-controlled text for Telegram Markdown. */
+function escapeMarkdown(text: string): string {
+  return text.replace(/\\/g, '\\\\').replace(/_/g, '\\_').replace(/\*/g, '\\*');
 }
 
 /**
- * Creates a message when someone leaves the group
- * @returns Message text to reassure the group
+ * Creates a welcome message (EN or UK from event.messageLanguage).
  */
-function createLeaveMessage(): string {
-  return `👋 **Someone left the squad.**\n\n` +
-    `Don't worry - we're on it! We'll find someone awesome to fill the spot. 🔍\n\n` +
-    `*The squad stays strong.* 💪`;
+function createWelcomeMessage(
+  firstName: string,
+  memberCount: number,
+  ticketUrl: string | null | undefined,
+  botUsername: string,
+  messageLanguage: string | null | undefined
+): { message: string; inlineKeyboard?: Array<Array<{ text: string; url: string }>> } {
+
+  const { message: msg, buyTicketLabel } = getWelcomeMessage(
+    messageLanguage,
+    escapeMarkdown(firstName),
+    memberCount,
+    botUsername,
+    ticketUrl
+  );
+  const result: {
+    message: string;
+    inlineKeyboard?: Array<Array<{ text: string; url: string }>>;
+  } = { message: msg };
+  if (ticketUrl) {
+    result.inlineKeyboard = [[{ text: buyTicketLabel, url: ticketUrl }]];
+  }
+  return result;
+}
+
+/** Creates a leave message in the event's language (EN or UK). */
+function createLeaveMessage(messageLanguage: string | null | undefined): string {
+  return getLeaveMessage(messageLanguage);
 }
 
 /**
@@ -299,7 +303,8 @@ async function handleNewChatMembers(message: any): Promise<void> {
         firstName,
         memberCountForMessage,
         event.ticketUrl,
-        botUsername
+        botUsername,
+        event.messageLanguage
       );
       
       await sendTelegramMessage(chatId, message, 'Markdown', inlineKeyboard);
@@ -360,7 +365,8 @@ async function handleChatMemberUpdate(chatMemberUpdate: any): Promise<void> {
         firstName,
         memberCountForMessage,
         event.ticketUrl,
-        botUsername
+        botUsername,
+        event.messageLanguage
       );
       
       await sendTelegramMessage(chatId, message, 'Markdown', inlineKeyboard);
@@ -380,11 +386,10 @@ async function handleChatMemberUpdate(chatMemberUpdate: any): Promise<void> {
       return;
     }
     
-    // Get the Telegram group for this chat
+    // Get the Telegram group for this chat (include event for message language)
     const telegramGroup = await prisma.telegramGroup.findFirst({
-      where: {
-        telegramChatId: chatId,
-      },
+      where: { telegramChatId: chatId },
+      include: { event: true },
     });
     
     if (!telegramGroup) {
@@ -392,19 +397,15 @@ async function handleChatMemberUpdate(chatMemberUpdate: any): Promise<void> {
       return;
     }
     
-    // Send leave message to the group
     try {
-      const leaveMessage = createLeaveMessage();
+      const leaveMessage = createLeaveMessage(telegramGroup.event?.messageLanguage);
       await sendTelegramMessage(chatId, leaveMessage, 'Markdown');
       console.log(`Leave message sent to group ${chatId}`);
     } catch (error: any) {
       console.error(`Failed to send leave message:`, error);
-      // Continue with member count update even if message fails
     }
     
-    // Update member count - this will automatically set isFull to false if count drops below maxMembers
     await updateMemberCountFromTelegram(telegramGroup.id, chatId);
-    
     console.log(`Member left group ${chatId}, updated member count`);
   }
 }
@@ -466,45 +467,49 @@ async function handleMessage(message: any): Promise<void> {
       ticketUrl: telegramGroup.event.ticketUrl,
     } : null;
 
-    // If message is just a mention (no text after cleaning), send a helpful response
+    const msgLang = telegramGroup?.event?.messageLanguage;
+    const from = message.from;
+    const userId = from?.id;
+    const firstName = from?.first_name || 'there';
+
     if (!cleanText) {
-      await sendTelegramMessage(
-        chatId,
-        'Hi! I\'m here to help. What would you like to know?',
-        'Markdown'
-      );
+      const reply = userId != null
+        ? formatReplyWithMention(userId, firstName, getBotHelpPrompt(msgLang))
+        : { text: getBotHelpPrompt(msgLang), parseMode: 'Markdown' as const };
+      await sendTelegramMessage(chatId, reply.text, reply.parseMode);
       return;
     }
 
-    // Generate LLM response with event information
     const llmResponse = await generateLLMResponse(chatId, cleanText, eventInfo);
 
     if (llmResponse.error) {
       console.error('LLM error:', llmResponse.error);
-      await sendTelegramMessage(
-        chatId,
-        'Sorry, I encountered an error processing your message. Please try again later.'
-      );
+      const errorReply = userId != null
+        ? formatReplyWithMention(userId, firstName, getBotErrorProcessing(msgLang))
+        : { text: getBotErrorProcessing(msgLang), parseMode: null as const };
+      await sendTelegramMessage(chatId, errorReply.text, errorReply.parseMode);
       return;
     }
 
-    // Add assistant response to buffer
     await conversationMemory.addAssistantMessage(chatId, llmResponse.content);
 
-    // Send response back to Telegram (without parse mode to avoid Markdown parsing errors)
-    // LLM responses may contain special characters that break Markdown parsing
-    await sendTelegramMessage(chatId, llmResponse.content);
+    const reply = userId != null
+      ? formatReplyWithMention(userId, firstName, llmResponse.content)
+      : { text: llmResponse.content, parseMode: null as const };
+    await sendTelegramMessage(chatId, reply.text, reply.parseMode);
 
     console.log(`[Telegram] Response sent to chat ${chatId}`);
   } catch (error: any) {
     console.error(`[Telegram] Error handling message in chat ${chatId}:`, error);
-    // Try to send error message to user (only if bot was mentioned)
     if (isMentioned) {
       try {
-        await sendTelegramMessage(
-          chatId,
-          'Sorry, I encountered an error. Please try again later.'
-        );
+        const from = message.from;
+        const userId = from?.id;
+        const firstName = from?.first_name || 'there';
+        const reply = userId != null
+          ? formatReplyWithMention(userId, firstName, getBotErrorGeneric(undefined))
+          : { text: getBotErrorGeneric(undefined), parseMode: null as const };
+        await sendTelegramMessage(chatId, reply.text, reply.parseMode);
       } catch (sendError) {
         console.error('Failed to send error message:', sendError);
       }
@@ -525,11 +530,9 @@ async function handleLeftChatMember(message: any): Promise<void> {
     return;
   }
   
-  // Get the Telegram group for this chat
   const telegramGroup = await prisma.telegramGroup.findFirst({
-    where: {
-      telegramChatId: chatId,
-    },
+    where: { telegramChatId: chatId },
+    include: { event: true },
   });
   
   if (!telegramGroup) {
@@ -537,18 +540,14 @@ async function handleLeftChatMember(message: any): Promise<void> {
     return;
   }
   
-  // Send leave message to the group
   try {
-    const leaveMessage = createLeaveMessage();
+    const leaveMessage = createLeaveMessage(telegramGroup.event?.messageLanguage);
     await sendTelegramMessage(chatId, leaveMessage, 'Markdown');
     console.log(`Leave message sent to group ${chatId}`);
   } catch (error: any) {
     console.error(`Failed to send leave message:`, error);
-    // Continue with member count update even if message fails
   }
   
-  // Update member count - this will automatically set isFull to false if count drops below maxMembers
   await updateMemberCountFromTelegram(telegramGroup.id, chatId);
-  
   console.log(`Member left group ${chatId}, updated member count`);
 }

@@ -23,6 +23,7 @@ export async function getUpcomingEvents(): Promise<EventDto[]> {
     imageUrl: event.imageUrl,
     isActive: event.isActive,
     useFestivalRegistration: event.useFestivalRegistration,
+    messageLanguage: (event.messageLanguage === 'uk' ? 'uk' : 'en') as 'en' | 'uk',
     createdAt: event.createdAt.toISOString(),
   }));
 }
@@ -50,6 +51,7 @@ export async function getAllActiveEvents(): Promise<EventDto[]> {
     imageUrl: event.imageUrl,
     isActive: event.isActive,
     useFestivalRegistration: event.useFestivalRegistration,
+    messageLanguage: (event.messageLanguage === 'uk' ? 'uk' : 'en') as 'en' | 'uk',
     createdAt: event.createdAt.toISOString(),
   }));
 }

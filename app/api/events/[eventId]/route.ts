@@ -26,6 +26,7 @@ export async function GET(
       imageUrl: event.imageUrl,
       isActive: event.isActive,
       useFestivalRegistration: event.useFestivalRegistration,
+      messageLanguage: event.messageLanguage === 'uk' ? 'uk' : 'en',
       createdAt: event.createdAt.toISOString(),
     };
     

@@ -19,6 +19,7 @@ model Event {
   imageUrl                  String?  @map("image_url") @db.VarChar(500)
   isActive                  Boolean  @default(true) @map("is_active")
   useFestivalRegistration   Boolean  @default(false) @map("use_festival_registration")
+  messageLanguage           String   @default("en") @map("message_language") @db.VarChar(10) // "en" | "uk"
   createdAt              DateTime @default(now()) @map("created_at")
 
   registrations  EventRegistration[]

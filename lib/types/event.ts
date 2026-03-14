@@ -1,3 +1,6 @@
+/** Supported languages for event bot messages (welcome, leave, etc.) */
+export type EventMessageLanguage = 'en' | 'uk';
+
 export interface EventDto {
   id: string;
   name: string;
@@ -9,5 +12,6 @@ export interface EventDto {
   imageUrl: string | null;
   isActive: boolean;
   useFestivalRegistration: boolean;
+  messageLanguage: EventMessageLanguage;
   createdAt: string; // ISO 8601 timestamp
 }
