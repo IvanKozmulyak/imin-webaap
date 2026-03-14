@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState, Suspense, useCallback } from 'react';
-import { useSearchParams, useRouter } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
 import { EventDto } from '@/lib/types/event';
@@ -35,19 +35,11 @@ const HAS_TICKET_OPTIONS = [
 
 function RegisterContent() {
   const searchParams = useSearchParams();
-  const router = useRouter();
   const eventId = searchParams?.get('eventId');
   const style = searchParams?.get('style');
   const fromEvents = searchParams?.get('fromEvents');
   const isFestivalStyle = style === 'festival';
   const [showSplash, setShowSplash] = useState(false);
-
-  const switchMode = () => {
-    if (!eventId) return;
-    const newStyle = isFestivalStyle ? '' : 'festival';
-    const newUrl = `/register?eventId=${eventId}${newStyle ? `&style=${newStyle}` : ''}`;
-    router.push(newUrl);
-  };
 
   const [event, setEvent] = useState<EventDto | null>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -571,20 +563,6 @@ function RegisterContent() {
           isFestivalStyle={isFestivalStyle}
         />
       )}
-      {/* Mode Switcher */}
-      {eventId && (
-        <button
-          onClick={switchMode}
-          className="mode-switcher"
-          aria-label={isFestivalStyle ? 'Switch to Nightlife' : 'Switch to Festival'}
-        >
-          <span className="switcher-indicator"></span>
-          <span className="switcher-text">
-            {isFestivalStyle ? 'Switch to Nightlife' : 'Switch to Festival'}
-          </span>
-        </button>
-      )}
-
       {/* Ambient Background with Blobs */}
       <div className="ambient-light" aria-hidden="true">
         <div className="blob blob-1" id="blob1"></div>
