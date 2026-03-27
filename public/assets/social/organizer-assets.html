@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>IMIN Social Assets - Organizer Toolkit</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: system-ui, -apple-system, sans-serif; background: #0a0a0a; color: white; padding: 40px; }
+    .intro { max-width: 800px; margin: 0 auto 40px; text-align: center; }
+    .intro h1 { font-size: 2.5rem; margin-bottom: 16px; background: linear-gradient(135deg, #10b981, #06b6d4); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .intro p { color: #888; font-size: 1.1rem; }
+    
+    .asset-section { margin-bottom: 60px; }
+    .asset-section h2 { font-size: 1.5rem; margin-bottom: 8px; color: #10b981; }
+    .asset-section .desc { color: #666; margin-bottom: 24px; }
+    
+    .asset-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 24px; }
+    
+    /* Instagram Post - 1080x1080 */
+    .instagram-post {
+      width: 340px;
+      height: 340px;
+      background: linear-gradient(145deg, #111, #0a0a0a);
+      border-radius: 16px;
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      overflow: hidden;
+    }
+    .instagram-post::before {
+      content: '';
+      position: absolute;
+      top: -50%; left: -50%;
+      width: 200%; height: 200%;
+      background: radial-gradient(circle at 30% 30%, rgba(16, 185, 129, 0.15), transparent 50%);
+      pointer-events: none;
+    }
+    .instagram-post .logo { font-size: 14px; font-weight: 700; color: #10b981; margin-bottom: 16px; }
+    .instagram-post .headline { font-size: 22px; font-weight: 700; line-height: 1.3; margin-bottom: 12px; }
+    .instagram-post .subtext { font-size: 13px; color: #888; flex-grow: 1; }
+    .instagram-post .cta { 
+      background: #10b981; color: #000; font-weight: 600; 
+      padding: 10px 20px; border-radius: 8px; text-align: center; font-size: 13px;
+    }
+    .instagram-post .tag { font-size: 11px; color: #666; margin-top: 12px; }
+    
+    /* Instagram Story - 1080x1920 scaled */
+    .instagram-story {
+      width: 255px;
+      height: 448px;
+      background: linear-gradient(180deg, #0f0f0f, #000);
+      border-radius: 12px;
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      overflow: hidden;
+    }
+    .instagram-story::after {
+      content: '';
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      height: 120px;
+      background: linear-gradient(to top, rgba(16, 185, 129, 0.2), transparent);
+    }
+    .instagram-story .logo { font-size: 12px; font-weight: 700; color: #10b981; margin-bottom: auto; }
+    .instagram-story .headline { font-size: 20px; font-weight: 700; line-height: 1.3; }
+    .instagram-story .subtext { font-size: 12px; color: #888; margin: 12px 0; }
+    .instagram-story .cta { 
+      background: #10b981; color: #000; font-weight: 600; 
+      padding: 12px; border-radius: 8px; text-align: center; font-size: 12px;
+    }
+    
+    /* Telegram Post */
+    .telegram-post {
+      width: 340px;
+      background: #1a1a1a;
+      border-radius: 16px;
+      padding: 20px;
+      border: 1px solid #333;
+    }
+    .telegram-post .header { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; }
+    .telegram-post .avatar { 
+      width: 40px; height: 40px; background: linear-gradient(135deg, #10b981, #06b6d4); 
+      border-radius: 50%; display: flex; align-items: center; justify-content: center;
+      font-weight: 700; font-size: 16px;
+    }
+    .telegram-post .name { font-weight: 600; font-size: 14px; }
+    .telegram-post .handle { font-size: 11px; color: #666; }
+    .telegram-post .content { font-size: 14px; line-height: 1.5; color: #ddd; }
+    .telegram-post .content strong { color: #10b981; }
+    .telegram-post .link { 
+      display: block; margin-top: 16px; padding: 12px; 
+      background: #10b981; color: #000; font-weight: 600;
+      border-radius: 8px; text-align: center; font-size: 13px; text-decoration: none;
+    }
+    
+    .dark-theme .instagram-post,
+    .dark-theme .instagram-story { background: linear-gradient(145deg, #1a1a1a, #0f0f0f); }
+    .light-theme .instagram-post,
+    .light-theme .instagram-story { background: linear-gradient(145deg, #fff, #f5f5f5); color: #111; }
+    .light-theme .instagram-post .subtext,
+    .light-theme .instagram-story .subtext { color: #666; }
+    .light-theme .telegram-post { background: #fff; border-color: #e5e5e5; color: #111; }
+    .light-theme .telegram-post .content { color: #333; }
+    
+    .theme-toggle {
+      position: fixed; top: 20px; right: 20px;
+      background: #222; border: 1px solid #444; color: #fff;
+      padding: 8px 16px; border-radius: 20px; cursor: pointer;
+      font-size: 12px;
+    }
+    
+    .usage-guide {
+      background: #111; border: 1px solid #333; border-radius: 12px; padding: 24px; margin-top: 40px;
+    }
+    .usage-guide h3 { color: #10b981; margin-bottom: 16px; }
+    .usage-guide ol { padding-left: 20px; color: #aaa; line-height: 2; }
+    .usage-guide code { background: #222; padding: 2px 8px; border-radius: 4px; color: #10b981; }
+  </style>
+</head>
+<body>
+
+<button class="theme-toggle" onclick="document.body.classList.toggle('light-theme')">Toggle Light/Dark</button>
+
+<div class="intro">
+  <h1>🎨 IMIN Organizer Social Assets</h1>
+  <p>Ready-to-use Instagram & Telegram assets for event organizers to promote IMIN to their audience</p>
+</div>
+
+<div class="asset-section">
+  <h2>📸 Instagram Posts (1080×1080)</h2>
+  <p class="desc">Square posts perfect for feed. Click to preview, screenshot to use.</p>
+  
+  <div class="asset-grid">
+    <!-- Post 1: The Problem -->
+    <div class="instagram-post">
+      <div class="logo">⬡ IMIN</div>
+      <div class="headline">Going to events alone sucks.</div>
+      <div class="subtext">You're not alone. 80% of event-goers feel awkward going solo. That's why we match you with a squad before the event.</div>
+      <div class="cta">Find Your Squad → imin.wtf</div>
+      <div class="tag">#SoloButNotAlone #EventSquads</div>
+    </div>
+    
+    <!-- Post 2: How It Works -->
+    <div class="instagram-post">
+      <div class="logo">⬡ IMIN</div>
+      <div class="headline">How IMIN works:</div>
+      <div class="subtext">1️⃣ Pick an event<br>2️⃣ Get matched with 4-5 like-minded people<br>3️⃣ Meet your squad at the event<br><br>No awkward icebreakers. No standing alone.</div>
+      <div class="cta">Try It Now → imin.wtf</div>
+      <div class="tag">#GoTogether #NoMoreSolo</div>
+    </div>
+    
+    <!-- Post 3: For Organizers -->
+    <div class="instagram-post">
+      <div class="logo">⬡ IMIN</div>
+      <div class="headline">Partner with IMIN 📢</div>
+      <div class="subtext">Boost your ticket sales by 20%. We match solo attendees into squads so they come back to YOUR events again.</div>
+      <div class="cta">Learn More → imin.wtf/partners</div>
+      <div class="tag">#EventOrganizers #Partnership</div>
+    </div>
+    
+    <!-- Post 4: Social Proof -->
+    <div class="instagram-post">
+      <div class="logo">⬡ IMIN</div>
+      <div class="headline">1,247 squads matched this month</div>
+      <div class="subtext">"Best decision I made this year. Met my people before even walking in." — Sarah, Tech Meetup attendee</div>
+      <div class="cta">Join the Squad → imin.wtf</div>
+      <div class="tag">#IMINStories #Community</div>
+    </div>
+  </div>
+</div>
+
+<div class="asset-section">
+  <h2>📱 Instagram Stories (1080×1920)</h2>
+  <p class="desc">Vertical stories with swipe-up potential. Perfect for quick engagement.</p>
+  
+  <div class="asset-grid">
+    <!-- Story 1 -->
+    <div class="instagram-story">
+      <div class="logo">⬡ IMIN</div>
+      <div class="headline">Going to [EVENT] alone?</div>
+      <div class="subtext">Don't stress. We'll match you with 4-5 people who are just as excited as you.</div>
+      <div class="cta">Get Your Squad ↗</div>
+    </div>
+    
+    <!-- Story 2 -->
+    <div class="instagram-story">
+      <div class="logo">⬡ IMIN</div>
+      <div class="headline">The awkward part is over</div>
+      <div class="subtext">IMIN matches you before the event. Chat, connect, show up together.</div>
+      <div class="cta">Try Free ↗</div>
+    </div>
+    
+    <!-- Story 3: Poll -->
+    <div class="instagram-story">
+      <div class="logo">⬡ IMIN</div>
+      <div class="headline">What's your biggest event fear?</div>
+      <div class="subtext">🤚 Standing alone<br>👋 No one to talk to<br>😰 Not knowing anyone</div>
+      <div class="cta">We fix it → imin.wtf</div>
+    </div>
+  </div>
+</div>
+
+<div class="asset-section">
+  <h2>✈️ Telegram Posts</h2>
+  <p class="desc">Copy-paste ready posts for Telegram channels and groups.</p>
+  
+  <div class="asset-grid">
+    <div class="telegram-post">
+      <div class="header">
+        <div class="avatar">I</div>
+        <div>
+          <div class="name">IMIN</div>
+          <div class="handle">@iminbot</div>
+        </div>
+      </div>
+      <div class="content">
+        <strong>🎉 Going to [EVENT NAME] alone?</strong><br><br>
+        Don't worry — we've got you covered! IMIN matches solo attendees into squads before the event so you never have to awkwardly stand alone.<br><br>
+        <strong>How it works:</strong><br>
+        → Choose your event<br>
+        → Get matched with 4-5 people<br>
+        → Chat before, arrive together<br><br>
+        <strong>20% more tickets sold</strong> for events partnered with IMIN 🎯
+      </div>
+      <a href="https://imin.wtf" class="link">👋 Find Your Squad</a>
+    </div>
+    
+    <div class="telegram-post">
+      <div class="header">
+        <div class="avatar">I</div>
+        <div>
+          <div class="name">IMIN</div>
+          <div class="handle">@iminbot</div>
+        </div>
+      </div>
+      <div class="content">
+        <strong>📢 For Event Organizers</strong><br><br>
+        Want to boost your ticket sales by 20%? IMIN matches solo attendees into squads — they come back to YOUR events because they found their community.<br><br>
+        <strong>It's free to start:</strong><br>
+        ✅ Add your event<br>
+        ✅ We handle matching<br>
+        ✅ You get analytics
+      </div>
+      <a href="https://imin.wtf/partners" class="link">🚀 Partner With Us</a>
+    </div>
+  </div>
+</div>
+
+<div class="usage-guide">
+  <h3>📋 Quick Usage Guide</h3>
+  <ol>
+    <li><strong>Preview:</strong> Toggle dark/light theme with the button (or screenshot as-is)</li>
+    <li><strong>Screenshot:</strong> Use your phone or screenshot tool to capture assets at full resolution</li>
+    <li><strong>Customize:</strong> Replace <code>[EVENT]</code> or <code>[EVENT NAME]</code> with your specific event</li>
+    <li><strong>Post:</strong> Upload to Instagram/Telegram and add your event link in bio/link</li>
+    <li><strong>Track:</strong> Use <code>?ref=instagram</code> or <code>?ref=telegram</code> to track referrals</li>
+  </ol>
+</div>
+
+</body>
+</html>
