@@ -217,3 +217,30 @@ model BadActor {
   @@index([telegramId])
   @@map("bad_actor")
 }
+
+// IMIN Ambassador program - for high-retention users who help with recruitment and squad creation
+model Ambassador {
+  id                    String   @id @default(uuid())
+  telegramId            String   @unique @map("telegram_id") @db.VarChar(255)
+  telegramUsername      String?  @map("telegram_username") @db.VarChar(255)
+  firstName             String?  @map("first_name") @db.VarChar(255)
+  // Criteria for becoming an ambassador
+  eventsAttended        Int      @default(0) @map("events_attended")
+  squadsCreated         Int      @default(0) @map("squads_created")
+  referrals             Int      @default(0) @map("referrals")
+  ratingScore           Float    @default(0) @map("rating_score") // Average rating from others
+  // Status
+  isActive              Boolean  @default(true) @map("is_active")
+  isVerified            Boolean  @default(false) @map("is_verified") // Manually verified by admin
+  // Benefits
+  badge                 String?  @map("badge") @db.VarChar(50) // "gold" | "silver" | "bronze"
+  commissionRate        Float    @default(0.05) @map("commission_rate") // 5% default
+  // Tracking
+  createdAt             DateTime @default(now()) @map("created_at")
+  updatedAt             DateTime @updatedAt @map("updated_at")
+  lastActiveAt          DateTime? @map("last_active_at")
+
+  @@index([telegramId])
+  @@index([isActive])
+  @@map("ambassador")
+}

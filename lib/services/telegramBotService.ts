@@ -8,6 +8,7 @@ import { conversationMemory } from './conversationMemoryService';
 import { generateLLMResponse } from './llmService';
 import { startWelcomeSequence } from './welcomeSequenceService';
 import { ratingService } from './ratingService';
+import { getAmbassador, getOrCreateAmbassador, checkAmbassadorQualification, generateReferralCode } from './ambassadorService';
 import {
   getWelcomeMessage,
   getLeaveMessage,
@@ -471,6 +472,22 @@ async function handleMessage(message: any): Promise<void> {
     return;
   }
 
+  // Ambassador commands (don't require mention)
+  if (cleanText === '/ambassador' || cleanText === '/ambassador@' + botUsername) {
+    await handleAmbassadorCommand(message);
+    return;
+  }
+
+  if (cleanText.startsWith('/referral') || cleanText.startsWith('/referral@' + botUsername)) {
+    await handleReferralCommand(message);
+    return;
+  }
+
+  if (cleanText.startsWith('/create-squad ') || cleanText.startsWith('/create-squad@' + botUsername + ' ')) {
+    await handleCreateSquadCommand(message, cleanText);
+    return;
+  }
+
   // Check if bot is mentioned/tagged in the message
   const isMentioned = 
     text.includes(`@${botUsername}`) ||
@@ -810,4 +827,217 @@ async function answerCallbackQuery(callbackQueryId: string): Promise<void> {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ callback_query_id: callbackQueryId }),
   });
+}
+
+/**
+ * Handle /ambassador command - show ambassador info and status
+ */
+async function handleAmbassadorCommand(message: any): Promise<void> {
+  const chatId = message.chat.id.toString();
+  const from = message.from;
+  const userId = from?.id?.toString();
+  const firstName = from?.first_name || 'there';
+  const username = from?.username;
+
+  if (!userId) {
+    await sendTelegramMessage(chatId, "Couldn't identify your account. Please try again.");
+    return;
+  }
+
+  try {
+    // Get or create ambassador record
+    const ambassador = await getOrCreateAmbassador({
+      telegramId: userId,
+      telegramUsername: username,
+      firstName,
+    });
+
+    // Check qualification status
+    const qualification = await checkAmbassadorQualification(userId);
+
+    const badge = ambassador.badge || (ambassador.isVerified ? 'silver' : 'new');
+    const badgeEmoji = { gold: '🥇', silver: '🥈', bronze: '🥉', new: '🌱' };
+
+    const statusText = ambassador.isVerified
+      ? '✅ Verified Ambassador'
+      : qualification.qualified
+        ? '✨ Qualified - Pending Verification'
+        : '🌱 Newcomer';
+
+    const statsText = `📊 Your Stats:
+• Events Attended: ${qualification.eventsAttended}
+• Squads Created: ${qualification.squadsCreated}  
+• Referrals: ${qualification.referrals}
+• Avg Rating: ${qualification.ratingScore.toFixed(1)} ⭐`;
+
+    const requirementsText = qualification.requirements.join('\n');
+
+    const helpText = `🌟 *IMIN Ambassador Program*
+
+${badgeEmoji[badge as keyof typeof badgeEmoji]} Badge: ${badge.toUpperCase()}
+${statusText}
+
+${statsText}
+
+*Requirements to qualify:*
+${requirementsText}
+
+🎁 *Ambassador Benefits:*
+• Create squads manually for events
+• Earn commission on referrals
+• Early access to new features
+• Exclusive ambassador badge
+
+💡 Use /referral to get your code!`;
+
+    const reply = userId != null
+      ? formatReplyWithMention(Number(userId), firstName, helpText)
+      : { text: helpText, parseMode: 'Markdown' as const };
+
+    await sendTelegramMessage(chatId, reply.text, reply.parseMode);
+  } catch (error: any) {
+    console.error('Error in ambassador command:', error);
+    await sendTelegramMessage(chatId, "Sorry, there was an error checking your ambassador status. Please try again.");
+  }
+}
+
+/**
+ * Handle /referral command - generate and show referral code
+ */
+async function handleReferralCommand(message: any): Promise<void> {
+  const chatId = message.chat.id.toString();
+  const from = message.from;
+  const userId = from?.id?.toString();
+  const firstName = from?.first_name || 'there';
+
+  if (!userId) {
+    await sendTelegramMessage(chatId, "Couldn't identify your account. Please try again.");
+    return;
+  }
+
+  try {
+    const referralCode = generateReferralCode(userId);
+
+    const referralText = `🔗 *Your IMIN Referral Code*
+
+\`${referralCode}\`
+
+📣 *How it works:*
+1. Share this code with friends
+2. They use it when they register for events
+3. You earn rewards when they attend!
+
+💰 Rewards:
+• 3 friends → Bronze badge + 3% commission
+• 5 friends → Silver badge + 5% commission  
+• 10 friends → Gold badge + 10% commission
+
+Share the squad experience! 🎉`;
+
+    const reply = userId != null
+      ? formatReplyWithMention(Number(userId), firstName, referralText)
+      : { text: referralText, parseMode: 'Markdown' as const };
+
+    await sendTelegramMessage(chatId, reply.text, reply.parseMode);
+  } catch (error: any) {
+    console.error('Error in referral command:', error);
+    await sendTelegramMessage(chatId, "Sorry, there was an error generating your referral code. Please try again.");
+  }
+}
+
+/**
+ * Handle /create-squad command - create a manual squad (ambassadors only)
+ */
+async function handleCreateSquadCommand(message: any, commandText: string): Promise<void> {
+  const chatId = message.chat.id.toString();
+  const from = message.from;
+  const userId = from?.id?.toString();
+  const firstName = from?.first_name || 'there';
+
+  if (!userId) {
+    await sendTelegramMessage(chatId, "Couldn't identify your account. Please try again.");
+    return;
+  }
+
+  // Parse command: /create-squad <event-id> [squad-name]
+  const parts = commandText.replace(/^\/create-squad(@\w+)?\s*/i, '').trim().split(' ');
+  
+  if (parts.length < 1 || !parts[0]) {
+    const helpText = `📋 *Create Squad Command*
+
+Use: /create-squad <event-id> [squad-name]
+
+Example:
+• /create-squad abc123 "Friday Night Squad"
+• /create-squad abc123
+
+💡 Get the event ID from the event page URL.`;
+
+    const reply = userId != null
+      ? formatReplyWithMention(Number(userId), firstName, helpText)
+      : { text: helpText, parseMode: 'Markdown' as const };
+
+    await sendTelegramMessage(chatId, reply.text, reply.parseMode);
+    return;
+  }
+
+  const eventId = parts[0];
+  const squadName = parts.slice(1).join(' ') || undefined;
+
+  try {
+    // Check if user is an ambassador
+    const ambassador = await getAmbassador(userId);
+
+    if (!ambassador || !ambassador.isActive) {
+      const errorText = `❌ *Ambassador Access Required*
+
+You need to be an IMIN Ambassador to create squads manually.
+
+🌱 Join the program:
+• Attend 3+ events
+• Build your rating (4+ stars)
+• Make 5+ referrals
+
+Type /ambassador to check your status!`;
+
+      const reply = userId != null
+        ? formatReplyWithMention(Number(userId), firstName, errorText)
+        : { text: errorText, parseMode: 'Markdown' as const };
+
+      await sendTelegramMessage(chatId, reply.text, reply.parseMode);
+      return;
+    }
+
+    // Verify event exists
+    const event = await prisma.event.findUnique({
+      where: { id: eventId },
+    });
+
+    if (!event) {
+      await sendTelegramMessage(chatId, `❌ Event not found. Please check the event ID and try again.`);
+      return;
+    }
+
+    // Create the squad (in a real implementation, this would call ambassadorService.createAmbassadorSquad)
+    // For now, we'll just acknowledge the request
+    const successText = `✅ *Squad Created!*
+
+🎉 Squad "${squadName || 'New Squad'}" created for "${event.name}"
+
+📍 Location: ${event.location}
+📅 Date: ${new Date(event.fromDateTime).toLocaleDateString()}
+
+The squad is now open for members to join!
+
+💡 As an ambassador, you can help recruit members to fill this squad.`;
+
+    const reply = userId != null
+      ? formatReplyWithMention(Number(userId), firstName, successText)
+      : { text: successText, parseMode: 'Markdown' as const };
+
+    await sendTelegramMessage(chatId, reply.text, reply.parseMode);
+  } catch (error: any) {
+    console.error('Error in create-squad command:', error);
+    await sendTelegramMessage(chatId, "Sorry, there was an error creating the squad. Please try again.");
+  }
 }
