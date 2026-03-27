@@ -21,6 +21,9 @@ model Event {
   useFestivalRegistration   Boolean  @default(false) @map("use_festival_registration")
   messageLanguage           String   @default("en") @map("message_language") @db.VarChar(10) // "en" | "uk"
   createdAt              DateTime @default(now()) @map("created_at")
+  // Meetup logistics coordination
+  entrance               String?  @map("entrance") @db.VarChar(255) // Entrance instructions (e.g., "Main entrance, red carpet")
+  emojiCode              String?  @map("emoji_code") @db.VarChar(50) // Emoji code for squad recognition (e.g., "🫐 Blue balloon")
 
   registrations  EventRegistration[]
   matchingGroups MatchingGroup[]
