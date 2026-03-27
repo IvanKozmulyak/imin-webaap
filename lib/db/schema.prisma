@@ -121,6 +121,38 @@ model TelegramGroup {
   @@map("telegram_group")
 }
 
+model Organizer {
+  id            String   @id @default(uuid())
+  email         String   @unique @db.VarChar(255)
+  name          String   @db.VarChar(255)
+  organization  String   @db.VarChar(255)
+  passwordHash  String   @map("password_hash") @db.VarChar(255)
+  apiKey        String?  @unique @map("api_key") @db.VarChar(255)
+  isActive      Boolean  @map("is_active") @default(true)
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  events        OrganizerEvent[]
+
+  @@index([email])
+  @@map("organizer")
+}
+
+model OrganizerEvent {
+  id              String   @id @default(uuid())
+  organizerId     String   @map("organizer_id")
+  eventId         String   @unique @map("event_id")
+  status          String   @db.VarChar(50) @default("active") // active, paused, cancelled
+  commissionRate  Float    @map("commission_rate") @default(0)
+  createdAt       DateTime @default(now()) @map("created_at")
+  
+  organizer       Organizer @relation(fields: [organizerId], references: [id])
+  event           Event     @relation(fields: [eventId], references: [id])
+
+  @@index([organizerId])
+  @@map("organizer_event")
+}
+
 model PartnerRequest {
   id              String   @id @default(uuid())
   organization    String   @db.VarChar(255)

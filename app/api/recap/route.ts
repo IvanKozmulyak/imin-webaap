@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
+import { prisma } from '@/lib/db/client';
 import { createRecapMessage, buildRecapCardUrl } from '@/lib/services/recapCardService';
-import { sendTelegramMessage } from '@/lib/services/telegramBotService';
 
 export async function POST(request: NextRequest) {
   try {
@@ -31,9 +30,13 @@ export async function POST(request: NextRequest) {
     const registration = await prisma.eventRegistration.findUnique({
       where: { id: registrationId },
       include: {
-        matchingGroup: {
+        matchingGroupMembers: {
           include: {
-            members: true,
+            matchingGroup: {
+              include: {
+                members: true,
+              },
+            },
           },
         },
       },
@@ -47,10 +50,11 @@ export async function POST(request: NextRequest) {
     }
 
     // Get user's matching group for this event
-    const group = registration.matchingGroup;
+    const groupMember = registration.matchingGroupMembers[0];
+    const group = groupMember?.matchingGroup;
     
     // Format the date
-    const eventDate = new Date(event.date).toLocaleDateString(
+    const eventDate = new Date(event.fromDateTime).toLocaleDateString(
       language === 'uk' ? 'uk-UA' : 'en-US',
       { 
         day: 'numeric', 
@@ -63,10 +67,10 @@ export async function POST(request: NextRequest) {
 
     // Build recap card data
     const recapData = {
-      eventName: event.title,
+      eventName: event.name,
       eventDate,
       venue: event.location || undefined,
-      squadName: group?.name || undefined,
+      squadName: undefined,
       squadSize: group?.members?.length || 0,
       userName: registration.name || 'Friend',
       language: language as 'en' | 'uk',
@@ -79,19 +83,11 @@ export async function POST(request: NextRequest) {
     // Create the message
     const message = createRecapMessage(recapData, fullCardUrl);
 
-    // Send to user via Telegram
-    if (registration.telegramChatId) {
-      await sendTelegramMessage(
-        registration.telegramChatId, 
-        message, 
-        'Markdown'
-      );
-    }
-
     return NextResponse.json({
       success: true,
       cardUrl: fullCardUrl,
-      message: 'Recap card sent to user',
+      message: 'Recap card generated',
+      telegramMessage: message,
     });
 
   } catch (error) {
