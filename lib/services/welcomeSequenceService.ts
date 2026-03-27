@@ -6,7 +6,7 @@
 import { prisma } from '@/lib/db/client';
 import { sendTelegramMessage } from './telegramBotService';
 
-export type WelcomeStep = 'instant' | 'intro' | 'icebreaker' | 'event-info' | 'day-before';
+export type WelcomeStep = 'instant' | 'intro' | 'icebreaker' | 'eventInfo' | 'dayBefore';
 
 interface WelcomeSequenceConfig {
   eventLanguage: string | null | undefined;
@@ -88,20 +88,25 @@ function buildMessage(lang: string | null | undefined, step: WelcomeStep, config
   let message = '';
 
   if (step === 'instant') {
-    const seq = stepConfig(config.firstName, config.botUsername);
-    message = `${seq.body}${seq.tips}`;
+    const seq = stepConfig as (firstName: string, botUsername: string) => { title: string; body: string; tips: string; };
+    const result = seq(config.firstName, config.botUsername);
+    message = `${result.body}${result.tips}`;
   } else if (step === 'intro') {
-    const seq = stepConfig(config.firstName);
-    message = `${seq.body}\n${seq.prompts}`;
+    const seq = stepConfig as (firstName: string) => { title: string; body: string; prompts: string; };
+    const result = seq(config.firstName);
+    message = `${result.body}\n${result.prompts}`;
   } else if (step === 'icebreaker') {
-    const seq = stepConfig();
-    message = `${seq.body}\n${seq.question}${seq.followup}`;
-  } else if (step === 'event-info') {
-    const seq = stepConfig(config.eventName, config.botUsername);
-    message = `${seq.body}${seq.mention}`;
-  } else if (step === 'day-before') {
-    const seq = stepConfig(config.eventName);
-    message = `${seq.body}${seq.reminder}`;
+    const seq = stepConfig as () => { title: string; body: string; question: string; followup: string; };
+    const result = seq();
+    message = `${result.body}\n${result.question}${result.followup}`;
+  } else if (step === 'eventInfo') {
+    const seq = stepConfig as (eventName: string, botUsername: string) => { title: string; body: string; mention: string; };
+    const result = seq(config.eventName, config.botUsername);
+    message = `${result.body}${result.mention}`;
+  } else if (step === 'dayBefore') {
+    const seq = stepConfig as (eventName: string) => { title: string; body: string; reminder: string; };
+    const result = seq(config.eventName);
+    message = `${result.body}${result.reminder}`;
   }
 
   return message;
@@ -152,7 +157,7 @@ export async function sendIcebreakerQuestion(config: WelcomeSequenceConfig): Pro
  */
 export async function sendEventInfoMessage(config: WelcomeSequenceConfig): Promise<void> {
   try {
-    const message = buildMessage(config.eventLanguage, 'event-info', config);
+    const message = buildMessage(config.eventLanguage, 'eventInfo', config);
     await sendTelegramMessage(config.chatId, message, 'Markdown');
     console.log(`[Welcome Sequence] Event info sent to chat ${config.chatId}`);
   } catch (error) {
