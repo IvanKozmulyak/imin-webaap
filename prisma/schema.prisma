@@ -175,3 +175,42 @@ model ConversationMessage {
   @@index([chatId, createdAt])
   @@map("conversation_message")
 }
+
+model Rating {
+  id                     String   @id @default(uuid())
+  eventId                String   @map("event_id")
+  raterTelegramId        String   @map("rater_telegram_id") @db.VarChar(255)
+  // Rating can be for: individual user, squad/group, or event
+  targetType             String   @map("target_type") @db.VarChar(50) // 'user' | 'group' | 'event' | 'organizer'
+  targetTelegramId       String?  @map("target_telegram_id") @db.VarChar(255)
+  targetGroupId          String?  @map("target_group_id") @db.VarChar(255)
+  // 1-5 rating score
+  score                  Int      @db.SmallInt // 1-5
+  // Optional review text
+  review                 String?  @db.Text
+  // Bad actor flag (for identifying problematic users)
+  isBadActor             Boolean  @default(false) @map("is_bad_actor")
+  // Categories for the rating
+  category               String?  @db.VarChar(50) // 'overall' | 'friendliness' | 'reliability' | 'communication' | 'fun'
+  createdAt              DateTime @default(now()) @map("created_at")
+
+  @@index([eventId])
+  @@index([raterTelegramId])
+  @@index([targetTelegramId])
+  @@index([targetGroupId])
+  @@index([isBadActor])
+  @@unique([eventId, raterTelegramId, targetTelegramId, targetType])
+  @@map("rating")
+}
+
+model BadActor {
+  id                String   @id @default(uuid())
+  telegramId        String   @unique @map("telegram_id") @db.VarChar(255)
+  reason            String   @db.Text
+  reportedByCount   Int      @default(1) @map("reported_by_count")
+  firstReportedAt   DateTime @default(now()) @map("first_reported_at")
+  lastReportedAt    DateTime @updatedAt @map("last_reported_at")
+
+  @@index([telegramId])
+  @@map("bad_actor")
+}

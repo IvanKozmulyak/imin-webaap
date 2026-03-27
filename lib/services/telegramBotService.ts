@@ -7,6 +7,7 @@ import { prisma } from '@/lib/db/client';
 import { conversationMemory } from './conversationMemoryService';
 import { generateLLMResponse } from './llmService';
 import { startWelcomeSequence } from './welcomeSequenceService';
+import { ratingService } from './ratingService';
 import {
   getWelcomeMessage,
   getLeaveMessage,
@@ -250,6 +251,11 @@ export async function handleTelegramWebhook(update: any): Promise<void> {
     if (update.chat_member) {
       await handleChatMemberUpdate(update.chat_member);
     }
+
+    // Handle callback queries (inline keyboard button presses)
+    if (update.callback_query) {
+      await handleCallbackQuery(update.callback_query);
+    }
   } catch (error: any) {
     console.error('Error handling webhook update:', error);
     throw error;
@@ -443,9 +449,25 @@ async function handleMessage(message: any): Promise<void> {
   const chatId = message.chat.id.toString();
   const text = message.text || '';
   const botUsername = process.env.TELEGRAM_BOT_USERNAME || 'imin_squad_bot';
+  const from = message.from;
+  const userId = from?.id;
+  const firstName = from?.first_name || 'there';
   
   // Skip if message is empty or from a bot (unless it's our bot)
   if (!text || (message.from?.is_bot && message.from?.username !== botUsername)) {
+    return;
+  }
+
+  // Check for rating commands first (don't require mention)
+  const cleanText = text.trim();
+  
+  if (cleanText === '/rate' || cleanText === '/feedback' || cleanText.startsWith('/rate ')) {
+    await handleRatingCommand(message, cleanText);
+    return;
+  }
+
+  if (cleanText === '/rate-event') {
+    await handleEventRatingCommand(message);
     return;
   }
 
@@ -575,4 +597,217 @@ async function handleLeftChatMember(message: any): Promise<void> {
   
   await updateMemberCountFromTelegram(telegramGroup.id, chatId);
   console.log(`Member left group ${chatId}, updated member count`);
+}
+
+/**
+ * Handle /rate or /feedback command - start rating flow
+ */
+async function handleRatingCommand(message: any, text: string): Promise<void> {
+  const chatId = message.chat.id.toString();
+  const from = message.from;
+  const userId = from?.id;
+  const firstName = from?.first_name || 'there';
+
+  // Get event for this group
+  const telegramGroup = await prisma.telegramGroup.findFirst({
+    where: { telegramChatId: chatId },
+    include: { event: true },
+  });
+
+  const event = telegramGroup?.event;
+  if (!event) {
+    const reply = userId != null
+      ? formatReplyWithMention(userId, firstName, "This command only works in event squad groups. Join an event to rate your squad! 🎉")
+      : { text: "This command only works in event squad groups. Join an event to rate your squad! 🎉", parseMode: null };
+    await sendTelegramMessage(chatId, reply.text, reply.parseMode);
+    return;
+  }
+
+  const msgLang = event.messageLanguage;
+  const ratings = ['⭐', '⭐⭐', '⭐⭐⭐', '⭐⭐⭐⭐', '⭐⭐⭐⭐⭐'];
+  
+  // Check if rating a specific user (e.g., /rate @username)
+  const targetMatch = text.match(/@(\w+)/);
+  const targetName = targetMatch ? targetMatch[1] : null;
+
+  let promptText: string;
+  if (targetName) {
+    promptText = msgLang === 'uk' 
+      ? `Оцініть ${targetName} від 1 до 5 зірочок:`
+      : `Rate ${targetName} from 1 to 5 stars:`;
+  } else {
+    promptText = msgLang === 'uk'
+      ? `Оцініть ваш досвід у групі від 1 до 5 зірочок:`
+      : `Rate your squad experience from 1 to 5 stars:`;
+  }
+
+  // Create inline keyboard with rating buttons
+  const inlineKeyboard = [
+    [
+      { text: '1 ⭐', callback_data: `rate_${event.id}_user_1` },
+      { text: '2 ⭐⭐', callback_data: `rate_${event.id}_user_2` },
+      { text: '3 ⭐⭐⭐', callback_data: `rate_${event.id}_user_3` },
+    ],
+    [
+      { text: '4 ⭐⭐⭐⭐', callback_data: `rate_${event.id}_user_4` },
+      { text: '5 ⭐⭐⭐⭐⭐', callback_data: `rate_${event.id}_user_5` },
+    ],
+  ];
+
+  const reply = userId != null
+    ? formatReplyWithMention(userId, firstName, promptText)
+    : { text: promptText, parseMode: null };
+  
+  await sendTelegramMessage(chatId, reply.text, reply.parseMode, inlineKeyboard);
+}
+
+/**
+ * Handle /rate-event command - rate the event itself
+ */
+async function handleEventRatingCommand(message: any): Promise<void> {
+  const chatId = message.chat.id.toString();
+  const from = message.from;
+  const userId = from?.id;
+  const firstName = from?.first_name || 'there';
+
+  // Get event for this group
+  const telegramGroup = await prisma.telegramGroup.findFirst({
+    where: { telegramChatId: chatId },
+    include: { event: true },
+  });
+
+  const event = telegramGroup?.event;
+  if (!event) {
+    const reply = userId != null
+      ? formatReplyWithMention(userId, firstName, "This command only works in event squad groups.")
+      : { text: "This command only works in event squad groups.", parseMode: null };
+    await sendTelegramMessage(chatId, reply.text, reply.parseMode);
+    return;
+  }
+
+  const msgLang = event.messageLanguage;
+  const promptText = msgLang === 'uk'
+    ? `Оцініть подію "${event.name}" від 1 до 5 зірочок:`
+    : `Rate the event "${event.name}" from 1 to 5 stars:`;
+
+  const inlineKeyboard = [
+    [
+      { text: '1 ⭐', callback_data: `rate_event_${event.id}_1` },
+      { text: '2 ⭐⭐', callback_data: `rate_event_${event.id}_2` },
+      { text: '3 ⭐⭐⭐', callback_data: `rate_event_${event.id}_3` },
+    ],
+    [
+      { text: '4 ⭐⭐⭐⭐', callback_data: `rate_event_${event.id}_4` },
+      { text: '5 ⭐⭐⭐⭐⭐', callback_data: `rate_event_${event.id}_5` },
+    ],
+  ];
+
+  const reply = userId != null
+    ? formatReplyWithMention(userId, firstName, promptText)
+    : { text: promptText, parseMode: null };
+  
+  await sendTelegramMessage(chatId, reply.text, reply.parseMode, inlineKeyboard);
+}
+
+/**
+ * Handle callback query from inline keyboard
+ */
+async function handleCallbackQuery(callbackQuery: any): Promise<void> {
+  const data = callbackQuery.data;
+  const message = callbackQuery.message;
+  const from = callbackQuery.from;
+  const chatId = message?.chat?.id?.toString();
+  const userId = from?.id?.toString();
+  const firstName = from?.first_name || 'there';
+
+  if (!data || !chatId || !userId) {
+    return;
+  }
+
+  // Answer the callback query first to stop loading animation
+  await answerCallbackQuery(callbackQuery.id);
+
+  // Parse the callback data
+  // Format: rate_<eventId>_user_<score> or rate_event_<eventId>_<score>
+  const userMatch = data.match(/^rate_([a-f0-9-]+)_user_(\d+)$/);
+  const eventMatch = data.match(/^rate_event_([a-f0-9-]+)_(\d+)$/);
+
+  if (userMatch) {
+    const eventId = userMatch[1];
+    const score = parseInt(userMatch[2], 10);
+    await processUserRating(chatId, userId, eventId, score);
+  } else if (eventMatch) {
+    const eventId = eventMatch[1];
+    const score = parseInt(eventMatch[2], 10);
+    await processEventRating(chatId, userId, eventId, score);
+  }
+}
+
+/**
+ * Process a user rating submission
+ */
+async function processUserRating(chatId: string, raterTelegramId: string, eventId: string, score: number): Promise<void> {
+  try {
+    await ratingService.createRating({
+      eventId,
+      raterTelegramId,
+      targetType: 'user',
+      targetTelegramId: raterTelegramId,
+      score,
+      category: 'overall',
+    });
+
+    const messages: Record<string, string> = {
+      en: `Thanks for your rating of ${score} stars! 🌟 Your feedback helps build a better community.`,
+      uk: `Дякуємо за оцінку ${score} зірочок! 🌟 Ваш відгук допомагає створювати кращу спільноту.`,
+    };
+
+    await sendTelegramMessage(chatId, messages.en, 'Markdown');
+  } catch (error: any) {
+    console.error('Error processing user rating:', error);
+    const errorMsg = error.message?.includes('already')
+      ? "You've already rated your squad for this event! 🎉"
+      : "Sorry, there was an error submitting your rating. Please try again.";
+    await sendTelegramMessage(chatId, errorMsg, 'Markdown');
+  }
+}
+
+/**
+ * Process an event rating submission
+ */
+async function processEventRating(chatId: string, raterTelegramId: string, eventId: string, score: number): Promise<void> {
+  try {
+    await ratingService.createRating({
+      eventId,
+      raterTelegramId,
+      targetType: 'event',
+      score,
+      category: 'overall',
+    });
+
+    const messages: Record<string, string> = {
+      en: `Thanks for rating the event ${score} stars! 🌟 Your feedback helps us improve future events.`,
+      uk: `Дякуємо за оцінку події ${score} зірочок! 🌟 Ваш відгук допомагає нам покращувати майбутні події.`,
+    };
+
+    await sendTelegramMessage(chatId, messages.en, 'Markdown');
+  } catch (error: any) {
+    console.error('Error processing event rating:', error);
+    const errorMsg = error.message?.includes('already')
+      ? "You've already rated this event! 🎉"
+      : "Sorry, there was an error submitting your rating. Please try again.";
+    await sendTelegramMessage(chatId, errorMsg, 'Markdown');
+  }
+}
+
+/**
+ * Answer a callback query (stop loading animation)
+ */
+async function answerCallbackQuery(callbackQueryId: string): Promise<void> {
+  const token = getBotToken();
+  await fetch(`${TELEGRAM_API_BASE}${token}/answerCallbackQuery`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ callback_query_id: callbackQueryId }),
+  });
 }
