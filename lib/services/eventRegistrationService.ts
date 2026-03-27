@@ -2,6 +2,7 @@ import { prisma } from '@/lib/db/client';
 import { EventRegistrationRequestDto, EventRegistrationResponseDto } from '@/lib/types/registration';
 import { EventNotFoundException } from '@/lib/utils/errors';
 import { createTelegramGroupInvite } from './telegramService';
+import { trackServerEvent, funnelEvents } from './analyticsService';
 
 // Type for telegram group (compatible with both raw query and Prisma result)
 interface TelegramGroupResult {
@@ -145,4 +146,20 @@ export async function createEventRegistration(
     country: reg.country ?? null,
     city: reg.city ?? null,
   };
+}
+
+// Track registration event for analytics
+export async function trackRegistrationAnalytics(
+  eventId: string,
+  registrationId: string
+): Promise<void> {
+  try {
+    await trackServerEvent(funnelEvents.BOT_REGISTRATION, {
+      eventId,
+      registrationId,
+      timestamp: new Date().toISOString(),
+    });
+  } catch (error) {
+    console.error('[Analytics] Failed to track registration:', error);
+  }
 }

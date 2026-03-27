@@ -54,10 +54,24 @@ model EventRegistration {
   languages            EventRegistrationLanguage[]
   matchingGroupMembers MatchingGroupMember[]
   telegramGroup        TelegramGroup?              @relation(fields: [telegramGroupId], references: [id])
+  countdownMessages    CountdownMessage[]
 
   @@index([eventId])
   @@index([telegramGroupId])
   @@map("event_registration")
+}
+
+model CountdownMessage {
+  id                String   @id @default(uuid())
+  eventRegistrationId String @map("event_registration_id")
+  messageType       String   @map("message_type") @db.VarChar(50) // "t-7" | "t-3" | "t-1"
+  sentAt            DateTime @default(now()) @map("sent_at")
+
+  eventRegistration EventRegistration @relation(fields: [eventRegistrationId], references: [id], onDelete: Cascade)
+
+  @@unique([eventRegistrationId, messageType])
+  @@index([eventRegistrationId])
+  @@map("countdown_message")
 }
 
 model EventRegistrationLanguage {
