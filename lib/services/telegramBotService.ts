@@ -6,6 +6,7 @@
 import { prisma } from '@/lib/db/client';
 import { conversationMemory } from './conversationMemoryService';
 import { generateLLMResponse } from './llmService';
+import { startWelcomeSequence } from './welcomeSequenceService';
 import {
   getWelcomeMessage,
   getLeaveMessage,
@@ -53,7 +54,7 @@ function formatReplyWithMention(userId: number, firstName: string, replyText: st
  * @param parseMode Parse mode for the message (default: 'Markdown')
  * @param inlineKeyboard Optional inline keyboard buttons
  */
-async function sendTelegramMessage(
+export async function sendTelegramMessage(
   chatId: string,
   text: string,
   parseMode: 'Markdown' | 'HTML' | null = null,
@@ -310,6 +311,18 @@ async function handleNewChatMembers(message: any): Promise<void> {
       await sendTelegramMessage(chatId, message, 'Markdown', inlineKeyboard);
       
       console.log(`Welcome message sent to ${firstName} in chat ${chatId}`);
+      
+      // Start the welcome sequence for enhanced onboarding
+      const fromDateTime = event.fromDateTime instanceof Date ? event.fromDateTime : new Date(event.fromDateTime);
+      await startWelcomeSequence({
+        eventLanguage: event.messageLanguage,
+        botUsername,
+        firstName,
+        chatId,
+        eventName: event.name,
+        eventDateTime: fromDateTime,
+        ticketUrl: event.ticketUrl,
+      });
     } catch (error: any) {
       console.error(`Failed to send welcome message to new member:`, error);
       // Continue with other members even if one fails
@@ -372,6 +385,18 @@ async function handleChatMemberUpdate(chatMemberUpdate: any): Promise<void> {
       await sendTelegramMessage(chatId, message, 'Markdown', inlineKeyboard);
       
       console.log(`Welcome message sent to ${firstName} in chat ${chatId}`);
+      
+      // Start the welcome sequence for enhanced onboarding
+      const fromDateTime = event.fromDateTime instanceof Date ? event.fromDateTime : new Date(event.fromDateTime);
+      await startWelcomeSequence({
+        eventLanguage: event.messageLanguage,
+        botUsername,
+        firstName,
+        chatId,
+        eventName: event.name,
+        eventDateTime: fromDateTime,
+        ticketUrl: event.ticketUrl,
+      });
     } catch (error: any) {
       console.error(`Failed to send welcome message to new member:`, error);
     }
