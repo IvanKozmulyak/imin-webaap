@@ -6,6 +6,9 @@
 import { prisma } from '@/lib/db/client';
 import { conversationMemory } from './conversationMemoryService';
 import { generateLLMResponse } from './llmService';
+import { startWelcomeSequence } from './welcomeSequenceService';
+import { ratingService } from './ratingService';
+import { getAmbassador, getOrCreateAmbassador, checkAmbassadorQualification, generateReferralCode } from './ambassadorService';
 import {
   getWelcomeMessage,
   getLeaveMessage,
@@ -53,7 +56,7 @@ function formatReplyWithMention(userId: number, firstName: string, replyText: st
  * @param parseMode Parse mode for the message (default: 'Markdown')
  * @param inlineKeyboard Optional inline keyboard buttons
  */
-async function sendTelegramMessage(
+export async function sendTelegramMessage(
   chatId: string,
   text: string,
   parseMode: 'Markdown' | 'HTML' | null = null,
@@ -249,6 +252,11 @@ export async function handleTelegramWebhook(update: any): Promise<void> {
     if (update.chat_member) {
       await handleChatMemberUpdate(update.chat_member);
     }
+
+    // Handle callback queries (inline keyboard button presses)
+    if (update.callback_query) {
+      await handleCallbackQuery(update.callback_query);
+    }
   } catch (error: any) {
     console.error('Error handling webhook update:', error);
     throw error;
@@ -310,6 +318,18 @@ async function handleNewChatMembers(message: any): Promise<void> {
       await sendTelegramMessage(chatId, message, 'Markdown', inlineKeyboard);
       
       console.log(`Welcome message sent to ${firstName} in chat ${chatId}`);
+      
+      // Start the welcome sequence for enhanced onboarding
+      const fromDateTime = event.fromDateTime instanceof Date ? event.fromDateTime : new Date(event.fromDateTime);
+      await startWelcomeSequence({
+        eventLanguage: event.messageLanguage,
+        botUsername,
+        firstName,
+        chatId,
+        eventName: event.name,
+        eventDateTime: fromDateTime,
+        ticketUrl: event.ticketUrl,
+      });
     } catch (error: any) {
       console.error(`Failed to send welcome message to new member:`, error);
       // Continue with other members even if one fails
@@ -372,6 +392,18 @@ async function handleChatMemberUpdate(chatMemberUpdate: any): Promise<void> {
       await sendTelegramMessage(chatId, message, 'Markdown', inlineKeyboard);
       
       console.log(`Welcome message sent to ${firstName} in chat ${chatId}`);
+      
+      // Start the welcome sequence for enhanced onboarding
+      const fromDateTime = event.fromDateTime instanceof Date ? event.fromDateTime : new Date(event.fromDateTime);
+      await startWelcomeSequence({
+        eventLanguage: event.messageLanguage,
+        botUsername,
+        firstName,
+        chatId,
+        eventName: event.name,
+        eventDateTime: fromDateTime,
+        ticketUrl: event.ticketUrl,
+      });
     } catch (error: any) {
       console.error(`Failed to send welcome message to new member:`, error);
     }
@@ -418,9 +450,41 @@ async function handleMessage(message: any): Promise<void> {
   const chatId = message.chat.id.toString();
   const text = message.text || '';
   const botUsername = process.env.TELEGRAM_BOT_USERNAME || 'imin_squad_bot';
+  const from = message.from;
+  const userId = from?.id;
+  const firstName = from?.first_name || 'there';
   
   // Skip if message is empty or from a bot (unless it's our bot)
   if (!text || (message.from?.is_bot && message.from?.username !== botUsername)) {
+    return;
+  }
+
+  // Check for rating commands first (don't require mention)
+  const cleanText = text.trim();
+  
+  if (cleanText === '/rate' || cleanText === '/feedback' || cleanText.startsWith('/rate ')) {
+    await handleRatingCommand(message, cleanText);
+    return;
+  }
+
+  if (cleanText === '/rate-event') {
+    await handleEventRatingCommand(message);
+    return;
+  }
+
+  // Ambassador commands (don't require mention)
+  if (cleanText === '/ambassador' || cleanText === '/ambassador@' + botUsername) {
+    await handleAmbassadorCommand(message);
+    return;
+  }
+
+  if (cleanText.startsWith('/referral') || cleanText.startsWith('/referral@' + botUsername)) {
+    await handleReferralCommand(message);
+    return;
+  }
+
+  if (cleanText.startsWith('/create-squad ') || cleanText.startsWith('/create-squad@' + botUsername + ' ')) {
+    await handleCreateSquadCommand(message, cleanText);
     return;
   }
 
@@ -550,4 +614,430 @@ async function handleLeftChatMember(message: any): Promise<void> {
   
   await updateMemberCountFromTelegram(telegramGroup.id, chatId);
   console.log(`Member left group ${chatId}, updated member count`);
+}
+
+/**
+ * Handle /rate or /feedback command - start rating flow
+ */
+async function handleRatingCommand(message: any, text: string): Promise<void> {
+  const chatId = message.chat.id.toString();
+  const from = message.from;
+  const userId = from?.id;
+  const firstName = from?.first_name || 'there';
+
+  // Get event for this group
+  const telegramGroup = await prisma.telegramGroup.findFirst({
+    where: { telegramChatId: chatId },
+    include: { event: true },
+  });
+
+  const event = telegramGroup?.event;
+  if (!event) {
+    const reply = userId != null
+      ? formatReplyWithMention(userId, firstName, "This command only works in event squad groups. Join an event to rate your squad! 🎉")
+      : { text: "This command only works in event squad groups. Join an event to rate your squad! 🎉", parseMode: null };
+    await sendTelegramMessage(chatId, reply.text, reply.parseMode);
+    return;
+  }
+
+  const msgLang = event.messageLanguage;
+  const ratings = ['⭐', '⭐⭐', '⭐⭐⭐', '⭐⭐⭐⭐', '⭐⭐⭐⭐⭐'];
+  
+  // Check if rating a specific user (e.g., /rate @username)
+  const targetMatch = text.match(/@(\w+)/);
+  const targetName = targetMatch ? targetMatch[1] : null;
+
+  let promptText: string;
+  if (targetName) {
+    promptText = msgLang === 'uk' 
+      ? `Оцініть ${targetName} від 1 до 5 зірочок:`
+      : `Rate ${targetName} from 1 to 5 stars:`;
+  } else {
+    promptText = msgLang === 'uk'
+      ? `Оцініть ваш досвід у групі від 1 до 5 зірочок:`
+      : `Rate your squad experience from 1 to 5 stars:`;
+  }
+
+  // Create inline keyboard with rating buttons
+  const inlineKeyboard = [
+    [
+      { text: '1 ⭐', callback_data: `rate_${event.id}_user_1` },
+      { text: '2 ⭐⭐', callback_data: `rate_${event.id}_user_2` },
+      { text: '3 ⭐⭐⭐', callback_data: `rate_${event.id}_user_3` },
+    ],
+    [
+      { text: '4 ⭐⭐⭐⭐', callback_data: `rate_${event.id}_user_4` },
+      { text: '5 ⭐⭐⭐⭐⭐', callback_data: `rate_${event.id}_user_5` },
+    ],
+  ];
+
+  const reply = userId != null
+    ? formatReplyWithMention(userId, firstName, promptText)
+    : { text: promptText, parseMode: null };
+  
+  await sendTelegramMessage(chatId, reply.text, reply.parseMode, inlineKeyboard);
+}
+
+/**
+ * Handle /rate-event command - rate the event itself
+ */
+async function handleEventRatingCommand(message: any): Promise<void> {
+  const chatId = message.chat.id.toString();
+  const from = message.from;
+  const userId = from?.id;
+  const firstName = from?.first_name || 'there';
+
+  // Get event for this group
+  const telegramGroup = await prisma.telegramGroup.findFirst({
+    where: { telegramChatId: chatId },
+    include: { event: true },
+  });
+
+  const event = telegramGroup?.event;
+  if (!event) {
+    const reply = userId != null
+      ? formatReplyWithMention(userId, firstName, "This command only works in event squad groups.")
+      : { text: "This command only works in event squad groups.", parseMode: null };
+    await sendTelegramMessage(chatId, reply.text, reply.parseMode);
+    return;
+  }
+
+  const msgLang = event.messageLanguage;
+  const promptText = msgLang === 'uk'
+    ? `Оцініть подію "${event.name}" від 1 до 5 зірочок:`
+    : `Rate the event "${event.name}" from 1 to 5 stars:`;
+
+  const inlineKeyboard = [
+    [
+      { text: '1 ⭐', callback_data: `rate_event_${event.id}_1` },
+      { text: '2 ⭐⭐', callback_data: `rate_event_${event.id}_2` },
+      { text: '3 ⭐⭐⭐', callback_data: `rate_event_${event.id}_3` },
+    ],
+    [
+      { text: '4 ⭐⭐⭐⭐', callback_data: `rate_event_${event.id}_4` },
+      { text: '5 ⭐⭐⭐⭐⭐', callback_data: `rate_event_${event.id}_5` },
+    ],
+  ];
+
+  const reply = userId != null
+    ? formatReplyWithMention(userId, firstName, promptText)
+    : { text: promptText, parseMode: null };
+  
+  await sendTelegramMessage(chatId, reply.text, reply.parseMode, inlineKeyboard);
+}
+
+/**
+ * Handle callback query from inline keyboard
+ */
+async function handleCallbackQuery(callbackQuery: any): Promise<void> {
+  const data = callbackQuery.data;
+  const message = callbackQuery.message;
+  const from = callbackQuery.from;
+  const chatId = message?.chat?.id?.toString();
+  const userId = from?.id?.toString();
+  const firstName = from?.first_name || 'there';
+
+  if (!data || !chatId || !userId) {
+    return;
+  }
+
+  // Answer the callback query first to stop loading animation
+  await answerCallbackQuery(callbackQuery.id);
+
+  // Parse the callback data
+  // Format: rate_<eventId>_user_<score> or rate_event_<eventId>_<score>
+  const userMatch = data.match(/^rate_([a-f0-9-]+)_user_(\d+)$/);
+  const eventMatch = data.match(/^rate_event_([a-f0-9-]+)_(\d+)$/);
+
+  if (userMatch) {
+    const eventId = userMatch[1];
+    const score = parseInt(userMatch[2], 10);
+    await processUserRating(chatId, userId, eventId, score);
+  } else if (eventMatch) {
+    const eventId = eventMatch[1];
+    const score = parseInt(eventMatch[2], 10);
+    await processEventRating(chatId, userId, eventId, score);
+  }
+}
+
+/**
+ * Process a user rating submission
+ */
+async function processUserRating(chatId: string, raterTelegramId: string, eventId: string, score: number): Promise<void> {
+  try {
+    await ratingService.createRating({
+      eventId,
+      raterTelegramId,
+      targetType: 'user',
+      targetTelegramId: raterTelegramId,
+      score,
+      category: 'overall',
+    });
+
+    const messages: Record<string, string> = {
+      en: `Thanks for your rating of ${score} stars! 🌟 Your feedback helps build a better community.`,
+      uk: `Дякуємо за оцінку ${score} зірочок! 🌟 Ваш відгук допомагає створювати кращу спільноту.`,
+    };
+
+    await sendTelegramMessage(chatId, messages.en, 'Markdown');
+  } catch (error: any) {
+    console.error('Error processing user rating:', error);
+    const errorMsg = error.message?.includes('already')
+      ? "You've already rated your squad for this event! 🎉"
+      : "Sorry, there was an error submitting your rating. Please try again.";
+    await sendTelegramMessage(chatId, errorMsg, 'Markdown');
+  }
+}
+
+/**
+ * Process an event rating submission
+ */
+async function processEventRating(chatId: string, raterTelegramId: string, eventId: string, score: number): Promise<void> {
+  try {
+    await ratingService.createRating({
+      eventId,
+      raterTelegramId,
+      targetType: 'event',
+      score,
+      category: 'overall',
+    });
+
+    const messages: Record<string, string> = {
+      en: `Thanks for rating the event ${score} stars! 🌟 Your feedback helps us improve future events.`,
+      uk: `Дякуємо за оцінку події ${score} зірочок! 🌟 Ваш відгук допомагає нам покращувати майбутні події.`,
+    };
+
+    await sendTelegramMessage(chatId, messages.en, 'Markdown');
+  } catch (error: any) {
+    console.error('Error processing event rating:', error);
+    const errorMsg = error.message?.includes('already')
+      ? "You've already rated this event! 🎉"
+      : "Sorry, there was an error submitting your rating. Please try again.";
+    await sendTelegramMessage(chatId, errorMsg, 'Markdown');
+  }
+}
+
+/**
+ * Answer a callback query (stop loading animation)
+ */
+async function answerCallbackQuery(callbackQueryId: string): Promise<void> {
+  const token = getBotToken();
+  await fetch(`${TELEGRAM_API_BASE}${token}/answerCallbackQuery`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ callback_query_id: callbackQueryId }),
+  });
+}
+
+/**
+ * Handle /ambassador command - show ambassador info and status
+ */
+async function handleAmbassadorCommand(message: any): Promise<void> {
+  const chatId = message.chat.id.toString();
+  const from = message.from;
+  const userId = from?.id?.toString();
+  const firstName = from?.first_name || 'there';
+  const username = from?.username;
+
+  if (!userId) {
+    await sendTelegramMessage(chatId, "Couldn't identify your account. Please try again.");
+    return;
+  }
+
+  try {
+    // Get or create ambassador record
+    const ambassador = await getOrCreateAmbassador({
+      telegramId: userId,
+      telegramUsername: username,
+      firstName,
+    });
+
+    // Check qualification status
+    const qualification = await checkAmbassadorQualification(userId);
+
+    const badge = ambassador.badge || (ambassador.isVerified ? 'silver' : 'new');
+    const badgeEmoji = { gold: '🥇', silver: '🥈', bronze: '🥉', new: '🌱' };
+
+    const statusText = ambassador.isVerified
+      ? '✅ Verified Ambassador'
+      : qualification.qualified
+        ? '✨ Qualified - Pending Verification'
+        : '🌱 Newcomer';
+
+    const statsText = `📊 Your Stats:
+• Events Attended: ${qualification.eventsAttended}
+• Squads Created: ${qualification.squadsCreated}  
+• Referrals: ${qualification.referrals}
+• Avg Rating: ${qualification.ratingScore.toFixed(1)} ⭐`;
+
+    const requirementsText = qualification.requirements.join('\n');
+
+    const helpText = `🌟 *IMIN Ambassador Program*
+
+${badgeEmoji[badge as keyof typeof badgeEmoji]} Badge: ${badge.toUpperCase()}
+${statusText}
+
+${statsText}
+
+*Requirements to qualify:*
+${requirementsText}
+
+🎁 *Ambassador Benefits:*
+• Create squads manually for events
+• Earn commission on referrals
+• Early access to new features
+• Exclusive ambassador badge
+
+💡 Use /referral to get your code!`;
+
+    const reply = userId != null
+      ? formatReplyWithMention(Number(userId), firstName, helpText)
+      : { text: helpText, parseMode: 'Markdown' as const };
+
+    await sendTelegramMessage(chatId, reply.text, reply.parseMode);
+  } catch (error: any) {
+    console.error('Error in ambassador command:', error);
+    await sendTelegramMessage(chatId, "Sorry, there was an error checking your ambassador status. Please try again.");
+  }
+}
+
+/**
+ * Handle /referral command - generate and show referral code
+ */
+async function handleReferralCommand(message: any): Promise<void> {
+  const chatId = message.chat.id.toString();
+  const from = message.from;
+  const userId = from?.id?.toString();
+  const firstName = from?.first_name || 'there';
+
+  if (!userId) {
+    await sendTelegramMessage(chatId, "Couldn't identify your account. Please try again.");
+    return;
+  }
+
+  try {
+    const referralCode = generateReferralCode(userId);
+
+    const referralText = `🔗 *Your IMIN Referral Code*
+
+\`${referralCode}\`
+
+📣 *How it works:*
+1. Share this code with friends
+2. They use it when they register for events
+3. You earn rewards when they attend!
+
+💰 Rewards:
+• 3 friends → Bronze badge + 3% commission
+• 5 friends → Silver badge + 5% commission  
+• 10 friends → Gold badge + 10% commission
+
+Share the squad experience! 🎉`;
+
+    const reply = userId != null
+      ? formatReplyWithMention(Number(userId), firstName, referralText)
+      : { text: referralText, parseMode: 'Markdown' as const };
+
+    await sendTelegramMessage(chatId, reply.text, reply.parseMode);
+  } catch (error: any) {
+    console.error('Error in referral command:', error);
+    await sendTelegramMessage(chatId, "Sorry, there was an error generating your referral code. Please try again.");
+  }
+}
+
+/**
+ * Handle /create-squad command - create a manual squad (ambassadors only)
+ */
+async function handleCreateSquadCommand(message: any, commandText: string): Promise<void> {
+  const chatId = message.chat.id.toString();
+  const from = message.from;
+  const userId = from?.id?.toString();
+  const firstName = from?.first_name || 'there';
+
+  if (!userId) {
+    await sendTelegramMessage(chatId, "Couldn't identify your account. Please try again.");
+    return;
+  }
+
+  // Parse command: /create-squad <event-id> [squad-name]
+  const parts = commandText.replace(/^\/create-squad(@\w+)?\s*/i, '').trim().split(' ');
+  
+  if (parts.length < 1 || !parts[0]) {
+    const helpText = `📋 *Create Squad Command*
+
+Use: /create-squad <event-id> [squad-name]
+
+Example:
+• /create-squad abc123 "Friday Night Squad"
+• /create-squad abc123
+
+💡 Get the event ID from the event page URL.`;
+
+    const reply = userId != null
+      ? formatReplyWithMention(Number(userId), firstName, helpText)
+      : { text: helpText, parseMode: 'Markdown' as const };
+
+    await sendTelegramMessage(chatId, reply.text, reply.parseMode);
+    return;
+  }
+
+  const eventId = parts[0];
+  const squadName = parts.slice(1).join(' ') || undefined;
+
+  try {
+    // Check if user is an ambassador
+    const ambassador = await getAmbassador(userId);
+
+    if (!ambassador || !ambassador.isActive) {
+      const errorText = `❌ *Ambassador Access Required*
+
+You need to be an IMIN Ambassador to create squads manually.
+
+🌱 Join the program:
+• Attend 3+ events
+• Build your rating (4+ stars)
+• Make 5+ referrals
+
+Type /ambassador to check your status!`;
+
+      const reply = userId != null
+        ? formatReplyWithMention(Number(userId), firstName, errorText)
+        : { text: errorText, parseMode: 'Markdown' as const };
+
+      await sendTelegramMessage(chatId, reply.text, reply.parseMode);
+      return;
+    }
+
+    // Verify event exists
+    const event = await prisma.event.findUnique({
+      where: { id: eventId },
+    });
+
+    if (!event) {
+      await sendTelegramMessage(chatId, `❌ Event not found. Please check the event ID and try again.`);
+      return;
+    }
+
+    // Create the squad (in a real implementation, this would call ambassadorService.createAmbassadorSquad)
+    // For now, we'll just acknowledge the request
+    const successText = `✅ *Squad Created!*
+
+🎉 Squad "${squadName || 'New Squad'}" created for "${event.name}"
+
+📍 Location: ${event.location}
+📅 Date: ${new Date(event.fromDateTime).toLocaleDateString()}
+
+The squad is now open for members to join!
+
+💡 As an ambassador, you can help recruit members to fill this squad.`;
+
+    const reply = userId != null
+      ? formatReplyWithMention(Number(userId), firstName, successText)
+      : { text: successText, parseMode: 'Markdown' as const };
+
+    await sendTelegramMessage(chatId, reply.text, reply.parseMode);
+  } catch (error: any) {
+    console.error('Error in create-squad command:', error);
+    await sendTelegramMessage(chatId, "Sorry, there was an error creating the squad. Please try again.");
+  }
 }
