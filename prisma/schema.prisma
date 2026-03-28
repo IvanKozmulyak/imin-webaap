@@ -21,10 +21,14 @@ model Event {
   useFestivalRegistration   Boolean  @default(false) @map("use_festival_registration")
   messageLanguage           String   @default("en") @map("message_language") @db.VarChar(10) // "en" | "uk"
   createdAt              DateTime @default(now()) @map("created_at")
+  // Meetup logistics coordination
+  entrance               String?  @map("entrance") @db.VarChar(255) // Entrance instructions (e.g., "Main entrance, red carpet")
+  emojiCode              String?  @map("emoji_code") @db.VarChar(50) // Emoji code for squad recognition (e.g., "🫐 Blue balloon")
 
   registrations  EventRegistration[]
   matchingGroups MatchingGroup[]
   telegramGroups TelegramGroup[]
+  organizerEvents OrganizerEvent[]
 
   @@map("event")
 }
@@ -54,10 +58,24 @@ model EventRegistration {
   languages            EventRegistrationLanguage[]
   matchingGroupMembers MatchingGroupMember[]
   telegramGroup        TelegramGroup?              @relation(fields: [telegramGroupId], references: [id])
+  countdownMessages    CountdownMessage[]
 
   @@index([eventId])
   @@index([telegramGroupId])
   @@map("event_registration")
+}
+
+model CountdownMessage {
+  id                String   @id @default(uuid())
+  eventRegistrationId String @map("event_registration_id")
+  messageType       String   @map("message_type") @db.VarChar(50) // "t-7" | "t-3" | "t-1"
+  sentAt            DateTime @default(now()) @map("sent_at")
+
+  eventRegistration EventRegistration @relation(fields: [eventRegistrationId], references: [id], onDelete: Cascade)
+
+  @@unique([eventRegistrationId, messageType])
+  @@index([eventRegistrationId])
+  @@map("countdown_message")
 }
 
 model EventRegistrationLanguage {
@@ -136,6 +154,38 @@ model TelegramGroup {
   @@map("telegram_group")
 }
 
+model Organizer {
+  id            String   @id @default(uuid())
+  email         String   @unique @db.VarChar(255)
+  name          String   @db.VarChar(255)
+  organization  String   @db.VarChar(255)
+  passwordHash  String   @map("password_hash") @db.VarChar(255)
+  apiKey        String?  @unique @map("api_key") @db.VarChar(255)
+  isActive      Boolean  @map("is_active") @default(true)
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  events        OrganizerEvent[]
+
+  @@index([email])
+  @@map("organizer")
+}
+
+model OrganizerEvent {
+  id              String   @id @default(uuid())
+  organizerId     String   @map("organizer_id")
+  eventId         String   @unique @map("event_id")
+  status          String   @db.VarChar(50) @default("active") // active, paused, cancelled
+  commissionRate  Float    @map("commission_rate") @default(0)
+  createdAt       DateTime @default(now()) @map("created_at")
+  
+  organizer       Organizer @relation(fields: [organizerId], references: [id])
+  event           Event     @relation(fields: [eventId], references: [id])
+
+  @@index([organizerId])
+  @@map("organizer_event")
+}
+
 model PartnerRequest {
   id              String   @id @default(uuid())
   organization    String   @db.VarChar(255)
@@ -160,4 +210,133 @@ model ConversationMessage {
   @@index([chatId, sequence])
   @@index([chatId, createdAt])
   @@map("conversation_message")
+}
+
+model Rating {
+  id                     String   @id @default(uuid())
+  eventId                String   @map("event_id")
+  raterTelegramId        String   @map("rater_telegram_id") @db.VarChar(255)
+  // Rating can be for: individual user, squad/group, or event
+  targetType             String   @map("target_type") @db.VarChar(50) // 'user' | 'group' | 'event' | 'organizer'
+  targetTelegramId       String?  @map("target_telegram_id") @db.VarChar(255)
+  targetGroupId          String?  @map("target_group_id") @db.VarChar(255)
+  // 1-5 rating score
+  score                  Int      @db.SmallInt // 1-5
+  // Optional review text
+  review                 String?  @db.Text
+  // Bad actor flag (for identifying problematic users)
+  isBadActor             Boolean  @default(false) @map("is_bad_actor")
+  // Categories for the rating
+  category               String?  @db.VarChar(50) // 'overall' | 'friendliness' | 'reliability' | 'communication' | 'fun'
+  createdAt              DateTime @default(now()) @map("created_at")
+
+  @@index([eventId])
+  @@index([raterTelegramId])
+  @@index([targetTelegramId])
+  @@index([targetGroupId])
+  @@index([isBadActor])
+  @@unique([eventId, raterTelegramId, targetTelegramId, targetType])
+  @@map("rating")
+}
+
+model BadActor {
+  id                String   @id @default(uuid())
+  telegramId        String   @unique @map("telegram_id") @db.VarChar(255)
+  reason            String   @db.Text
+  reportedByCount   Int      @default(1) @map("reported_by_count")
+  firstReportedAt   DateTime @default(now()) @map("first_reported_at")
+  lastReportedAt    DateTime @updatedAt @map("last_reported_at")
+
+  @@index([telegramId])
+  @@map("bad_actor")
+}
+
+// IMIN Ambassador program - for high-retention users who help with recruitment and squad creation
+model Ambassador {
+  id                    String   @id @default(uuid())
+  telegramId            String   @unique @map("telegram_id") @db.VarChar(255)
+  telegramUsername      String?  @map("telegram_username") @db.VarChar(255)
+  firstName             String?  @map("first_name") @db.VarChar(255)
+  // Criteria for becoming an ambassador
+  eventsAttended        Int      @default(0) @map("events_attended")
+  squadsCreated         Int      @default(0) @map("squads_created")
+  referrals             Int      @default(0) @map("referrals")
+  ratingScore           Float    @default(0) @map("rating_score") // Average rating from others
+  // Status
+  isActive              Boolean  @default(true) @map("is_active")
+  isVerified            Boolean  @default(false) @map("is_verified") // Manually verified by admin
+  // Benefits
+  badge                 String?  @map("badge") @db.VarChar(50) // "gold" | "silver" | "bronze"
+  commissionRate        Float    @default(0.05) @map("commission_rate") // 5% default
+  // Tracking
+  createdAt             DateTime @default(now()) @map("created_at")
+  updatedAt             DateTime @updatedAt @map("updated_at")
+  lastActiveAt          DateTime? @map("last_active_at")
+
+  @@index([telegramId])
+  @@index([isActive])
+  @@map("ambassador")
+}
+
+// Sponsored Squad Experiences - brands sponsor drinks/perks for squads
+model Sponsor {
+  id              String   @id @default(uuid())
+  name            String   @db.VarChar(255)
+  logoUrl         String?  @map("logo_url") @db.VarChar(500)
+  description     String?  @db.Text
+  // Sponsorship tier: bronze, silver, gold
+  tier            String   @db.VarChar(50) // "bronze" | "silver" | "gold"
+  // Brand category for matching
+  category        String   @db.VarChar(100) // alcohol, food, transport, telecom, lifestyle, fintech
+  // Budget and pricing
+  budgetCents     Int      @default(0) @map("budget_cents") // Available budget in cents
+  pricePerSquadCents Int   @default(0) @map("price_per_squad_cents") // Price per squad sponsorship
+  // Target events/categories
+  targetEventCategories String[] @map("target_event_categories") // e.g., ["music", "food", "tech"]
+  targetCities        String[] @map("target_cities") // e.g., ["Paris", "Berlin"]
+  // Redemption
+  redemptionCode  String   @unique @db.VarChar(50)
+  redemptionUrl   String?  @map("redemption_url") @db.VarChar(500)
+  // What sponsor provides
+  perkDescription String?  @map("perk_description") @db.VarChar(500) // e.g., "One free drink per squad member"
+  // Status
+  isActive        Boolean  @default(true) @map("is_active")
+  contactEmail    String?  @map("contact_email") @db.VarChar(255)
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  sponsorships    Sponsorship[]
+
+  @@index([tier])
+  @@index([category])
+  @@index([isActive])
+  @@index([redemptionCode])
+  @@map("sponsor")
+}
+
+model Sponsorship {
+  id              String   @id @default(uuid())
+  sponsorId       String   @map("sponsor_id")
+  eventId         String   @map("event_id")
+  squadId         String?  @map("squad_id") // TelegramGroup id
+  // Tier matches sponsor tier at time of creation
+  tier            String   @db.VarChar(50)
+  // Status: pending, confirmed, sent, redeemed, expired
+  status          String   @db.VarChar(50) @default("pending") // "pending" | "confirmed" | "sent" | "redeemed" | "expired"
+  // Revenue tracking
+  amountCents     Int      @default(0) @map("amount_cents")
+  // Redemption tracking
+  redeemedAt      DateTime? @map("redeemed_at")
+  redeemedBy      String?  @map("redeemed_by") @db.VarChar(255) // Telegram ID who redeemed
+  // Timestamps
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  sponsor         Sponsor @relation(fields: [sponsorId], references: [id])
+
+  @@index([sponsorId])
+  @@index([eventId])
+  @@index([squadId])
+  @@index([status])
+  @@map("sponsorship")
 }
