@@ -277,3 +277,66 @@ model Ambassador {
   @@index([isActive])
   @@map("ambassador")
 }
+
+// Sponsored Squad Experiences - brands sponsor drinks/perks for squads
+model Sponsor {
+  id              String   @id @default(uuid())
+  name            String   @db.VarChar(255)
+  logoUrl         String?  @map("logo_url") @db.VarChar(500)
+  description     String?  @db.Text
+  // Sponsorship tier: bronze, silver, gold
+  tier            String   @db.VarChar(50) // "bronze" | "silver" | "gold"
+  // Brand category for matching
+  category        String   @db.VarChar(100) // alcohol, food, transport, telecom, lifestyle, fintech
+  // Budget and pricing
+  budgetCents     Int      @default(0) @map("budget_cents") // Available budget in cents
+  pricePerSquadCents Int   @default(0) @map("price_per_squad_cents") // Price per squad sponsorship
+  // Target events/categories
+  targetEventCategories String[] @map("target_event_categories") // e.g., ["music", "food", "tech"]
+  targetCities        String[] @map("target_cities") // e.g., ["Paris", "Berlin"]
+  // Redemption
+  redemptionCode  String   @unique @db.VarChar(50)
+  redemptionUrl   String?  @map("redemption_url") @db.VarChar(500)
+  // What sponsor provides
+  perkDescription String?  @map("perk_description") @db.VarChar(500) // e.g., "One free drink per squad member"
+  // Status
+  isActive        Boolean  @default(true) @map("is_active")
+  contactEmail    String?  @map("contact_email") @db.VarChar(255)
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  sponsorships    Sponsorship[]
+
+  @@index([tier])
+  @@index([category])
+  @@index([isActive])
+  @@index([redemptionCode])
+  @@map("sponsor")
+}
+
+model Sponsorship {
+  id              String   @id @default(uuid())
+  sponsorId       String   @map("sponsor_id")
+  eventId         String   @map("event_id")
+  squadId         String?  @map("squad_id") // TelegramGroup id
+  // Tier matches sponsor tier at time of creation
+  tier            String   @db.VarChar(50)
+  // Status: pending, confirmed, sent, redeemed, expired
+  status          String   @db.VarChar(50) @default("pending") // "pending" | "confirmed" | "sent" | "redeemed" | "expired"
+  // Revenue tracking
+  amountCents     Int      @default(0) @map("amount_cents")
+  // Redemption tracking
+  redeemedAt      DateTime? @map("redeemed_at")
+  redeemedBy      String?  @map("redeemed_by") @db.VarChar(255) // Telegram ID who redeemed
+  // Timestamps
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  sponsor         Sponsor @relation(fields: [sponsorId], references: [id])
+
+  @@index([sponsorId])
+  @@index([eventId])
+  @@index([squadId])
+  @@index([status])
+  @@map("sponsorship")
+}
