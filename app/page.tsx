@@ -638,8 +638,11 @@ export default function Page() {
                   <span className="team-role">CEO / FOUNDER</span>
                 </h3>
                 <p className="team-bio">
-                  Serial founder since 2016. Built and marketed companies across
-                  industries, survived a war, rebuilt. Five languages.
+                  Serial founder since 2016 — built and marketed companies
+                  across industries, survived a war, rebuilt from zero. Lives
+                  in nightlife and knows the organizer&rsquo;s pain firsthand.
+                  Sets the vision, sells the first clients, speaks five
+                  languages.
                 </p>
               </div>
             </div>
@@ -665,7 +668,10 @@ export default function Page() {
                   <span className="team-role">CO-FOUNDER — OPEN</span>
                 </h3>
                 <p className="team-bio">
-                  The person who owns scaling demand is the next hire.
+                  The seat for whoever owns scaling demand — paid acquisition,
+                  organizer partnerships, the growth engine. Bohdan and Ivan
+                  cover product and first sales; this hire turns traction into
+                  a curve. Equity on the table.
                 </p>
               </div>
             </div>
@@ -708,10 +714,6 @@ export default function Page() {
               >
                 Book a call with Bohdan →
               </a>
-              <span className="cta-note">
-                <span className="live-dot live-dot--sm" />
-                At VivaTech this week — let&rsquo;s meet there.
-              </span>
             </div>
           </div>
 
