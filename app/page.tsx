@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, type CSSProperties, type FormEvent, type ChangeEvent } from 'react';
+import Image from 'next/image';
 import { useLandingEffects } from './useLandingEffects';
 
 /** Helper: build an inline style carrying the reveal stagger delay (ms). */
@@ -272,9 +273,12 @@ export default function Page() {
                   </span>
                 </div>
                 <div className="post-media">
-                  <img
+                  <Image
                     src="/assets/vechirka-poster.png"
                     alt="Vechirka × Aerogare — AI-generated event poster, Berlin, 7 Jun 2026"
+                    width={896}
+                    height={1120}
+                    sizes="(max-width: 700px) 92vw, 420px"
                     loading="lazy"
                   />
                   <span className="post-shine" data-ambient aria-hidden="true" />
@@ -357,9 +361,12 @@ export default function Page() {
             <figure className="poster-figure reveal">
               <div className="poster-frame">
                 <div className="poster-glow" />
-                <img
+                <Image
                   src="/assets/poster-studio-variants.png"
                   alt="IMIN Poster Studio — three AI-generated, export-ready poster variants"
+                  width={1942}
+                  height={1440}
+                  sizes="(max-width: 700px) 92vw, 46vw"
                   loading="lazy"
                 />
               </div>
@@ -379,9 +386,12 @@ export default function Page() {
             <figure className="poster-figure reveal" style={delay(100)}>
               <div className="poster-frame">
                 <div className="poster-glow poster-glow--alt" />
-                <img
+                <Image
                   src="/assets/poster-studio-vibe.png"
                   alt="IMIN Poster Studio — pick a vibe from genre-matched aesthetic references"
+                  width={1942}
+                  height={1440}
+                  sizes="(max-width: 700px) 92vw, 46vw"
                   loading="lazy"
                 />
               </div>
@@ -596,8 +606,8 @@ export default function Page() {
               <span className="timeline-dot" />
               <span className="timeline-date">Feb 2026 · Metz</span>
               <p>
-                Won the Metz Startup Challenge. Ivan joins as CTO — 10 years in
-                IT.
+                Won the Metz Startup Challenge. Ivan joins as CTO and
+                co-founder — building the full product.
               </p>
             </li>
             <li className="timeline-item timeline-item--now reveal" style={delay(200)}>
@@ -640,7 +650,10 @@ export default function Page() {
                   Ivan <span className="team-role">CTO / CO-FOUNDER</span>
                 </h3>
                 <p className="team-bio">
-                  10 years in IT. Fully committed. Builds the product.
+                  Full-stack engineer and the builder behind the product —
+                  backend, organizer dashboard, and the AI creative tooling.
+                  Owns the architecture and the shipping pace, turning the
+                  market read into working software. All-in on IMIN.
                 </p>
               </div>
             </div>
