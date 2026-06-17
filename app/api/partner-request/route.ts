@@ -88,7 +88,7 @@ async function sendNotification(d: AccessRequestData): Promise<void> {
   }
 
   // EMAIL_TO is a comma-separated list — any number of recipients.
-  const to = (process.env.EMAIL_TO || 'bohdan.shostak.ua@gmail.com')
+  const to = (process.env.EMAIL_TO || 'bohdan.shostak.ua@gmail.com,ivankozmulyak@gmail.com')
     .split(',')
     .map((addr) => addr.trim())
     .filter(Boolean);
