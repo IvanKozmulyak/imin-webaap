@@ -78,8 +78,8 @@ export async function POST(request: NextRequest) {
 
 // Sends a notification via Resend's REST API. No SDK — one fetch.
 // Set RESEND_API_KEY to enable; EMAIL_FROM/EMAIL_TO override the defaults.
-// ponytail: onboarding@resend.dev only delivers to the Resend account owner —
-// set EMAIL_FROM to a verified-domain address for real inboxes.
+// ponytail: the From domain (imin.support) must be verified in Resend, else
+// sends fail — override with EMAIL_FROM if the domain changes.
 async function sendNotification(d: AccessRequestData): Promise<void> {
   const apiKey = process.env.RESEND_API_KEY;
   if (!apiKey) {
@@ -100,7 +100,7 @@ async function sendNotification(d: AccessRequestData): Promise<void> {
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      from: process.env.EMAIL_FROM || 'IMIN <onboarding@resend.dev>',
+      from: process.env.EMAIL_FROM || 'IMIN <contact@imin.support>',
       to,
       reply_to: d.email,
       subject: `New IMIN access request — ${d.name} (${d.city})`,
