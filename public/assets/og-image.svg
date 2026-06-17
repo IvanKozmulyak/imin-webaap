@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0a0816"/>
+      <stop offset="1" stop-color="#07060d"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#6b7bff"/>
+      <stop offset="1" stop-color="#b06bff"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="50%" cy="0%" r="70%">
+      <stop offset="0" stop-color="#6b7bff" stop-opacity="0.28"/>
+      <stop offset="1" stop-color="#6b7bff" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="1200" height="630" fill="url(#bg)"/>
+  <rect width="1200" height="630" fill="url(#glow)"/>
+  <text x="80" y="150" font-family="'Space Mono', monospace" font-size="22" fill="#aea7c8" letter-spacing="6">AI EVENT MARKETING · TICKETING BUILT IN</text>
+  <text x="80" y="270" font-family="DM Sans, system-ui, sans-serif" font-size="84" font-weight="800" fill="#f0eaff" letter-spacing="-3">You'll know the show</text>
+  <text x="80" y="370" font-family="DM Sans, system-ui, sans-serif" font-size="84" font-weight="800" fill="#f0eaff" letter-spacing="-3">is in trouble</text>
+  <text x="80" y="470" font-family="DM Sans, system-ui, sans-serif" font-size="84" font-weight="800" letter-spacing="-3">
+    <tspan fill="url(#accent)">two weeks before the night.</tspan>
+  </text>
+  <text x="80" y="565" font-family="DM Sans, system-ui, sans-serif" font-size="40" font-weight="800" fill="#6b7bff" letter-spacing="-1">IMIN</text>
+  <text x="220" y="565" font-family="'Space Mono', monospace" font-size="20" fill="#6c647f">for independent nightlife organizers</text>
+</svg>

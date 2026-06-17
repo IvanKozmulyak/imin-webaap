@@ -1,49 +1,64 @@
-import type { Metadata, Viewport } from 'next'
-import { Inter, JetBrains_Mono } from 'next/font/google'
-import './globals.css'
+import type { Metadata } from 'next';
+import { Barlow_Condensed, DM_Sans, DM_Mono } from 'next/font/google';
+import './globals.css';
 
-const inter = Inter({
-  weight: ['400', '500', '600', '800'],
+const display = Barlow_Condensed({
+  weight: ['600', '700', '800'],
   subsets: ['latin'],
   display: 'swap',
-  variable: '--font-inter',
-})
+  variable: '--font-display',
+});
 
-const jetbrainsMono = JetBrains_Mono({
-  weight: ['500', '700'],
+const sans = DM_Sans({
+  weight: ['400', '500', '600', '700'],
+  subsets: ['latin'],
+  display: 'swap',
+  variable: '--font-sans',
+});
+
+const mono = DM_Mono({
+  weight: ['400', '500'],
   subsets: ['latin'],
   display: 'swap',
   variable: '--font-mono',
-})
+});
+
+const description =
+  'The operating system that runs the night for organizers — and the app that helps people find an event, and someone to go with. Live product, one paying client, raising our first round.';
 
 export const metadata: Metadata = {
-  title: 'IMIN | The Social Infrastructure',
-  description: 'Find your people for events. Don\'t let "I have no one to go with" stop you. We match you into squads of 5 for anywhere the music is loud.',
-  icons: {
-    icon: [
-      { url: '/assets/logo.svg', type: 'image/svg+xml' },
-    ],
-    apple: [
-      { url: '/assets/logo.svg', type: 'image/svg+xml' },
-    ],
-    shortcut: '/assets/logo.svg',
+  metadataBase: new URL('https://imin.wtf'),
+  title: 'IMIN — The two-sided platform for nightlife',
+  description,
+  openGraph: {
+    title: 'IMIN — The two-sided platform for nightlife',
+    description,
+    images: ['/assets/og-image.svg'],
   },
-}
-
-export const viewport: Viewport = {
-  width: 'device-width',
-  initialScale: 1,
-  maximumScale: 5,
-}
+  icons: { icon: '/assets/favicon.svg' },
+};
 
 export default function RootLayout({
   children,
 }: {
-  children: React.ReactNode
+  children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className="scroll-smooth">
-      <body className={`${inter.variable} ${jetbrainsMono.variable} font-sans`}>{children}</body>
+    <html
+      lang="en"
+      className={`${display.variable} ${sans.variable} ${mono.variable}`}
+    >
+      <body>
+        {/* ponytail: no-JS fallback — reveal elements start opacity:0 and are shown by the IO hook; without JS they'd stay invisible */}
+        <noscript>
+          <style
+            dangerouslySetInnerHTML={{
+              __html: '.reveal{opacity:1!important;transform:none!important}',
+            }}
+          />
+        </noscript>
+        {children}
+      </body>
     </html>
-  )
+  );
 }

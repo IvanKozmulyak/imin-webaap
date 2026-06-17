@@ -3,19 +3,24 @@ import { prisma } from '@/lib/db/client';
 
 export const dynamic = 'force-dynamic';
 
-interface PartnerRequestData {
-  organization: string;
+interface AccessRequestData {
+  name: string;
   email: string;
-  annualAttendees: string;
-  message?: string;
+  city: string;
+  link: string;
 }
 
 export async function POST(request: NextRequest) {
   try {
-    const body: PartnerRequestData = await request.json();
+    const body: AccessRequestData = await request.json();
+
+    const name = body.name?.trim();
+    const email = body.email?.trim();
+    const city = body.city?.trim();
+    const link = body.link?.trim();
 
     // Validate required fields
-    if (!body.organization || !body.email || !body.annualAttendees) {
+    if (!name || !email || !city || !link) {
       return NextResponse.json(
         { error: 'Missing required fields' },
         { status: 400 }
@@ -24,40 +29,33 @@ export async function POST(request: NextRequest) {
 
     // Validate email format
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(body.email)) {
+    if (!emailRegex.test(email)) {
       return NextResponse.json(
         { error: 'Invalid email format' },
         { status: 400 }
       );
     }
 
-    // Save partner request to database
-    const partnerRequest = await prisma.partnerRequest.create({
+    // Save access request to database
+    const accessRequest = await prisma.accessRequest.create({
       data: {
-        organization: body.organization.trim(),
-        email: body.email.trim().toLowerCase(),
-        annualAttendees: body.annualAttendees.trim(),
-        message: body.message?.trim() ? body.message.trim() : null,
+        name,
+        email: email.toLowerCase().trim(),
+        city,
+        link,
       },
     });
 
-    console.log('Partner request saved:', {
-      id: partnerRequest.id,
-      organization: partnerRequest.organization,
-      email: partnerRequest.email,
+    console.log('Access request saved:', {
+      id: accessRequest.id,
+      name: accessRequest.name,
+      email: accessRequest.email,
     });
 
-    return NextResponse.json(
-      { 
-        success: true,
-        message: 'Request submitted successfully. We will contact you soon.',
-        id: partnerRequest.id
-      },
-      { status: 200 }
-    );
+    return NextResponse.json({ success: true }, { status: 200 });
   } catch (error: any) {
-    console.error('Error processing partner request:', error);
-    
+    console.error('Error processing access request:', error);
+
     // Handle unique constraint violations or other database errors
     if (error.code === 'P2002') {
       return NextResponse.json(

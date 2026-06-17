@@ -1,818 +1,853 @@
 'use client';
 
-import { useEffect, useRef, useState, Suspense } from 'react';
-import { useSearchParams, useRouter } from 'next/navigation';
-import Link from 'next/link';
-import Image from 'next/image';
-import CustomDropdown, { DropdownOption } from './components/CustomDropdown';
-import SiteHeader from './components/SiteHeader';
-import SiteFooter from './components/SiteFooter';
+import { useState, type CSSProperties, type FormEvent, type ChangeEvent } from 'react';
+import { useLandingEffects } from './useLandingEffects';
 
-function HomeContent() {
-  const searchParams = useSearchParams();
-  const router = useRouter();
-  const style = searchParams?.get('style');
-  const isFestivalStyle = style === 'festival';
+/** Helper: build an inline style carrying the reveal stagger delay (ms). */
+function delay(ms: number): CSSProperties {
+  return { ['--reveal-delay' as string]: `${ms}ms` };
+}
 
-  const switchMode = () => {
-    if (isFestivalStyle) {
-      router.push('/');
-    } else {
-      router.push('/?style=festival');
-    }
-  };
-  
-  const [attendees, setAttendees] = useState(50000);
-  const [revenue, setRevenue] = useState(600000);
-  const masterFlowWrapperRef = useRef<HTMLDivElement>(null);
-  const [annualAttendees, setAnnualAttendees] = useState<string>('');
-  const [showSuccess, setShowSuccess] = useState(false);
-  const [partnerFieldErrors, setPartnerFieldErrors] = useState<{
-    organization?: string;
-    email?: string;
-    annualAttendees?: string;
-  }>({});
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-  const attendeeOptions: DropdownOption[] = [
-    { value: 'Under 10k Attendees', label: 'Under 10k Attendees' },
-    { value: '10k - 50k Attendees', label: '10k - 50k Attendees' },
-    { value: '50k - 200k Attendees', label: '50k - 200k Attendees' },
-    { value: '200k+ Attendees', label: '200k+ Attendees' },
-  ];
+interface FormValues {
+  name: string;
+  email: string;
+  city: string;
+  link: string;
+}
 
-  useEffect(() => {
-    // Calculator update
-    const recovered = Math.round(attendees * 0.24 * 50);
-    setRevenue(recovered);
-  }, [attendees]);
+interface FormErrors {
+  name?: boolean;
+  email?: boolean;
+  city?: boolean;
+  link?: boolean;
+}
 
-  useEffect(() => {
-    // Force reload videos when style changes to prevent caching issues
-    const videos = document.querySelectorAll('video');
-    videos.forEach((video) => {
-      if (video instanceof HTMLVideoElement) {
-        video.load();
-      }
-    });
-  }, [isFestivalStyle]);
+type FieldName = keyof FormValues;
 
-  useEffect(() => {
-    // Parallax blob animation with performance optimization
-    let ticking = false;
-    let rafId: number | null = null;
+export default function Page() {
+  useLandingEffects();
 
-    const handleScroll = () => {
-      if (!ticking) {
-        rafId = requestAnimationFrame(() => {
-          const scrollPos = window.scrollY;
-          const blob1 = document.getElementById('blob1');
-          const blob2 = document.getElementById('blob2');
-          if (blob1) blob1.style.transform = `translate3d(0, ${scrollPos * 0.2}px, 0)`;
-          if (blob2) blob2.style.transform = `translate3d(0, ${scrollPos * 0.15}px, 0)`;
+  const [values, setValues] = useState<FormValues>({
+    name: '',
+    email: '',
+    city: '',
+    link: '',
+  });
+  const [errors, setErrors] = useState<FormErrors>({});
+  const [submitting, setSubmitting] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
+  const [serverError, setServerError] = useState<string | null>(null);
 
-          // Scroll ball animation
-          const path = document.getElementById('motion-path') as SVGPathElement | null;
-          const ball = document.getElementById('scroll-ball') as SVGCircleElement | null;
-          const wrapper = masterFlowWrapperRef.current;
-          const contactForm = document.getElementById('contact-form-card');
-
-          if (path && ball && wrapper) {
-            let percentage = (window.scrollY - (wrapper.offsetTop - 300)) / (wrapper.offsetHeight - window.innerHeight / 2);
-            percentage = Math.max(0, Math.min(1, percentage));
-
-            if (percentage > 0 && percentage < 1 && path) {
-              let currentRadius = Math.max(15, 80 - (percentage * 200));
-              let currentBlur = Math.max(10, 50 - (percentage * 120));
-              let color = isFestivalStyle 
-                ? (percentage < 0.1 ? '#14B8A6' : '#EC4899') // Ocean teal to vivid pink for festival
-                : (percentage < 0.1 ? '#00FF94' : '#FF8F00'); // Green to orange for nightlife
-              let currentOpacity = Math.min(1, percentage * 5);
-
-              ball.setAttribute('r', currentRadius.toString());
-              ball.setAttribute('fill', color);
-              ball.style.filter = `blur(${currentBlur}px) drop-shadow(0 0 30px ${color})`;
-              ball.style.opacity = currentOpacity.toString();
-
-              const pathLength = path.getTotalLength();
-              const point = path.getPointAtLength(percentage * pathLength);
-              ball.setAttribute('cx', point.x.toString());
-              ball.setAttribute('cy', point.y.toString());
-            } else {
-              if (ball) ball.style.opacity = '0';
-            }
-
-            // Hit target effect
-            if (contactForm) {
-              if (percentage > 0.95) {
-                contactForm.classList.add('form-active');
-              } else {
-                contactForm.classList.remove('form-active');
-              }
-            }
-          }
-          ticking = false;
-        });
-        ticking = true;
-      }
+  const handleChange =
+    (field: FieldName) => (e: ChangeEvent<HTMLInputElement>) => {
+      const value = e.target.value;
+      setValues((prev) => ({ ...prev, [field]: value }));
+      setErrors((prev) => ({ ...prev, [field]: false }));
     };
 
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    return () => {
-      window.removeEventListener('scroll', handleScroll);
-      if (rafId !== null) cancelAnimationFrame(rafId);
-    };
-  }, [isFestivalStyle]);
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setServerError(null);
 
-  const formatRevenue = (value: number) => {
-    if (value >= 1000000) {
-      return '$' + (value / 1000000).toFixed(1) + 'M';
+    const name = values.name.trim();
+    const email = values.email.trim();
+    const city = values.city.trim();
+    const link = values.link.trim();
+
+    const nextErrors: FormErrors = {
+      name: name === '',
+      email: email === '' || !EMAIL_RE.test(email),
+      city: city === '',
+      link: link === '',
+    };
+    setErrors(nextErrors);
+
+    const order: FieldName[] = ['name', 'email', 'city', 'link'];
+    const firstInvalid = order.find((f) => nextErrors[f]);
+    if (firstInvalid) {
+      const el = document.getElementById(`f-${firstInvalid}`);
+      if (el) (el as HTMLInputElement).focus();
+      return;
     }
-    return '$' + Math.round(value / 1000) + 'k';
+
+    setSubmitting(true);
+    try {
+      const res = await fetch('/api/partner-request', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, email, city, link }),
+      });
+      if (!res.ok) {
+        let message = 'Something went wrong. Please try again.';
+        try {
+          const data = (await res.json()) as { error?: string };
+          if (data && data.error) message = data.error;
+        } catch {
+          /* ignore parse error */
+        }
+        setServerError(message);
+        setSubmitting(false);
+        return;
+      }
+      setSubmitted(true);
+    } catch {
+      setServerError('Network error. Please try again.');
+      setSubmitting(false);
+    }
   };
 
   return (
-    <div className={isFestivalStyle ? 'festival-style' : ''}>
-      {/* Mode Switcher */}
-      <button 
-        onClick={switchMode}
-        className="mode-switcher"
-        aria-label={isFestivalStyle ? 'Switch to Nightlife' : 'Switch to Festival'}
-      >
-        <span className="switcher-indicator"></span>
-        <span className="switcher-text">
-          {isFestivalStyle ? 'Switch to Nightlife' : 'Switch to Festival'}
-        </span>
-      </button>
-
-      {/* Ambient Background with Blobs */}
-      <div className="ambient-light" aria-hidden="true">
-        <div className="blob blob-1" id="blob1"></div>
-        <div className="blob blob-2" id="blob2"></div>
+    <>
+      {/* AMBIENT BLOBS */}
+      <div className="bg-blobs" aria-hidden="true">
+        <span className="blob blob-1" data-ambient />
+        <span className="blob blob-2" data-ambient />
+        <span className="blob blob-3" data-ambient />
+        <span className="blob blob-4" data-ambient />
       </div>
-      
-      {/* Festival Background Layer */}
-      {isFestivalStyle && (
-        <>
-          <div className="hero-bg-layer"></div>
-          <div className="hero-overlay"></div>
-        </>
-      )}
+      {/* NOISE OVERLAY */}
+      <div className="bg-noise" aria-hidden="true" />
 
-      <SiteHeader />
+      {/* PROGRESS BAR */}
+      <div id="iminProgress" className="progress-bar" />
 
-      <div className="container">
-        {/* Hero Section */}
-        <section className="hero">
-          <div className="hero-content" style={{ zIndex: 5 }}>
-            <span className="section-tag">{isFestivalStyle ? 'Festival Season 2026' : 'Market Opportunity 2026'}</span>
-            <h1>
-              {isFestivalStyle ? (
-                <>
-                  <span className="hero-nowrap-line">UNITING PEOPLE TO</span><br />
-                  <span className="text-gradient">POWER YOUR EVENT.</span>
-                </>
-              ) : (
-                <>
-                  <span className="hero-nowrap-line">UNITING PEOPLE TO</span><br />
-                  <span className="text-green">POWER YOUR EVENT.</span>
-                </>
-              )}
+      {/* NAV */}
+      <nav id="iminNav" className="nav">
+        <a href="#top" className="nav-logo" aria-label="IMIN home">
+          <img src="/assets/logo-imin.png" alt="IMIN" />
+        </a>
+        <div className="nav-actions">
+          <a href="#invest" className="nav-link">
+            For investors
+          </a>
+          <a href="#access" className="nav-cta">
+            Request access
+          </a>
+        </div>
+      </nav>
+
+      {/* HERO */}
+      <header id="top" className="hero">
+        <div className="hero-grid">
+          <div className="hero-copy">
+            <span className="eyebrow-pill hero-eyebrow">
+              The two-sided platform for nightlife
+            </span>
+            <h1 className="hero-title">
+              The night has two problems.
+              <br />
+              <span className="accent">We solve both.</span>
             </h1>
-            <p>
-              {isFestivalStyle ? (
-                <>
-                    <span style={{ color: 'var(--primary-purple)', fontWeight: 800 }}>Don&apos;t lose sales </span> bacause of{' '}
-                  solo anxiety.
-                  <br />
-                  We match users into{' '}
-                  <span style={{ color: 'var(--vivid-pink)', fontWeight: 800 }}>groups of 5</span>, ensuring they have the company and the means to <span style={{ color: 'var(--primary-purple)', fontWeight: 800 }}>buy your ticket.</span>
-                </>
-              ) : (
-                <>
-                  <span style={{ color: 'white' }}>
-                    <strong>24%</strong> of your traffic leaves because they have{' '}
-                    <span className="text-green">&quot;no one to go with.&quot;</span> We provide the platform that bundles them into{' '}
-                    <span className="text-green">squads</span> and drives them to <span className="text-green">your checkout</span>.
-                  </span>
-                </>
-              )}
+            <p className="hero-sub">
+              The operating system that runs the night for organizers — and the
+              app that helps people find it, and someone to go with.
             </p>
-            <div className="hero-actions" style={{ display: 'flex', gap: '15px', flexWrap: 'wrap' }}>
-              <a href="#partner" className="btn-gradient">Start Integrating</a>
-              <a href="#calc" className="btn-outline">{isFestivalStyle ? 'Calculate Revenue' : 'Calculate Revenue'}</a>
+            <div className="hero-cta">
+              <a href="#invest" className="btn btn--primary">
+                Let&rsquo;s talk
+              </a>
+              <a href="#product" className="btn btn--ghost">
+                See the product →
+              </a>
+            </div>
+            <p className="hero-proof">
+              Live product · 1 paying client · Web&nbsp;Summit &rsquo;24 &amp;
+              &rsquo;25 · Metz Startup Challenge winner
+            </p>
+          </div>
+          <div className="hero-visual">
+            <div className="hero-mark" data-ambient>
+              <div className="hero-mark-glow" />
+              <img
+                src="/assets/imin-logo-mark.png"
+                alt="IM IN — the night, in the letters"
+              />
+              <span className="hero-mark-shine" data-ambient aria-hidden="true" />
             </div>
           </div>
-          <div className="phone-perspective">
-            <div className="hero-glow"></div>
-            <div className="iphone-wrapper face-left">
-              <div className="iphone-body"></div>
-              <div className="iphone-frame"></div>
-              <div className="iphone-screen">
-                <Image
-                  key={isFestivalStyle ? 'festival-hero' : 'nightlife-hero'}
-                  src={isFestivalStyle ? "/assets/placeholders/festival-eventsimin.png" : "/assets/placeholders/eventsimin.png"}
-                  alt="IMIN App"
-                  className="screen-content"
-                  fill
-                  style={{ objectFit: 'cover' }}
-                  unoptimized
-                />
-              </div>
-            </div>
-          </div>
-        </section>
-      </div>
+        </div>
+      </header>
 
-      {/* Markets Section - Both Styles */}
-      <section className="markets-section" style={{ padding: '60px 0' }}>
+      {/* PROBLEM */}
+      <section id="problem" className="section section--bordered">
         <div className="container">
-          <div style={{ textAlign: 'center' }}>
-            <span className="section-tag">WHO WE SERVE</span>
-            <h2 style={{ fontSize: '2.5rem', fontWeight: 800, color: isFestivalStyle ? 'var(--text-dark)' : 'white' }}>
-              {isFestivalStyle ? 'Built For Multi-Day Experiences' : 'Built For High-Frequency Events'}
-            </h2>
-          </div>
-            <div className="markets-grid">
-              {isFestivalStyle ? (
-                <>
-                  <div className="market-card" key="festival-card-1">
-                    <Image key="festival-img-1" src="/assets/placeholders/who-we-serve-1.jpg" alt="Placeholder image 1" width={800} height={200} className="market-img" unoptimized />
-                    <div className="market-content">
-                      <h3>Major Music Festivals</h3>
-                      <p>For large-scale events where organizing camping and travel is a major friction point for solo attendees.</p>
-                    </div>
-                  </div>
-                  <div className="market-card" key="festival-card-2">
-                    <Image key="festival-img-2" src="/assets/placeholders/who-we-serve-2.jpg" alt="Placeholder image 2" width={800} height={200} className="market-img" unoptimized />
-                    <div className="market-content">
-                      <h3>Dance Congresses</h3>
-                      <p>Community-driven events where connection is key. We help dancers find roommates and travel buddies.</p>
-                    </div>
-                  </div>
-                  <div className="market-card" key="festival-card-3">
-                    <Image key="festival-img-3" src="/assets/placeholders/who-we-serve-3.jpg" alt="Placeholder image 3" width={800} height={200} className="market-img" unoptimized />
-                    <div className="market-content">
-                      <h3>Concerts And Live Events</h3>
-                      <p>We segments your audience into intimate groups of five that increases long-term loyalty and onsite spend.</p>
-                    </div>
-                  </div>
-                </>
-              ) : (
-                <>
-                  <div className="market-card" key="nightlife-card-1">
-                    <Image key="nightlife-img-1" src="/assets/event-types/night-clubs.jpg" alt="Night Clubs" width={800} height={200} className="market-img" unoptimized />
-                    <div className="market-content">
-                      <h3>Night Clubs & Venues</h3>
-                      <p>For weekly parties and regular club nights where solo attendees need a squad to feel comfortable entering.</p>
-                    </div>
-                  </div>
-                  <div className="market-card" key="nightlife-card-2">
-                    <Image key="nightlife-img-2" src="/assets/event-types/techno-raves.jpg" alt="Techno Raves" width={800} height={200} className="market-img" unoptimized />
-                    <div className="market-content">
-                      <h3>Techno Raves & Underground</h3>
-                      <p>Community-focused events where finding your crew is essential. We match by music taste and vibe.</p>
-                    </div>
-                  </div>
-                  <div className="market-card" key="nightlife-card-3">
-                    <Image key="nightlife-img-3" src="/assets/event-types/rooftop.jpg" alt="Rooftop Events" width={800} height={200} className="market-img" unoptimized />
-                    <div className="market-content">
-                      <h3>Rooftop & Pop-Up Events</h3>
-                      <p>Exclusive events where social proof matters. We bundle solo attendees into confident squads.</p>
-                    </div>
-                  </div>
-                </>
-              )}
+          <span className="eyebrow reveal">Two sides · same market</span>
+          <h2 className="h2 problem-h2 reveal" style={delay(60)}>
+            Independent nightlife is broken — in both directions.
+          </h2>
+          <div className="cards-2">
+            <div className="card reveal">
+              <span className="card-eyebrow">The organizer</span>
+              <h3 className="card-h3">Great nights. Lost on the marketing.</h3>
+              <p className="card-body">
+                A 2-person crew can&rsquo;t run ads, email, SMS and design like a
+                company with a marketing team — and they find out a show is soft
+                when the budget&rsquo;s already gone.
+              </p>
             </div>
+            <div className="card reveal" style={delay(100)}>
+              <span className="card-eyebrow">The event-goer</span>
+              <h3 className="card-h3">
+                Want to go out. Don&rsquo;t know where — or who with.
+              </h3>
+              <p className="card-body">
+                New rooms, new circles, company for the night — not a romantic
+                transaction. Dating apps don&rsquo;t fit.
+              </p>
+            </div>
+          </div>
+          <p className="problem-pull reveal" style={delay(80)}>
+            The gap nobody serves.{' '}
+            <span className="muted">The gap IMIN owns.</span>
+          </p>
         </div>
       </section>
 
-      <div className="master-flow-wrapper" ref={masterFlowWrapperRef}>
-        {/* SVG Track Container */}
-        <div className="svg-track-container">
-          <svg id="main-svg" width="100%" height="100%" viewBox="0 0 1200 4500" preserveAspectRatio="none">
-            <path
-              id="motion-path"
-              className="track-path"
-              d="M 600 100 C 600 300 200 600 200 1000 C 200 1400 1000 1500 1000 1900 C 1000 2300 200 2400 200 2800 C 200 3200 1000 3300 1000 3700 C 1000 4100 600 4200 600 4400"
-            />
-            <circle
-              id="scroll-ball"
-              className="track-ball"
-              cx="0"
-              cy="0"
-              r="80"
-              fill={isFestivalStyle ? "#14B8A6" : "#00FF94"}
-              filter="blur(50px)"
-              opacity="0.6"
-            />
-          </svg>
+      {/* PRODUCT / LIVE PROOF */}
+      <section id="product" className="section section--bordered">
+        <div className="container">
+          <div className="status-pill reveal">
+            <span className="live-dot" />
+            Live today
+          </div>
+          <h2 className="h2 product-h2 reveal" style={delay(60)}>
+            Not a concept. The wedge is shipping.
+          </h2>
+          <p className="section-lead product-lead reveal" style={delay(120)}>
+            Real revenue, real organizer, running live today at{' '}
+            <a
+              href="https://dashboard.imin.wtf"
+              target="_blank"
+              rel="noopener"
+              className="inline-link"
+            >
+              dashboard.imin.wtf
+            </a>
+            .
+          </p>
+
+          {/* 01 FORECAST */}
+          <div id="forecast" className="feature-row">
+            <div className="feature-copy reveal">
+              <span className="feature-eyebrow">01 — Forecast</span>
+              <h3 className="feature-h3">Know before it&rsquo;s too late.</h3>
+              <p className="feature-body">
+                IMIN flags a soft night two weeks out — while you can still push
+                harder, not after you&rsquo;ve spent the budget trying to save
+                it.
+              </p>
+            </div>
+            <figure className="feature-figure reveal" style={delay(100)}>
+              <div className="feature-figure-glow" />
+              <div className="screenshot">
+                <img
+                  src="/assets/dashboard-home.webp"
+                  alt="IMIN dashboard — live event overview with tickets sold, revenue and cycle metrics"
+                  loading="lazy"
+                />
+              </div>
+            </figure>
+          </div>
+
+          {/* 02 MARKETING (flipped) */}
+          <div id="marketing" className="feature-row feature-row--flip">
+            <div className="feature-copy reveal">
+              <span className="feature-eyebrow">02 — Marketing</span>
+              <h3 className="feature-h3">Marketing that runs itself.</h3>
+              <p className="feature-body">
+                Meta Ads, email, SMS and AI-generated posters — built from the
+                organizer&rsquo;s own buyer data, launched from the same place
+                they sold the tickets.
+              </p>
+            </div>
+            <div className="feature-visual reveal" style={delay(100)}>
+              <div className="post-card">
+                <div className="post-head">
+                  <span className="post-avatar" />
+                  <span className="post-handle">
+                    yournight
+                    <small>Sponsored · generated by IMIN</small>
+                  </span>
+                </div>
+                <div className="post-media">
+                  <img
+                    src="/assets/vechirka-poster.png"
+                    alt="Vechirka × Aerogare — AI-generated event poster, Berlin, 7 Jun 2026"
+                    loading="lazy"
+                  />
+                  <span className="post-shine" data-ambient aria-hidden="true" />
+                  <span className="post-tag">AI Poster · Sample</span>
+                </div>
+                <div className="post-foot">
+                  <span className="post-foot-text">
+                    Last tickets — don&rsquo;t miss it.
+                  </span>
+                  <a href="#access" className="post-launch">
+                    Launch
+                  </a>
+                </div>
+              </div>
+              <div className="post-caption">
+                <span className="live-dot live-dot--sm" />
+                Audience: <strong>1,240</strong> past buyers · built
+                automatically
+              </div>
+            </div>
+          </div>
+
+          {/* 03 OWNERSHIP */}
+          <div id="data" className="feature-row feature-row--last">
+            <div className="feature-copy reveal">
+              <span className="feature-eyebrow">03 — Ownership</span>
+              <h3 className="feature-h3">Your audience stays yours.</h3>
+              <p className="feature-body">
+                Every ticket buyer feeds the next campaign automatically. The
+                fan data belongs to the organizer — not the platform.
+              </p>
+            </div>
+            <div className="feature-copy reveal" style={delay(100)}>
+              <div className="flow-card">
+                <div className="flow-head">Ticket buyers</div>
+                <div className="flow-row">
+                  <span className="flow-label">
+                    <span className="flow-arrow">→</span>Email list
+                  </span>
+                  <span className="flow-tag">auto</span>
+                </div>
+                <div className="flow-row">
+                  <span className="flow-label">
+                    <span className="flow-arrow">→</span>Meta Ads audience
+                  </span>
+                  <span className="flow-tag">auto</span>
+                </div>
+                <div className="flow-row">
+                  <span className="flow-label">
+                    <span className="flow-arrow">→</span>SMS list
+                  </span>
+                  <span className="flow-tag">auto</span>
+                </div>
+                <div className="flow-row">
+                  <span className="flow-label">
+                    <span className="flow-arrow flow-arrow--green">→</span>
+                    Export, anytime
+                  </span>
+                  <span className="flow-tag flow-tag--green">yours</span>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
+      </section>
 
-        {/* Revenue Calculator Section */}
-        <section id="calc" className="container" style={{ padding: '60px 0' }}>
-          <div className="calc-grid">
-            <div>
-              <span className="section-tag" style={isFestivalStyle ? {} : { background: 'rgba(59, 130, 246, 0.1)', borderColor: 'var(--glow-blue)', color: 'var(--glow-blue)' }}>
-                {isFestivalStyle ? 'REVENUE FORECAST' : 'REVENUE CALCULATOR'}
-              </span>
-              <h2 style={{ fontSize: '2.5rem', lineHeight: '1.1', marginBottom: '20px' }}>
-                {isFestivalStyle ? (
-                  <>
-                    Calculate Your <br />
-                    <span className="text-gradient">Recoverable Revenue.</span>
-                  </>
-                ) : (
-                  <>
-                    CALCULATE YOUR<br />
-                    <span className="text-green">LOST REVENUE.</span>
-                  </>
-                )}
-              </h2>
-              <p style={{ color: isFestivalStyle ? 'var(--text-muted)' : 'white' }}>
-                  <>
-                    Move the slider to match your annual attendance. See exactly how much money is walking away because they have &quot;no one to go with.&quot;
-                  </>
-              </p>
-              <label style={{ fontFamily: 'var(--font-mono)', color: 'var(--text-muted)', display: 'block', marginTop: '40px', fontSize: '0.9rem', letterSpacing: '1px' }}>
-                ANNUAL ATTENDEES
-              </label>
-              <div id="attendee-val" className={isFestivalStyle ? '' : 'text-green'} style={{ fontWeight: 700, fontSize: '3rem', lineHeight: '1', marginBottom: '20px', color: isFestivalStyle ? 'var(--primary-purple)' : undefined }}>
-                {attendees.toLocaleString()}
+      {/* AI POSTER SHOWCASE */}
+      <section id="posters" className="section section--bordered">
+        <div className="container">
+          <span className="eyebrow reveal">AI creative · inside the dashboard</span>
+          <h2 className="h2 posters-h2 reveal" style={delay(60)}>
+            Generate event posters. On-brand. In seconds.
+          </h2>
+          <p className="section-lead posters-lead reveal" style={delay(120)}>
+            From the same dashboard where the event lives — no Canva tab, no
+            designer brief. The organizer describes the night; IMIN generates the
+            artwork.
+          </p>
+          <div className="posters-grid">
+            <figure className="poster-figure reveal">
+              <div className="poster-frame">
+                <div className="poster-glow" />
+                <img
+                  src="/assets/poster-studio-variants.png"
+                  alt="IMIN Poster Studio — three AI-generated, export-ready poster variants"
+                  loading="lazy"
+                />
               </div>
-              <input
-                type="range"
-                min={5000}
-                max={500000}
-                step={5000}
-                value={attendees}
-                onChange={(e) => setAttendees(parseInt(e.target.value))}
-                className="slider"
-                id="calc-slider"
-                style={{ margin: 0 }}
-              />
+              <figcaption className="poster-cap">
+                <span className="poster-num">02</span>
+                <span>
+                  <span className="poster-cap-title">
+                    Get three ready-to-use posters
+                  </span>
+                  <span className="poster-cap-sub">
+                    On-brand variants in seconds — pick a favorite and export
+                    PNG, no designer brief.
+                  </span>
+                </span>
+              </figcaption>
+            </figure>
+            <figure className="poster-figure reveal" style={delay(100)}>
+              <div className="poster-frame">
+                <div className="poster-glow poster-glow--alt" />
+                <img
+                  src="/assets/poster-studio-vibe.png"
+                  alt="IMIN Poster Studio — pick a vibe from genre-matched aesthetic references"
+                  loading="lazy"
+                />
+              </div>
+              <figcaption className="poster-cap">
+                <span className="poster-num">01</span>
+                <span>
+                  <span className="poster-cap-title">Pick a vibe</span>
+                  <span className="poster-cap-sub">
+                    Choose the aesthetic — IMIN defaults to one from the genre,
+                    change it anytime.
+                  </span>
+                </span>
+              </figcaption>
+            </figure>
+          </div>
+        </div>
+      </section>
+
+      {/* VISION + FLYWHEEL */}
+      <section id="future" className="section section--bordered">
+        <div className="container">
+          <span className="eyebrow reveal">Where this goes</span>
+          <h2 className="h2 vision-h2 reveal" style={delay(60)}>
+            The OS <em>and</em> the app. Both sides of the room.
+          </h2>
+          <p className="section-lead vision-lead reveal" style={delay(120)}>
+            The organizer OS is the wedge. The consumer app is the moat.
+          </p>
+
+          <div className="pillars">
+            <div className="pillar reveal">
+              <span className="pillar-word">Join</span>
+              <p>Find an event nearby. Find someone to go with. One tap.</p>
             </div>
-            <div style={{ textAlign: 'center', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-              <h3 style={{ color: 'var(--text-muted)', fontSize: '0.9rem', letterSpacing: '2px', textTransform: 'uppercase', marginBottom: '10px' }}>
-                Estimated Recoverable Revenue
-              </h3>
-              <div id="revenue-val" style={{ fontSize: '6rem', fontWeight: 900, color: isFestivalStyle ? 'var(--text-dark)' : 'white', lineHeight: '1', textShadow: isFestivalStyle ? 'none' : '0 0 40px rgba(0, 255, 148, 0.3)' }}>
-                {formatRevenue(revenue)}
-              </div>
-              <p style={{ fontSize: '1.2rem', color: isFestivalStyle ? 'var(--text-dark)' : 'white', marginTop: '20px', fontWeight: 500 }}>
-                Based on a <span style={{ color: isFestivalStyle ? 'var(--vivid-pink)' : 'var(--glow-green)', fontWeight: 700 }}>+24%</span> uplift in ticket sales.
+            <div className="pillar reveal" style={delay(90)}>
+              <span className="pillar-word">Create</span>
+              <p>
+                Anyone can put on a night — living-room party to club night, in
+                minutes.
               </p>
-              <p style={{ marginTop: '30px', fontSize: '0.8rem', color: '#666', lineHeight: '1.4', maxWidth: '80%', marginLeft: 'auto', marginRight: 'auto' }}>
-                *Projections are estimates based on industry averages and an assumed $50 avg. ticket price.
+            </div>
+            <div className="pillar reveal" style={delay(180)}>
+              <span className="pillar-word">Earn</span>
+              <p>
+                Host exclusive experiences and get paid. Turn a social life into
+                income.
               </p>
             </div>
           </div>
-        </section>
 
-        {/* Flow Steps Section */}
-        <section className="flow-section">
-          <div className="container">
-            <div className="flow-header">
-              <span className="section-tag">{'THE MECHANIC'}</span>
-              <h2 style={{ fontSize: '3rem', color: isFestivalStyle ? 'var(--text-dark)' : undefined }}>
-                {isFestivalStyle ? 'From Solo to Squad in 4 Steps' : 'How We Fill The Floor.'}
-              </h2>
-            </div>
-
-            {/* Step 01 */}
-            <div className="flow-row">
-              <div className="flow-phone-wrap">
-                <div className="flow-glow glow-1"></div>
-                <div className="iphone-wrapper face-right">
-                  <div className="iphone-body"></div>
-                  <div className="iphone-frame"></div>
-                  <div className="iphone-screen">
-                    <Image
-                      key={isFestivalStyle ? 'festival-link' : 'nightlife-link'}
-                      src={isFestivalStyle ? "/assets/placeholders/festival-linkscreen.png" : "/assets/placeholders/linkscreen.png"}
-                      alt="Link"
-                      className="screen-content"
-                      fill
-                      style={{ objectFit: 'cover' }}
-                      unoptimized
-                    />
-                  </div>
+          <div className="flywheel-wrap">
+            <div className="flywheel-col reveal">
+              <div className="flywheel">
+                <span className="fw-ring" />
+                <span className="fw-comet" data-ambient />
+                <div className="fw-hub">
+                  <strong>IMIN</strong>
+                  <span>the flywheel</span>
+                </div>
+                <div className="fw-node fw-node--1">
+                  <b>01</b>
+                  <p>Organizers post events</p>
+                </div>
+                <div className="fw-node fw-node--2">
+                  <b>02</b>
+                  <p>Events fill the app</p>
+                </div>
+                <div className="fw-node fw-node--3">
+                  <b>03</b>
+                  <p>Event-goers join</p>
+                </div>
+                <div className="fw-node fw-node--4">
+                  <b>04</b>
+                  <p>Demand data flows back</p>
+                </div>
+                <div className="fw-node fw-node--5">
+                  <b>05</b>
+                  <p>Smarter ads + forecast</p>
+                </div>
+                <div className="fw-node fw-node--6">
+                  <b>06</b>
+                  <p>More organizers join</p>
                 </div>
               </div>
-              <div className="flow-text">
-                <div className="flow-step-num">01</div>
-                <h3 className="flow-title">The Smart Link</h3>
-                <p className="flow-desc">No complex integration. You simply place a unique IMIN link in your socials, email blast or simple widget in your website.</p>
-              </div>
             </div>
-
-            {/* Step 02 */}
-            <div className="flow-row right-img">
-              <div className="flow-phone-wrap">
-                <div className="flow-glow glow-2"></div>
-                <div className="iphone-wrapper face-left">
-                  <div className="iphone-body"></div>
-                  <div className="iphone-frame"></div>
-                  <div className="iphone-screen">
-                    <Image
-                      key={isFestivalStyle ? 'festival-regis' : 'nightlife-regis'}
-                      src={isFestivalStyle ? "/assets/placeholders/festival-regisimin.png" : "/assets/placeholders/regisimin.png"}
-                      alt="Form"
-                      className="screen-content"
-                      fill
-                      style={{ objectFit: 'cover' }}
-                      unoptimized
-                    />
-                  </div>
-                </div>
-              </div>
-              <div className="flow-text">
-                <div className="flow-step-num">02</div>
-                <h3 className="flow-title">The Vibe Check</h3>
-                <p className="flow-desc">
-                  {isFestivalStyle 
-                    ? 'We capture user data in simple form and use for the best group matching.'
-                    : 'We capture user data in simple form and use for the best group matching.'}
-                </p>
-              </div>
-            </div>
-
-            {/* Step 03 */}
-            <div className="flow-row">
-              <div className="flow-phone-wrap">
-                <div className="flow-glow glow-3"></div>
-                <div className="iphone-wrapper face-right">
-                  <div className="iphone-body"></div>
-                  <div className="iphone-frame"></div>
-                  <div className="iphone-screen">
-                    <Image
-                      key={isFestivalStyle ? 'festival-telegram' : 'nightlife-telegram'}
-                      src={isFestivalStyle ? "/assets/placeholders/festival-telegramimin.png" : "/assets/placeholders/telegramimin.png"}
-                      alt="Chat"
-                      className="screen-content"
-                      fill
-                      style={{ objectFit: 'cover' }}
-                      unoptimized
-                    />
-                  </div>
-                </div>
-              </div>
-              <div className="flow-text">
-                <div className="flow-step-num">03</div>
-                <h3 className="flow-title">{isFestivalStyle ? 'The Logistics Concierge' : 'The Squad Sale'}</h3>
-                <p className="flow-desc">
-                  {isFestivalStyle 
-                    ? 'A private squad chat is formed. Our AI agent immediately starts organizing logistics: coordinating carpools from their city, finding flight options, and securing shared accommodation options tailored to their budget.'
-                    : 'A private Telegram group is formed. Our AI Bot facilitates introductions and pushes a "Group Buy" button.'}
-                </p>
-              </div>
-            </div>
-
-            {/* Step 04 */}
-            <div className="flow-row right-img">
-              <div className="flow-phone-wrap">
-                <div className="flow-glow glow-4"></div>
-                <div className="iphone-wrapper face-left">
-                  <div className="iphone-body"></div>
-                  <div className="iphone-frame"></div>
-                  <div className="iphone-screen">
-                    <video 
-                      key={isFestivalStyle ? 'festival-video' : 'nightlife-video'}
-                      className="screen-content" 
-                      autoPlay 
-                      loop 
-                      muted 
-                      playsInline 
-                      poster={isFestivalStyle ? "/assets/placeholders/festival-partyvideo-poster.jpg" : "/assets/placeholders/partyvideo-poster.jpg"}
-                    >
-                      <source src={isFestivalStyle ? "/assets/placeholders/festival-partyvideo.mp4" : "/assets/placeholders/partyvideo.mp4"} type="video/mp4" />
-                    </video>
-                  </div>
-                </div>
-              </div>
-              <div className="flow-text">
-                <div className="flow-step-num">04</div>
-                <h3 className="flow-title">{isFestivalStyle ? 'The Squad Arrival' : 'The Experience'}</h3>
-                <p className="flow-desc">
-                  {isFestivalStyle 
-                    ? 'Logistics solved, entry anxiety gone. They buy the ticket and arrive as a cohesive unit, ready to spend the weekend together (and spend more on-site).'
-                    : (
-                      <>
-                        Attendees arrive together, reducing entry anxiety. Squads <strong>stay longer and spend more</strong>.
-                      </>
-                    )}
+            <div className="moat-text reveal" style={delay(100)}>
+              <p className="moat-statement">
+                Every ticket sold makes the next event easier to fill. The moat
+                compounds with scale — and a new entrant can&rsquo;t copy it.
+              </p>
+              <div className="callout">
+                <span className="callout-dot" />
+                <p>
+                  <strong>The first node is already turning.</strong> A real
+                  organizer is running events on IMIN — their buyer data is in
+                  the system, training the model.
                 </p>
               </div>
             </div>
           </div>
-        </section>
+        </div>
+      </section>
 
-        {/* Economics Section */}
-        <section id="economics" className="container" style={{ padding: '60px 0' }}>
-          <div style={{ textAlign: 'center', marginBottom: '60px' }}>
-            <span className="section-tag">OUR PRIORITIES</span>
-            <h2 style={{ fontSize: '2.5rem', fontWeight: 800, color: isFestivalStyle ? 'var(--text-dark)' : undefined }}>
-              What We Focus On
+      {/* CROWD PHOTO BEAT */}
+      <section className="crowd" data-crowd>
+        <div className="crowd-inner">
+          <span className="eyebrow eyebrow--green reveal">
+            The room is full again
+          </span>
+          <h2 className="crowd-h2 reveal" style={delay(60)}>
+            151 million people went to live music last year.
+          </h2>
+          <p className="crowd-sub reveal" style={delay(140)}>
+            They all had to find the night somehow. IMIN is how.
+          </p>
+        </div>
+      </section>
+
+      {/* NUMBERS: WHY NOW + MARKET */}
+      <section id="market" className="section">
+        <div className="container">
+          <span className="eyebrow reveal">Why now</span>
+          <h2 className="h2 market-h2 reveal" style={delay(60)}>
+            Four forces aligned. We&rsquo;re moving.
+          </h2>
+          <div className="stat-grid">
+            <div className="stat-card reveal">
+              <span className="stat-num">$85B</span>
+              <p className="stat-body">
+                Global event-ticketing market — nightlife is its biggest,
+                fastest segment.
+              </p>
+              <cite className="stat-cite">Mordor Intelligence, 2025</cite>
+            </div>
+            <div className="stat-card reveal" style={delay(80)}>
+              <span className="stat-num">151M</span>
+              <p className="stat-body">
+                Live-music fans in 2024 — a record. Demand for the real-world
+                room is back.
+              </p>
+              <cite className="stat-cite">Live Nation FY2024</cite>
+            </div>
+            <div className="stat-card reveal" style={delay(160)}>
+              <span className="stat-num">57%</span>
+              <p className="stat-body">
+                Of 18–35 Europeans feel lonely — 63% in France, our beachhead.
+              </p>
+              <cite className="stat-cite">eupinions 2024 · WHO 2025</cite>
+            </div>
+            <div className="stat-card reveal" style={delay(240)}>
+              <span className="stat-num">Zero</span>
+              <p className="stat-body">
+                Incumbents do both sides with AI marketing underneath. DICE→Fever;
+                Eventbrite sold.
+              </p>
+              <cite className="stat-cite">2025–2026</cite>
+            </div>
+          </div>
+
+          <div className="market-strip reveal">
+            <div className="market-cell">
+              <span className="market-label">TAM</span>
+              <span className="market-num">$85B</span>
+              <p>Global event ticketing.</p>
+            </div>
+            <div className="market-cell">
+              <span className="market-label">SAM</span>
+              <span className="market-num">$5.5→21.7B</span>
+              <p>EU event software · 16.5%/yr.</p>
+            </div>
+            <div className="market-cell">
+              <span className="market-label">SOM</span>
+              <span className="market-num">FR · ES · PT</span>
+              <p>Independent-nightlife beachhead.</p>
+            </div>
+          </div>
+          <p className="market-footnote reveal" style={delay(80)}>
+            The category is fundable —{' '}
+            <strong>Posh $64M · Fever $527M · Timeleft €18M ARR.</strong> None do
+            both sides with AI underneath. We do.
+          </p>
+        </div>
+      </section>
+
+      {/* TRACTION */}
+      <section id="traction" className="section section--bordered">
+        <div className="container">
+          <span className="eyebrow reveal">Built the hard way</span>
+          <h2 className="h2 traction-h2 reveal" style={delay(60)}>
+            Validated, not theorized.
+          </h2>
+          <ol className="timeline">
+            <li className="timeline-item reveal">
+              <span className="timeline-dot" />
+              <span className="timeline-date">2024 · Web Summit</span>
+              <p>Pitched in Lisbon. Two investors asked to see an MVP.</p>
+            </li>
+            <li className="timeline-item reveal" style={delay(50)}>
+              <span className="timeline-dot" />
+              <span className="timeline-date">2024 · Solo build</span>
+              <p>
+                No dev would commit. Bohdan taught himself and shipped the app
+                alone.
+              </p>
+            </li>
+            <li className="timeline-item reveal" style={delay(100)}>
+              <span className="timeline-dot" />
+              <span className="timeline-date">2025 · Web Summit</span>
+              <p>Advised to focus B2B first. He pivoted — this is that direction.</p>
+            </li>
+            <li className="timeline-item reveal" style={delay(150)}>
+              <span className="timeline-dot" />
+              <span className="timeline-date">Feb 2026 · Metz</span>
+              <p>
+                Won the Metz Startup Challenge. Ivan joins as CTO — 10 years in
+                IT.
+              </p>
+            </li>
+            <li className="timeline-item timeline-item--now reveal" style={delay(200)}>
+              <span className="timeline-dot" />
+              <span className="timeline-date">Now · Vechirka</span>
+              <p>
+                First paying client — house &amp; techno, Metz. Real events live.
+                The flywheel&rsquo;s first node is turning.
+              </p>
+            </li>
+          </ol>
+        </div>
+      </section>
+
+      {/* TEAM */}
+      <section id="team" className="section section--bordered">
+        <div className="container">
+          <span className="eyebrow reveal">Who&rsquo;s building it</span>
+          <h2 className="h2 team-h2 reveal" style={delay(60)}>
+            A marketer, building a marketing product.
+          </h2>
+          <div className="team-grid">
+            <div className="team-card reveal">
+              <div className="team-avatar">BS</div>
+              <div>
+                <h3 className="team-name">
+                  Bohdan Shostak{' '}
+                  <span className="team-role">CEO / FOUNDER</span>
+                </h3>
+                <p className="team-bio">
+                  Serial founder since 2016. Built and marketed companies across
+                  industries, survived a war, rebuilt. Five languages.
+                </p>
+              </div>
+            </div>
+            <div className="team-card reveal" style={delay(90)}>
+              <div className="team-avatar">IV</div>
+              <div>
+                <h3 className="team-name">
+                  Ivan <span className="team-role">CTO / CO-FOUNDER</span>
+                </h3>
+                <p className="team-bio">
+                  10 years in IT. Fully committed. Builds the product.
+                </p>
+              </div>
+            </div>
+            <div className="team-card reveal" style={delay(180)}>
+              <div className="team-avatar team-avatar--open">+</div>
+              <div>
+                <h3 className="team-name">
+                  Growth{' '}
+                  <span className="team-role">CO-FOUNDER — OPEN</span>
+                </h3>
+                <p className="team-bio">
+                  The person who owns scaling demand is the next hire.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* DUAL CTA */}
+      <section id="invest" className="cta">
+        <div className="cta-haze" />
+        <div className="cta-grid">
+          <div className="reveal">
+            <span className="eyebrow">Raising our first round</span>
+            <h2 className="cta-h2">
+              Let&rsquo;s build
+              <br />
+              the night.
             </h2>
-          </div>
-          <div className="bento-grid">
-            <div className="glass-card">
-              <span
-                className="section-tag"
-                style={{
-                  ...(isFestivalStyle
-                    ? { background: 'rgba(20, 184, 166, 0.1)', borderColor: 'var(--ocean-teal)', color: 'var(--ocean-teal)' }
-                    : { background: 'rgba(0, 255, 148, 0.1)', borderColor: 'var(--glow-green)' }),
-                  fontSize: '1.12rem',
-                  padding: '8px 17px',
-                  borderRadius: '6px',
-                  letterSpacing: '1.4px',
-                }}
-              >
-                PRIORITY #1
+            <p className="cta-lead">
+              We proved the hard side first. Now we&rsquo;re raising to build the
+              consumer app and grow the organizer cohort across{' '}
+              <span className="accent">France · Spain · Portugal</span>.
+            </p>
+            <div className="proof-chips">
+              <span className="proof-chip">
+                <span className="live-dot live-dot--sm live-dot--static" />
+                Live product
               </span>
-              <h2 style={{ fontSize: '2.5rem', marginBottom: '20px', color: isFestivalStyle ? 'var(--text-dark)' : undefined }}>Ticket Sales.</h2>
-              <p style={{ color: 'var(--text-muted)', marginBottom: '30px' }}>
-                {isFestivalStyle 
-                  ? 'We recover the "Lost Audience." By bundling solo users into squads and solving travel, we convert hesitant traffic into sales.'
-                  : 'We recover the "Lost Audience." By bundling solo users into squads, we convert hesitant traffic into bulk ticket sales.'}
-              </p>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
-                <div style={{ fontSize: '3rem' }}>🎟️</div>
-                <div>
-                  <div style={{ fontSize: '1.5rem', fontWeight: 700, color: isFestivalStyle ? 'var(--text-dark)' : 'white' }}>+24%</div>
-                  <div style={{ fontSize: '0.9rem', color: 'var(--text-muted)' }}>Volume Uplift</div>
-                </div>
-              </div>
+              <span className="proof-chip">
+                <span className="live-dot live-dot--sm live-dot--static" />
+                Paying client
+              </span>
+              <span className="proof-chip">Web Summit ×2</span>
+              <span className="proof-chip">Metz winner</span>
             </div>
-            <div className="glass-card">
-              <span
-                className="section-tag"
-                style={{
-                  ...(isFestivalStyle
-                    ? { background: 'rgba(139, 92, 246, 0.1)', borderColor: 'var(--primary-purple)', color: 'var(--primary-purple)' }
-                    : { background: 'rgba(139, 92, 246, 0.1)', borderColor: 'var(--glow-purple)', color: 'var(--glow-purple)' }),
-                  fontSize: '1.12rem',
-                  padding: '8px 17px',
-                  borderRadius: '6px',
-                  letterSpacing: '1.4px',
-                }}
+            <div className="cta-actions">
+              <a
+                href="mailto:bohdan.shostak.ua@gmail.com?subject=IMIN%20%E2%80%94%20investor%20conversation&body=Hi%20Bohdan%2C%20saw%20IMIN%20and%20would%20like%20to%20talk."
+                className="btn btn--primary"
               >
-                PRIORITY #2
+                Book a call with Bohdan →
+              </a>
+              <span className="cta-note">
+                <span className="live-dot live-dot--sm" />
+                At VivaTech this week — let&rsquo;s meet there.
               </span>
-              <h2 style={{ fontSize: '2.5rem', marginBottom: '20px', color: isFestivalStyle ? 'var(--text-dark)' : undefined }}>On-Site Spend.</h2>
-              <p style={{ color: 'var(--text-muted)', marginBottom: '30px' }}>
-                Solo attendees leave early and spend less. Squads stay late, drink a lot and utilize upsells (Glamping, Shuttles, VIP upgrades).
-              </p>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
-                <div style={{ fontSize: '3rem' }}>🍹</div>
-                <div>
-                  <div style={{ fontSize: '1.5rem', fontWeight: 700, color: isFestivalStyle ? 'var(--text-dark)' : 'white' }}>+30%</div>
-                  <div style={{ fontSize: '0.9rem', color: 'var(--text-muted)' }}>Bar Revenue</div>
-                </div>
-              </div>
             </div>
           </div>
-        </section>
 
-        {/* AI Bot Section */}
-        <section id="bot" className="container" style={{ padding: '60px 0' }}>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '60px', alignItems: 'center' }}>
-            <div>
-              <span className="section-tag" style={isFestivalStyle ? { color: 'var(--primary-purple)', borderColor: 'var(--primary-purple)' } : { color: 'var(--glow-purple)', borderColor: 'var(--glow-purple)' }}>
-                MEET THE AGENT
-              </span>
-              <h2 style={{ fontSize: '3rem', lineHeight: '1.1', marginBottom: '30px', color: isFestivalStyle ? 'var(--text-dark)' : undefined }}>
-                {isFestivalStyle ? 'More Than A Chatbot.\nA 24/7 Travel Agent.' : 'More Than A Chat.\nA Concierge.'}
-              </h2>
-              <p style={{ color: 'var(--text-muted)', fontSize: '1.1rem', marginBottom: '40px' }}>
-                {isFestivalStyle 
-                  ? 'Our AI Bot sits inside the squad chat and handles the complex logistics that humans hate doing.'
-                  : 'Our AI Bot acts like a savvy team member inside the squad chat.'}
-              </p>
-              <ul style={{ listStyle: 'none', color: 'var(--text-muted)' }}>
-                <li style={{ marginBottom: '20px', display: 'flex', gap: '15px' }}>
-                  <span style={{ color: isFestivalStyle ? 'var(--vivid-pink)' : 'var(--glow-green)' }}>✓</span>
-                  <strong>{isFestivalStyle ? 'Accommodation Bundling:' : 'Human-Like Persona:'}</strong> {isFestivalStyle ? 'Finds Airbnbs/Hotels to split.' : 'Uses slang and memes.'}
-                </li>
-                <li style={{ marginBottom: '20px', display: 'flex', gap: '15px' }}>
-                  <span style={{ color: isFestivalStyle ? 'var(--vivid-pink)' : 'var(--glow-green)' }}>✓</span>
-                  <strong>Logistics Solver:</strong> {isFestivalStyle ? 'Organizes carpools based on location.' : 'Organizes carpooling.'}
-                </li>
-                <li style={{ marginBottom: '20px', display: 'flex', gap: '15px' }}>
-                  <span style={{ color: isFestivalStyle ? 'var(--vivid-pink)' : 'var(--glow-green)' }}>✓</span>
-                  <strong>Revenue Upsell:</strong> {isFestivalStyle ? 'Suggests official festival travel partners.' : 'Suggests partner hotels.'}
-                </li>
-              </ul>
-            </div>
-            <div className="chat-interface">
-              <div className="chat-header">
-                <div className="bot-avatar">IM</div>
-                <div>
-                  <div style={{ fontWeight: 700, fontSize: '0.9rem', color: isFestivalStyle ? 'var(--text-dark)' : undefined }}>
-                    {isFestivalStyle ? 'IMIN Travel Concierge' : 'IMIN Squad Host'}
-                  </div>
-                  <div style={{ fontSize: '0.75rem', color: isFestivalStyle ? 'var(--primary-purple)' : 'var(--glow-green)' }}>Online • AI Agent</div>
-                </div>
+          <div id="access" className="access-card reveal" style={delay(100)}>
+            <span className="access-eyebrow">For organizers</span>
+            <h3 className="access-h3">Run your next night on IMIN.</h3>
+            <p className="access-sub">
+              We&rsquo;re admitting a small founding cohort across FR · ES · PT.
+              Every application is read by hand — expect a reply within 48 hours.
+            </p>
+            {submitted ? (
+              <div className="access-ok">
+                <p className="access-ok-title">You&rsquo;re on the list.</p>
+                <p>
+                  We review every application by hand. If it&rsquo;s a fit,
+                  you&rsquo;ll hear from us within 48 hours.
+                </p>
               </div>
-              <div className="chat-bubble bubble-bot">Yo Squad! ⚡ Looks like 3 of you are coming from downtown. Need a ride?</div>
-              <div className="chat-bubble bubble-user">Yeah, parking is tight there.</div>
-              <div className="chat-bubble bubble-bot">
-                {isFestivalStyle 
-                  ? 'Smart. I found a 4-person Airbnb near the venue and can organize a carpool.'
-                  : 'Smart. I can organize a carpool or grab a 5-seater Uber for you guys?'}
-              </div>
-              <div className="chat-bubble bubble-action">
-                <span>{isFestivalStyle ? '🚙' : '🚖'}</span> {isFestivalStyle ? 'View Travel Plan & Split Costs' : 'Setup Carpool Group'}
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* Partner Form Section */}
-        <section id="partner" style={{ padding: '60px 0 80px 0' }}>
-          <div className="container">
-            {/* Success Modal */}
-            {showSuccess && (
-              <div className="partner-success-overlay" onClick={() => setShowSuccess(false)}>
-                <div className="partner-success-modal" onClick={(e) => e.stopPropagation()}>
-                  <button 
-                    className="partner-success-close" 
-                    onClick={() => setShowSuccess(false)}
-                    aria-label="Close"
-                  >
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <line x1="18" y1="6" x2="6" y2="18"></line>
-                      <line x1="6" y1="6" x2="18" y2="18"></line>
-                    </svg>
-                  </button>
-                  <div className="partner-success-content">
-                    <div className="partner-success-icon">
-                      <svg width="60" height="60" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2" fill="none"/>
-                        <path d="M8 12l2 2 4-4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                      </svg>
-                    </div>
-                    <h2 style={{ fontSize: '2.5rem', fontWeight: 800, marginBottom: '16px', color: isFestivalStyle ? 'var(--text-dark)' : 'white' }}>
-                      Thank You!
-                    </h2>
-                    <p style={{ fontSize: '1.1rem', color: 'var(--text-muted)', marginBottom: '30px', lineHeight: '1.6' }}>
-                      We&apos;ve received your application. Our team will review it and get back to you within 24-48 hours.
-                    </p>
-                    <button 
-                      onClick={() => setShowSuccess(false)}
-                      className="btn-gradient"
-                      style={{ padding: '14px 32px', fontSize: '1rem' }}
-                    >
-                      Close
-                    </button>
-                  </div>
-                </div>
-              </div>
-            )}
-            <div id="contact-form-card" className="glass-card form-target" style={{ maxWidth: '900px', margin: '0 auto', border: isFestivalStyle ? '1px solid var(--glass-border)' : '1px solid var(--glow-green)', textAlign: 'center' }}>
-              <span
-                className="section-tag"
-                style={{
-                  ...(isFestivalStyle ? { background: 'var(--text-dark)', color: 'white' } : { background: 'var(--glow-green)', color: 'black' }),
-                  fontSize: '1.12rem',
-                  padding: '8px 17px',
-                  borderRadius: '6px',
-                  letterSpacing: '1.4px',
-                }}
-              >
-                FOUNDING PARTNER PROGRAM
-              </span>
-              <h2 style={{ fontSize: '3rem', fontWeight: 800, lineHeight: '1', marginBottom: '20px', color: isFestivalStyle ? 'var(--text-dark)' : undefined }}>
-                {isFestivalStyle ? 'FILL YOUR FIELDS.' : 'FILL YOUR VENUE.'}
-              </h2>
-              <p style={{ color: 'var(--text-muted)', marginBottom: '40px' }}>
-                {isFestivalStyle 
-                  ? 'We are opening 50 spots for our Launch Cohort (Q1 2026). Apply now.'
-                  : 'We are opening 50 spots for our Launch Cohort (Q1 2026).'}
-              </p>
+            ) : (
               <form
+                id="accessForm"
+                className="access-form"
                 noValidate
-                onSubmit={async (e) => {
-                  e.preventDefault();
-                  const form = e.currentTarget as HTMLFormElement;
-                  const formData = new FormData(form);
-                  const organization = ((formData.get('organization') as string) || '').trim();
-                  const email = ((formData.get('email') as string) || '').trim();
-
-                  const nextErrors: typeof partnerFieldErrors = {};
-                  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
-                  if (!organization) nextErrors.organization = 'Please enter your organization name.';
-                  if (!email || !emailRegex.test(email)) nextErrors.email = 'Please enter a valid email address.';
-                  if (!annualAttendees) nextErrors.annualAttendees = 'Please select annual attendees.';
-
-                  if (Object.keys(nextErrors).length > 0) {
-                    setPartnerFieldErrors(nextErrors);
-                    return;
-                  }
-
-                  setPartnerFieldErrors({});
-
-                  const data = {
-                    organization,
-                    email,
-                    annualAttendees,
-                  };
-                  try {
-                    const response = await fetch('/api/partner-request', {
-                      method: 'POST',
-                      headers: { 'Content-Type': 'application/json' },
-                      body: JSON.stringify(data),
-                    });
-                    if (response.ok) {
-                      form.reset();
-                      setAnnualAttendees('');
-                      setPartnerFieldErrors({});
-                      setShowSuccess(true);
-                    } else {
-                      const res = await response.json().catch(() => null);
-                      setPartnerFieldErrors({ email: res?.error || 'Failed to send request. Please try again.' });
-                    }
-                  } catch (error) {
-                    setPartnerFieldErrors({ email: 'An error occurred. Please try again.' });
-                  }
-                }}
-                style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', textAlign: 'left' }}
+                onSubmit={handleSubmit}
               >
-                <div style={{ gridColumn: 'span 2' }}>
-                  <label htmlFor="organization" style={{ display: 'block', marginBottom: '8px', fontSize: '0.9rem', fontWeight: 600, color: isFestivalStyle ? 'var(--text-dark)' : 'white' }}>
-                    Organization Name
-                  </label>
-                  <input 
-                    type="text" 
-                    id="organization"
-                    className={`form-input ${partnerFieldErrors.organization ? 'error' : ''}`}
-                    placeholder={isFestivalStyle ? 'e.g., Coachella, Tomorrowland, Electric Daisy Carnival' : 'e.g., Your Venue Name'} 
-                    name="organization" 
-                    aria-required="true"
-                    aria-invalid={partnerFieldErrors.organization ? 'true' : 'false'}
-                    onChange={() => {
-                      if (partnerFieldErrors.organization) setPartnerFieldErrors((p) => ({ ...p, organization: undefined }));
-                    }}
+                <div className="field">
+                  <label htmlFor="f-name">Name</label>
+                  <input
+                    id="f-name"
+                    name="name"
+                    autoComplete="name"
+                    placeholder="First and last"
+                    className={errors.name ? 'is-invalid' : undefined}
+                    value={values.name}
+                    onChange={handleChange('name')}
                   />
-                  {partnerFieldErrors.organization && <div className="form-error-text">{partnerFieldErrors.organization}</div>}
                 </div>
-                <div>
-                  <label htmlFor="email" style={{ display: 'block', marginBottom: '8px', fontSize: '0.9rem', fontWeight: 600, color: isFestivalStyle ? 'var(--text-dark)' : 'white' }}>
-                    Work Email
-                  </label>
-                  <input 
-                    type="email" 
-                    id="email"
-                    className={`form-input ${partnerFieldErrors.email ? 'error' : ''}`}
-                    placeholder="your.email@organization.com" 
-                    name="email" 
-                    aria-required="true"
-                    aria-invalid={partnerFieldErrors.email ? 'true' : 'false'}
-                    onChange={() => {
-                      if (partnerFieldErrors.email) setPartnerFieldErrors((p) => ({ ...p, email: undefined }));
-                    }}
+                <div className="field">
+                  <label htmlFor="f-email">Email</label>
+                  <input
+                    id="f-email"
+                    name="email"
+                    type="email"
+                    autoComplete="email"
+                    placeholder="you@yournight.com"
+                    className={errors.email ? 'is-invalid' : undefined}
+                    value={values.email}
+                    onChange={handleChange('email')}
                   />
-                  {partnerFieldErrors.email && <div className="form-error-text">{partnerFieldErrors.email}</div>}
                 </div>
-                <div>
-                  <label htmlFor="annualAttendees" style={{ display: 'block', marginBottom: '8px', fontSize: '0.9rem', fontWeight: 600, color: isFestivalStyle ? 'var(--text-dark)' : 'white' }}>
-                    Annual Attendees
-                  </label>
-                  <CustomDropdown
-                    options={attendeeOptions}
-                    value={annualAttendees}
-                    onChange={(val) => {
-                      setAnnualAttendees(val);
-                      if (partnerFieldErrors.annualAttendees) setPartnerFieldErrors((p) => ({ ...p, annualAttendees: undefined }));
-                    }}
-                    placeholder="Select Annual Attendees"
-                    isFestivalStyle={isFestivalStyle}
-                    className={partnerFieldErrors.annualAttendees ? 'error' : ''}
+                <div className="field">
+                  <label htmlFor="f-city">City / country</label>
+                  <input
+                    id="f-city"
+                    name="city"
+                    placeholder="Lisbon, Portugal"
+                    className={errors.city ? 'is-invalid' : undefined}
+                    value={values.city}
+                    onChange={handleChange('city')}
                   />
-                  <input type="hidden" name="annualAttendees" value={annualAttendees} />
-                  {partnerFieldErrors.annualAttendees && <div className="form-error-text">{partnerFieldErrors.annualAttendees}</div>}
                 </div>
-                <div style={{ gridColumn: 'span 2', marginTop: '10px' }}>
-                  <button type="submit" className="btn-gradient" style={{ width: '100%', fontSize: '1.1rem', padding: '16px' }}>
-                    {isFestivalStyle ? 'Apply for Festival Partnership' : 'Apply for Access'}
-                  </button>
+                <div className="field">
+                  <label htmlFor="f-link">Instagram or events link</label>
+                  <input
+                    id="f-link"
+                    name="link"
+                    placeholder="@yournight"
+                    className={errors.link ? 'is-invalid' : undefined}
+                    value={values.link}
+                    onChange={handleChange('link')}
+                  />
                 </div>
+                <button
+                  type="submit"
+                  className="btn btn--primary btn--block"
+                  disabled={submitting}
+                >
+                  {submitting ? 'Sending…' : 'Request access'}
+                </button>
+                {serverError ? (
+                  <p
+                    className="access-fine"
+                    style={{ color: 'var(--red)' }}
+                    role="alert"
+                  >
+                    {serverError}
+                  </p>
+                ) : (
+                  <p className="access-fine">
+                    Reviewed by hand. Not everyone gets in on the first ask.
+                  </p>
+                )}
               </form>
+            )}
+          </div>
+        </div>
+      </section>
+
+      {/* FOOTER */}
+      <footer className="footer">
+        <div className="container">
+          <div className="footer-top">
+            <div>
+              <div className="footer-logo">
+                <img src="/assets/logo-imin.png" alt="IMIN" />
+              </div>
+              <div className="footer-tagline">Join · Create · Earn</div>
+            </div>
+            <div className="footer-cols">
+              <div className="footer-col">
+                <span className="footer-col-head">Platform</span>
+                <a href="#problem" className="footer-link">
+                  Problem
+                </a>
+                <a href="#product" className="footer-link">
+                  Product
+                </a>
+                <a href="#future" className="footer-link">
+                  Vision
+                </a>
+              </div>
+              <div className="footer-col">
+                <span className="footer-col-head">Start</span>
+                <a href="#access" className="footer-link">
+                  Request access
+                </a>
+                <a href="#invest" className="footer-link">
+                  For investors
+                </a>
+                <a
+                  href="https://dashboard.imin.wtf"
+                  target="_blank"
+                  rel="noopener"
+                  className="footer-link"
+                >
+                  Organizer dashboard ↗
+                </a>
+              </div>
             </div>
           </div>
-        </section>
-      </div>
-
-      <SiteFooter />
-    </div>
-  );
-}
-
-export default function Home() {
-  return (
-    <Suspense fallback={null}>
-      <HomeContent />
-    </Suspense>
+          <div className="footer-bottom">
+            <span>
+              © 2026 IMIN — built for the people who run the night, and the
+              people who live for it.
+            </span>
+            <span>The two-sided platform for nightlife</span>
+          </div>
+        </div>
+      </footer>
+    </>
   );
 }
