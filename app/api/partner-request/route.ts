@@ -87,6 +87,12 @@ async function sendNotification(d: AccessRequestData): Promise<void> {
     return;
   }
 
+  // EMAIL_TO is a comma-separated list — any number of recipients.
+  const to = (process.env.EMAIL_TO || 'bohdan.shostak.ua@gmail.com')
+    .split(',')
+    .map((addr) => addr.trim())
+    .filter(Boolean);
+
   const res = await fetch('https://api.resend.com/emails', {
     method: 'POST',
     headers: {
@@ -95,7 +101,7 @@ async function sendNotification(d: AccessRequestData): Promise<void> {
     },
     body: JSON.stringify({
       from: process.env.EMAIL_FROM || 'IMIN <onboarding@resend.dev>',
-      to: [process.env.EMAIL_TO || 'bohdan.shostak.ua@gmail.com'],
+      to,
       reply_to: d.email,
       subject: `New IMIN access request — ${d.name} (${d.city})`,
       text: `Name: ${d.name}\nEmail: ${d.email}\nCity: ${d.city}\nLink: ${d.link}`,
