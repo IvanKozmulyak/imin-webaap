@@ -11,6 +11,12 @@ function delay(ms: number): CSSProperties {
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
+// Cal.com booking link. Set NEXT_PUBLIC_CAL_URL (e.g. https://cal.com/bohdan/intro)
+// to make the button book a call; falls back to email until it's set.
+const BOOK_CALL_HREF =
+  process.env.NEXT_PUBLIC_CAL_URL ||
+  'mailto:bohdan.shostak.ua@gmail.com?subject=IMIN%20%E2%80%94%20investor%20conversation&body=Hi%20Bohdan%2C%20saw%20IMIN%20and%20would%20like%20to%20talk.';
+
 interface FormValues {
   name: string;
   email: string;
@@ -709,7 +715,9 @@ export default function Page() {
             </div>
             <div className="cta-actions">
               <a
-                href="mailto:bohdan.shostak.ua@gmail.com?subject=IMIN%20%E2%80%94%20investor%20conversation&body=Hi%20Bohdan%2C%20saw%20IMIN%20and%20would%20like%20to%20talk."
+                href={BOOK_CALL_HREF}
+                target={BOOK_CALL_HREF.startsWith('http') ? '_blank' : undefined}
+                rel={BOOK_CALL_HREF.startsWith('http') ? 'noreferrer' : undefined}
                 className="btn btn--primary"
               >
                 Book a call with Bohdan →

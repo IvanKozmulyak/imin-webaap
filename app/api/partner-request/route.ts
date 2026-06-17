@@ -52,6 +52,11 @@ export async function POST(request: NextRequest) {
       email: accessRequest.email,
     });
 
+    // Notify the team by email. Non-blocking: a save still succeeds if email fails.
+    await sendNotification({ name, email, city, link }).catch((err) =>
+      console.error('Access-request email failed:', err)
+    );
+
     return NextResponse.json({ success: true }, { status: 200 });
   } catch (error: any) {
     console.error('Error processing access request:', error);
@@ -68,5 +73,36 @@ export async function POST(request: NextRequest) {
       { error: 'Failed to process request. Please try again later.' },
       { status: 500 }
     );
+  }
+}
+
+// Sends a notification via Resend's REST API. No SDK — one fetch.
+// Set RESEND_API_KEY to enable; EMAIL_FROM/EMAIL_TO override the defaults.
+// ponytail: onboarding@resend.dev only delivers to the Resend account owner —
+// set EMAIL_FROM to a verified-domain address for real inboxes.
+async function sendNotification(d: AccessRequestData): Promise<void> {
+  const apiKey = process.env.RESEND_API_KEY;
+  if (!apiKey) {
+    console.warn('RESEND_API_KEY unset — skipping access-request email.');
+    return;
+  }
+
+  const res = await fetch('https://api.resend.com/emails', {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${apiKey}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      from: process.env.EMAIL_FROM || 'IMIN <onboarding@resend.dev>',
+      to: [process.env.EMAIL_TO || 'bohdan.shostak.ua@gmail.com'],
+      reply_to: d.email,
+      subject: `New IMIN access request — ${d.name} (${d.city})`,
+      text: `Name: ${d.name}\nEmail: ${d.email}\nCity: ${d.city}\nLink: ${d.link}`,
+    }),
+  });
+
+  if (!res.ok) {
+    throw new Error(`Resend ${res.status}: ${await res.text()}`);
   }
 }
