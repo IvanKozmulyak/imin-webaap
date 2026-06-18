@@ -20,6 +20,7 @@ const BOOK_CALL_HREF =
 interface FormValues {
   name: string;
   email: string;
+  phone: string;
   city: string;
   link: string;
 }
@@ -27,8 +28,8 @@ interface FormValues {
 interface FormErrors {
   name?: boolean;
   email?: boolean;
+  phone?: boolean;
   city?: boolean;
-  link?: boolean;
 }
 
 type FieldName = keyof FormValues;
@@ -39,6 +40,7 @@ export default function Page() {
   const [values, setValues] = useState<FormValues>({
     name: '',
     email: '',
+    phone: '',
     city: '',
     link: '',
   });
@@ -60,18 +62,19 @@ export default function Page() {
 
     const name = values.name.trim();
     const email = values.email.trim();
+    const phone = values.phone.trim();
     const city = values.city.trim();
-    const link = values.link.trim();
+    const link = values.link.trim(); // optional
 
     const nextErrors: FormErrors = {
       name: name === '',
       email: email === '' || !EMAIL_RE.test(email),
+      phone: phone === '',
       city: city === '',
-      link: link === '',
     };
     setErrors(nextErrors);
 
-    const order: FieldName[] = ['name', 'email', 'city', 'link'];
+    const order: (keyof FormErrors)[] = ['name', 'email', 'phone', 'city'];
     const firstInvalid = order.find((f) => nextErrors[f]);
     if (firstInvalid) {
       const el = document.getElementById(`f-${firstInvalid}`);
@@ -84,7 +87,7 @@ export default function Page() {
       const res = await fetch('/api/partner-request', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, email, city, link }),
+        body: JSON.stringify({ name, email, phone, city, link }),
       });
       if (!res.ok) {
         let message = 'Something went wrong. Please try again.';
@@ -773,6 +776,19 @@ export default function Page() {
                   />
                 </div>
                 <div className="field">
+                  <label htmlFor="f-phone">Phone</label>
+                  <input
+                    id="f-phone"
+                    name="phone"
+                    type="tel"
+                    autoComplete="tel"
+                    placeholder="+351 912 345 678"
+                    className={errors.phone ? 'is-invalid' : undefined}
+                    value={values.phone}
+                    onChange={handleChange('phone')}
+                  />
+                </div>
+                <div className="field">
                   <label htmlFor="f-city">City / country</label>
                   <input
                     id="f-city"
@@ -784,12 +800,11 @@ export default function Page() {
                   />
                 </div>
                 <div className="field">
-                  <label htmlFor="f-link">Instagram or events link</label>
+                  <label htmlFor="f-link">Instagram or events link (optional)</label>
                   <input
                     id="f-link"
                     name="link"
                     placeholder="@yournight"
-                    className={errors.link ? 'is-invalid' : undefined}
                     value={values.link}
                     onChange={handleChange('link')}
                   />

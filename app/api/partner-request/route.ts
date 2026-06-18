@@ -5,8 +5,9 @@ export const dynamic = 'force-dynamic';
 interface AccessRequestData {
   name: string;
   email: string;
+  phone: string;
   city: string;
-  link: string;
+  link: string; // optional
 }
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -17,10 +18,11 @@ export async function POST(request: NextRequest) {
 
     const name = body.name?.trim();
     const email = body.email?.trim().toLowerCase();
+    const phone = body.phone?.trim();
     const city = body.city?.trim();
-    const link = body.link?.trim();
+    const link = body.link?.trim() || ''; // optional
 
-    if (!name || !email || !city || !link) {
+    if (!name || !email || !phone || !city) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
     if (!EMAIL_RE.test(email)) {
@@ -28,7 +30,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Email is the delivery channel — if it fails, surface a 500 so the user retries.
-    await sendNotification({ name, email, city, link });
+    await sendNotification({ name, email, phone, city, link });
 
     return NextResponse.json({ success: true }, { status: 200 });
   } catch (error) {
@@ -66,7 +68,7 @@ async function sendNotification(d: AccessRequestData): Promise<void> {
       to,
       reply_to: d.email,
       subject: `New IMIN access request — ${d.name} (${d.city})`,
-      text: `Name: ${d.name}\nEmail: ${d.email}\nCity: ${d.city}\nLink: ${d.link}`,
+      text: `Name: ${d.name}\nEmail: ${d.email}\nPhone: ${d.phone}\nCity: ${d.city}\nLink: ${d.link || '—'}`,
     }),
   });
 
