@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/db/client';
 
 export const dynamic = 'force-dynamic';
 
@@ -10,65 +9,30 @@ interface AccessRequestData {
   link: string;
 }
 
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
 export async function POST(request: NextRequest) {
   try {
     const body: AccessRequestData = await request.json();
 
     const name = body.name?.trim();
-    const email = body.email?.trim();
+    const email = body.email?.trim().toLowerCase();
     const city = body.city?.trim();
     const link = body.link?.trim();
 
-    // Validate required fields
     if (!name || !email || !city || !link) {
-      return NextResponse.json(
-        { error: 'Missing required fields' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
+    }
+    if (!EMAIL_RE.test(email)) {
+      return NextResponse.json({ error: 'Invalid email format' }, { status: 400 });
     }
 
-    // Validate email format
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-      return NextResponse.json(
-        { error: 'Invalid email format' },
-        { status: 400 }
-      );
-    }
-
-    // Save access request to database
-    const accessRequest = await prisma.accessRequest.create({
-      data: {
-        name,
-        email: email.toLowerCase().trim(),
-        city,
-        link,
-      },
-    });
-
-    console.log('Access request saved:', {
-      id: accessRequest.id,
-      name: accessRequest.name,
-      email: accessRequest.email,
-    });
-
-    // Notify the team by email. Non-blocking: a save still succeeds if email fails.
-    await sendNotification({ name, email, city, link }).catch((err) =>
-      console.error('Access-request email failed:', err)
-    );
+    // Email is the delivery channel — if it fails, surface a 500 so the user retries.
+    await sendNotification({ name, email, city, link });
 
     return NextResponse.json({ success: true }, { status: 200 });
-  } catch (error: any) {
+  } catch (error) {
     console.error('Error processing access request:', error);
-
-    // Handle unique constraint violations or other database errors
-    if (error.code === 'P2002') {
-      return NextResponse.json(
-        { error: 'A request with this email already exists.' },
-        { status: 409 }
-      );
-    }
-
     return NextResponse.json(
       { error: 'Failed to process request. Please try again later.' },
       { status: 500 }
@@ -76,15 +40,13 @@ export async function POST(request: NextRequest) {
   }
 }
 
-// Sends a notification via Resend's REST API. No SDK — one fetch.
-// Set RESEND_API_KEY to enable; EMAIL_FROM/EMAIL_TO override the defaults.
+// Sends the request via Resend's REST API. No SDK — one fetch.
 // ponytail: the From domain (imin.support) must be verified in Resend, else
 // sends fail — override with EMAIL_FROM if the domain changes.
 async function sendNotification(d: AccessRequestData): Promise<void> {
   const apiKey = process.env.RESEND_API_KEY;
   if (!apiKey) {
-    console.warn('RESEND_API_KEY unset — skipping access-request email.');
-    return;
+    throw new Error('RESEND_API_KEY unset — cannot deliver access request.');
   }
 
   // EMAIL_TO is a comma-separated list — any number of recipients.
