@@ -1293,6 +1293,105 @@ img { display: block; max-width: 100%; }
 }
 .access-ok p { color: var(--text2); font-size: 0.95rem; }
 
+/* ---- Apply-for-seat CTA + modal ------------------------------------------ */
+.team-apply {
+  margin-top: 14px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--grad);
+  color: #08070d;
+  border: none;
+  border-radius: 999px;
+  padding: 9px 16px;
+  font-family: var(--mono);
+  font-size: 0.66rem;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+.team-apply:hover { opacity: 0.92; }
+
+.modal {
+  width: min(520px, calc(100vw - 32px));
+  background: var(--panel);
+  border: 1px solid var(--hair2);
+  border-radius: 20px;
+  padding: 30px;
+  color: var(--text);
+  box-shadow: 0 40px 120px -40px rgba(0, 0, 0, 0.9);
+}
+.modal::backdrop { background: rgba(8, 7, 13, 0.72); backdrop-filter: blur(4px); }
+.modal-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 22px;
+}
+.modal-eyebrow {
+  font-family: var(--mono);
+  font-size: 0.62rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+.modal-title {
+  font-family: var(--display);
+  font-weight: 800;
+  font-size: 1.9rem;
+  text-transform: uppercase;
+  line-height: 1;
+  margin-top: 8px;
+}
+.modal-sub { color: var(--text2); font-size: 0.9rem; margin-top: 8px; }
+.modal-close {
+  flex: none;
+  background: none;
+  border: 1px solid var(--hair2);
+  color: var(--text2);
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  cursor: pointer;
+  font-size: 1.1rem;
+  line-height: 1;
+}
+.modal-close:hover { color: var(--text); border-color: var(--hair); }
+.field textarea {
+  width: 100%;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid var(--hair2);
+  border-radius: 12px;
+  padding: 13px 16px;
+  color: var(--text);
+  font-family: var(--sans);
+  font-size: 0.95rem;
+  resize: vertical;
+  min-height: 96px;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+.field textarea:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 16%, transparent);
+}
+.field input[type='file'] { padding: 11px 14px; font-size: 0.85rem; cursor: pointer; }
+.field input[type='file']::file-selector-button {
+  background: var(--card-surface);
+  border: 1px solid var(--hair2);
+  color: var(--text);
+  border-radius: 8px;
+  padding: 6px 12px;
+  margin-right: 12px;
+  cursor: pointer;
+  font-family: var(--mono);
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
 /* ==========================================================================
    FOOTER
    ========================================================================== */

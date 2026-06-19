@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, type CSSProperties, type FormEvent, type ChangeEvent } from 'react';
+import { useState, useRef, type CSSProperties, type FormEvent, type ChangeEvent } from 'react';
 import Image from 'next/image';
 import { useLandingEffects } from './useLandingEffects';
 
@@ -110,6 +110,95 @@ export default function Page() {
       setServerError('Network error. Please try again.');
       setSubmitting(false);
     }
+  };
+
+  // --- Growth application modal ---
+  const growthRef = useRef<HTMLDialogElement>(null);
+  const [growth, setGrowth] = useState({
+    name: '',
+    email: '',
+    phone: '',
+    linkedin: '',
+    message: '',
+  });
+  const [resumeFile, setResumeFile] = useState<File | null>(null);
+  const [growthErr, setGrowthErr] = useState<string | null>(null);
+  const [growthSubmitting, setGrowthSubmitting] = useState(false);
+  const [growthDone, setGrowthDone] = useState(false);
+
+  const openGrowth = () => {
+    setGrowthDone(false);
+    setGrowthErr(null);
+    growthRef.current?.showModal();
+  };
+
+  const growthField =
+    (field: keyof typeof growth) =>
+    (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
+      setGrowth((prev) => ({ ...prev, [field]: e.target.value }));
+
+  const fileToBase64 = (file: File) =>
+    new Promise<string>((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () =>
+        resolve((reader.result as string).split(',')[1] ?? '');
+      reader.onerror = () => reject(reader.error);
+      reader.readAsDataURL(file);
+    });
+
+  const handleGrowthSubmit = async (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setGrowthErr(null);
+
+    const name = growth.name.trim();
+    const email = growth.email.trim();
+    const message = growth.message.trim();
+
+    if (!name || !email || !EMAIL_RE.test(email) || !message) {
+      setGrowthErr('Add your name, a valid email, and a short pitch.');
+      return;
+    }
+    if (!resumeFile) {
+      setGrowthErr('Attach your resume (PDF or DOC).');
+      return;
+    }
+    if (resumeFile.size > 5 * 1024 * 1024) {
+      setGrowthErr('Resume must be under 5 MB.');
+      return;
+    }
+
+    setGrowthSubmitting(true);
+    try {
+      const content = await fileToBase64(resumeFile);
+      const res = await fetch('/api/growth-application', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name,
+          email,
+          phone: growth.phone.trim(),
+          linkedin: growth.linkedin.trim(),
+          message,
+          resume: { filename: resumeFile.name, content },
+        }),
+      });
+      if (!res.ok) {
+        let m = 'Something went wrong. Please try again.';
+        try {
+          const data = (await res.json()) as { error?: string };
+          if (data?.error) m = data.error;
+        } catch {
+          /* ignore */
+        }
+        setGrowthErr(m);
+        setGrowthSubmitting(false);
+        return;
+      }
+      setGrowthDone(true);
+    } catch {
+      setGrowthErr('Network error. Please try again.');
+    }
+    setGrowthSubmitting(false);
   };
 
   return (
@@ -706,11 +795,93 @@ export default function Page() {
                   cover product and first sales; this hire turns traction into
                   a curve. Equity on the table.
                 </p>
+                <button type="button" className="team-apply" onClick={openGrowth}>
+                  Apply for this seat →
+                </button>
               </div>
             </div>
           </div>
         </div>
       </section>
+
+      {/* GROWTH APPLICATION MODAL */}
+      <dialog ref={growthRef} className="modal" aria-label="Apply for the Growth co-founder seat">
+        <div className="modal-head">
+          <div>
+            <div className="modal-eyebrow">Growth · Co-founder</div>
+            <div className="modal-title">Apply for the seat</div>
+            <p className="modal-sub">
+              Own scaling demand at IMIN. Tell us your edge and leave your resume —
+              Bohdan &amp; Ivan read every one.
+            </p>
+          </div>
+          <button
+            type="button"
+            className="modal-close"
+            aria-label="Close"
+            onClick={() => growthRef.current?.close()}
+          >
+            ×
+          </button>
+        </div>
+
+        {growthDone ? (
+          <div className="access-ok">
+            <p className="access-ok-title">Application in.</p>
+            <p>Thanks — if there&rsquo;s a fit, we&rsquo;ll be in touch fast.</p>
+            <button
+              type="button"
+              className="btn btn--primary btn--block"
+              style={{ marginTop: 18 }}
+              onClick={() => growthRef.current?.close()}
+            >
+              Close
+            </button>
+          </div>
+        ) : (
+          <form className="access-form" noValidate onSubmit={handleGrowthSubmit}>
+            <div className="field">
+              <label htmlFor="g-name">Name</label>
+              <input id="g-name" value={growth.name} onChange={growthField('name')} placeholder="First and last" />
+            </div>
+            <div className="field">
+              <label htmlFor="g-email">Email</label>
+              <input id="g-email" type="email" value={growth.email} onChange={growthField('email')} placeholder="you@email.com" />
+            </div>
+            <div className="field">
+              <label htmlFor="g-phone">Phone (optional)</label>
+              <input id="g-phone" type="tel" value={growth.phone} onChange={growthField('phone')} placeholder="+351 912 345 678" />
+            </div>
+            <div className="field">
+              <label htmlFor="g-linkedin">LinkedIn (optional)</label>
+              <input id="g-linkedin" value={growth.linkedin} onChange={growthField('linkedin')} placeholder="linkedin.com/in/you" />
+            </div>
+            <div className="field">
+              <label htmlFor="g-message">Why you / your edge</label>
+              <textarea id="g-message" value={growth.message} onChange={growthField('message')} placeholder="What you'd own, what you've scaled before." />
+            </div>
+            <div className="field">
+              <label htmlFor="g-resume">Resume (PDF or DOC, max 5 MB)</label>
+              <input
+                id="g-resume"
+                type="file"
+                accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                onChange={(e) => setResumeFile(e.target.files?.[0] ?? null)}
+              />
+            </div>
+            <button type="submit" className="btn btn--primary btn--block" disabled={growthSubmitting}>
+              {growthSubmitting ? 'Sending…' : 'Send application'}
+            </button>
+            {growthErr ? (
+              <p className="access-fine" style={{ color: 'var(--red)' }} role="alert">
+                {growthErr}
+              </p>
+            ) : (
+              <p className="access-fine">Equity on the table. Read by hand.</p>
+            )}
+          </form>
+        )}
+      </dialog>
 
       {/* DUAL CTA */}
       <section id="invest" className="cta">
