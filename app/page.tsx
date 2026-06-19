@@ -221,6 +221,13 @@ export default function Page() {
         <a href="#top" className="nav-logo" aria-label="IMIN home">
           <img src="/assets/logo-imin.png" alt="IMIN" />
         </a>
+        <div className="nav-sections">
+          <a href="#problem">Problem</a>
+          <a href="#product">Product</a>
+          <a href="#future">Vision</a>
+          <a href="#traction">Traction</a>
+          <a href="#team">Team</a>
+        </div>
         <div className="nav-actions">
           <a href="#invest" className="nav-link">
             For investors
@@ -462,6 +469,29 @@ export default function Page() {
           <div className="posters-grid">
             <figure className="poster-figure reveal">
               <div className="poster-frame">
+                <div className="poster-glow poster-glow--alt" />
+                <Image
+                  src="/assets/poster-studio-vibe.png"
+                  alt="IMIN Poster Studio — pick a vibe from genre-matched aesthetic references"
+                  width={1942}
+                  height={1440}
+                  sizes="(max-width: 700px) 92vw, 46vw"
+                  loading="lazy"
+                />
+              </div>
+              <figcaption className="poster-cap">
+                <span className="poster-num">01</span>
+                <span>
+                  <span className="poster-cap-title">Pick a vibe</span>
+                  <span className="poster-cap-sub">
+                    Choose the aesthetic — IMIN defaults to one from the genre,
+                    change it anytime.
+                  </span>
+                </span>
+              </figcaption>
+            </figure>
+            <figure className="poster-figure reveal" style={delay(100)}>
+              <div className="poster-frame">
                 <div className="poster-glow" />
                 <Image
                   src="/assets/poster-studio-variants.png"
@@ -481,29 +511,6 @@ export default function Page() {
                   <span className="poster-cap-sub">
                     On-brand variants in seconds — pick a favorite and export
                     PNG, no designer brief.
-                  </span>
-                </span>
-              </figcaption>
-            </figure>
-            <figure className="poster-figure reveal" style={delay(100)}>
-              <div className="poster-frame">
-                <div className="poster-glow poster-glow--alt" />
-                <Image
-                  src="/assets/poster-studio-vibe.png"
-                  alt="IMIN Poster Studio — pick a vibe from genre-matched aesthetic references"
-                  width={1942}
-                  height={1440}
-                  sizes="(max-width: 700px) 92vw, 46vw"
-                  loading="lazy"
-                />
-              </div>
-              <figcaption className="poster-cap">
-                <span className="poster-num">01</span>
-                <span>
-                  <span className="poster-cap-title">Pick a vibe</span>
-                  <span className="poster-cap-sub">
-                    Choose the aesthetic — IMIN defaults to one from the genre,
-                    change it anytime.
                   </span>
                 </span>
               </figcaption>

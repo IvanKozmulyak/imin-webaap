@@ -266,6 +266,14 @@ img { display: block; max-width: 100%; }
 }
 .nav-logo { display: inline-flex; align-items: center; }
 .nav-logo img { height: 34px; width: auto; display: block; }
+.nav-sections { display: flex; align-items: center; gap: 24px; }
+.nav-sections a {
+  font: 600 0.85rem var(--sans);
+  color: var(--text2);
+  transition: color 0.2s;
+}
+.nav-sections a:hover, .nav-sections a:focus-visible { color: var(--text); }
+@media (max-width: 880px) { .nav-sections { display: none; } }
 .nav-actions { display: flex; align-items: center; gap: 12px; }
 .nav-link {
   display: inline-flex;
