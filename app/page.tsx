@@ -28,7 +28,6 @@ interface FormValues {
 interface FormErrors {
   name?: boolean;
   email?: boolean;
-  phone?: boolean;
   city?: boolean;
 }
 
@@ -62,19 +61,18 @@ export default function Page() {
 
     const name = values.name.trim();
     const email = values.email.trim();
-    const phone = values.phone.trim();
+    const phone = values.phone.trim(); // optional
     const city = values.city.trim();
     const link = values.link.trim(); // optional
 
     const nextErrors: FormErrors = {
       name: name === '',
       email: email === '' || !EMAIL_RE.test(email),
-      phone: phone === '',
       city: city === '',
     };
     setErrors(nextErrors);
 
-    const order: (keyof FormErrors)[] = ['name', 'email', 'phone', 'city'];
+    const order: (keyof FormErrors)[] = ['name', 'email', 'city'];
     const firstInvalid = order.find((f) => nextErrors[f]);
     if (firstInvalid) {
       const el = document.getElementById(`f-${firstInvalid}`);
@@ -776,14 +774,13 @@ export default function Page() {
                   />
                 </div>
                 <div className="field">
-                  <label htmlFor="f-phone">Phone</label>
+                  <label htmlFor="f-phone">Phone (optional)</label>
                   <input
                     id="f-phone"
                     name="phone"
                     type="tel"
                     autoComplete="tel"
                     placeholder="+351 912 345 678"
-                    className={errors.phone ? 'is-invalid' : undefined}
                     value={values.phone}
                     onChange={handleChange('phone')}
                   />

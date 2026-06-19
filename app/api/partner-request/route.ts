@@ -18,11 +18,11 @@ export async function POST(request: NextRequest) {
 
     const name = body.name?.trim();
     const email = body.email?.trim().toLowerCase();
-    const phone = body.phone?.trim();
+    const phone = body.phone?.trim() || ''; // optional
     const city = body.city?.trim();
     const link = body.link?.trim() || ''; // optional
 
-    if (!name || !email || !phone || !city) {
+    if (!name || !email || !city) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
     if (!EMAIL_RE.test(email)) {
@@ -68,7 +68,7 @@ async function sendNotification(d: AccessRequestData): Promise<void> {
       to,
       reply_to: d.email,
       subject: `New IMIN access request — ${d.name} (${d.city})`,
-      text: `Name: ${d.name}\nEmail: ${d.email}\nPhone: ${d.phone}\nCity: ${d.city}\nLink: ${d.link || '—'}`,
+      text: `Name: ${d.name}\nEmail: ${d.email}\nPhone: ${d.phone || '—'}\nCity: ${d.city}\nLink: ${d.link || '—'}`,
     }),
   });
 
