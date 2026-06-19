@@ -471,8 +471,8 @@ export default function Page() {
               <div className="poster-frame">
                 <div className="poster-glow poster-glow--alt" />
                 <Image
-                  src="/assets/poster-studio-vibe.png"
-                  alt="IMIN Poster Studio — pick a vibe from genre-matched aesthetic references"
+                  src="/assets/poster-studio-variants.png"
+                  alt="IMIN Poster Studio — three AI-generated, export-ready poster variants"
                   width={1942}
                   height={1440}
                   sizes="(max-width: 700px) 92vw, 46vw"
@@ -494,8 +494,8 @@ export default function Page() {
               <div className="poster-frame">
                 <div className="poster-glow" />
                 <Image
-                  src="/assets/poster-studio-variants.png"
-                  alt="IMIN Poster Studio — three AI-generated, export-ready poster variants"
+                  src="/assets/poster-studio-vibe.png"
+                  alt="IMIN Poster Studio — pick a vibe from genre-matched aesthetic references"
                   width={1942}
                   height={1440}
                   sizes="(max-width: 700px) 92vw, 46vw"
