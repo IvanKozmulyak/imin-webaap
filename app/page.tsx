@@ -806,27 +806,20 @@ export default function Page() {
 
       {/* GROWTH APPLICATION MODAL */}
       <dialog ref={growthRef} className="modal" aria-label="Apply for the Growth co-founder seat">
-        <div className="modal-head">
-          <div>
-            <div className="modal-eyebrow">Growth · Co-founder</div>
-            <div className="modal-title">Apply for the seat</div>
-            <p className="modal-sub">
-              Own scaling demand at IMIN. Tell us your edge and leave your resume —
-              Bohdan &amp; Ivan read every one.
-            </p>
-          </div>
-          <button
-            type="button"
-            className="modal-close"
-            aria-label="Close"
-            onClick={() => growthRef.current?.close()}
-          >
-            ×
-          </button>
-        </div>
-
         {growthDone ? (
-          <div className="access-ok">
+          <div className="access-ok access-ok--center">
+            <div className="modal-mark" aria-hidden="true">
+              <svg viewBox="0 0 24 24">
+                <path
+                  d="M20 6 9 17l-5-5"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+            </div>
             <p className="access-ok-title">Application in.</p>
             <p>Thanks — if there&rsquo;s a fit, we&rsquo;ll be in touch fast.</p>
             <button
@@ -839,6 +832,25 @@ export default function Page() {
             </button>
           </div>
         ) : (
+          <>
+          <div className="modal-head">
+            <div>
+              <div className="modal-eyebrow">Growth · Co-founder</div>
+              <div className="modal-title">Apply for the seat</div>
+              <p className="modal-sub">
+                Own scaling demand at IMIN. Tell us your edge and leave your resume —
+                Bohdan &amp; Ivan read every one.
+              </p>
+            </div>
+            <button
+              type="button"
+              className="modal-close"
+              aria-label="Close"
+              onClick={() => growthRef.current?.close()}
+            >
+              ×
+            </button>
+          </div>
           <form className="access-form" noValidate onSubmit={handleGrowthSubmit}>
             <div className="field">
               <label htmlFor="g-name">Name</label>
@@ -880,6 +892,7 @@ export default function Page() {
               <p className="access-fine">Equity on the table. Read by hand.</p>
             )}
           </form>
+          </>
         )}
       </dialog>
 
