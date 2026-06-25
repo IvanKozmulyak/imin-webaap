@@ -1,0 +1,344 @@
+/* ==========================================================================
+   IMIN night-kit — design-system stylesheet
+   Extracted from the IMIN landing globals.css. Components emit classNames only;
+   all styling lives here. Tokens are CSS custom properties on :root.
+   ========================================================================== */
+
+/* Brand fonts. next/font isn't present in the kit, so the --font-* vars stay
+   undefined and the literal family fallbacks resolve — loaded here from Google. */
+@import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=DM+Mono:wght@400;500&family=DM+Sans:wght@400;500;600;700&display=swap');
+
+/* ---- Tokens --------------------------------------------------------------- */
+:root {
+  --bg: #08070d;
+  --panel: #100c1c;
+  --hair: rgba(255, 255, 255, 0.09);
+  --hair2: rgba(255, 255, 255, 0.15);
+  --text: #f4f2fb;
+  --text2: #9a96ad;
+  --text3: #5f5b70;
+  --accent: #16b877;
+  --accent2: #0e8f86;
+  --green: #16b877;
+  --amber: #fbbf24;
+  --red: #ef5b5b;
+  --grad: linear-gradient(120deg, #0e8f86 0%, #24c98a 100%);
+  --maxw: 1180px;
+
+  --display: var(--font-display), 'Barlow Condensed', system-ui, sans-serif;
+  --sans: var(--font-sans), 'DM Sans', system-ui, -apple-system, sans-serif;
+  --mono: var(--font-mono), 'DM Mono', ui-monospace, monospace;
+
+  --card-surface: linear-gradient(180deg, rgba(255, 255, 255, 0.045), rgba(255, 255, 255, 0.008));
+  --card-surface-2: linear-gradient(180deg, rgba(255, 255, 255, 0.045), rgba(255, 255, 255, 0.01));
+}
+
+/* ---- Base ----------------------------------------------------------------- */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--sans);
+  font-size: 16px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+a { color: inherit; text-decoration: none; }
+img { display: block; max-width: 100%; }
+::selection { background: color-mix(in srgb, var(--accent) 32%, transparent); }
+:focus-visible { outline: 2px solid var(--accent2); outline-offset: 3px; }
+
+/* ---- Keyframes ------------------------------------------------------------ */
+@keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.35; } }
+@keyframes modalIn {
+  from { opacity: 0; transform: translateY(10px) scale(0.96); }
+  to { opacity: 1; transform: none; }
+}
+
+/* ==========================================================================
+   Button
+   ========================================================================== */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font: 700 0.98rem var(--sans);
+  padding: 14px 26px;
+  border: none;
+  border-radius: 999px;
+  cursor: pointer;
+}
+.btn--primary {
+  color: #fff;
+  background: var(--grad);
+  box-shadow: 0 0 30px -8px color-mix(in srgb, var(--accent) 60%, transparent);
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+.btn--primary:hover,
+.btn--primary:focus-visible {
+  transform: translateY(-2px);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--accent) 50%, transparent),
+              0 18px 44px -14px color-mix(in srgb, var(--accent) 70%, transparent);
+}
+.btn--ghost {
+  color: var(--text);
+  background: transparent;
+  border: 1px solid var(--hair2);
+  font-weight: 600;
+  transition: border-color 0.2s;
+}
+.btn--ghost:hover,
+.btn--ghost:focus-visible { border-color: var(--text); }
+.btn--block { width: 100%; justify-content: center; }
+
+/* ==========================================================================
+   Eyebrow
+   ========================================================================== */
+.eyebrow {
+  display: inline-block;
+  font-family: var(--mono);
+  font-size: 0.7rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+.eyebrow--green { color: var(--green); }
+.eyebrow-pill {
+  display: inline-block;
+  font-family: var(--mono);
+  font-size: 0.7rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--accent);
+  padding: 8px 15px;
+  border: 1px solid color-mix(in srgb, var(--accent) 28%, transparent);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--accent) 6%, transparent);
+  box-shadow: 0 0 26px -12px color-mix(in srgb, var(--accent) 60%, transparent);
+}
+
+/* ==========================================================================
+   LiveDot
+   ========================================================================== */
+.live-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--green);
+  box-shadow: 0 0 10px var(--green);
+  animation: pulse 2s infinite;
+}
+.live-dot--sm { width: 6px; height: 6px; box-shadow: 0 0 8px var(--green); }
+.live-dot--static { animation: none; }
+
+/* ==========================================================================
+   StatusPill
+   ========================================================================== */
+.status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-family: var(--mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--green);
+  padding: 7px 14px;
+  border: 1px solid color-mix(in srgb, var(--green) 30%, transparent);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--green) 6%, transparent);
+}
+
+/* ==========================================================================
+   Card
+   ========================================================================== */
+.card {
+  padding: clamp(28px, 3vw, 40px);
+  background: var(--card-surface);
+  border: 1px solid var(--hair2);
+  border-radius: 18px;
+}
+.card-eyebrow {
+  font-family: var(--mono);
+  font-size: 0.68rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--accent);
+  display: block;
+  margin-bottom: 16px;
+}
+.card-h3 {
+  font-family: var(--display);
+  font-weight: 700;
+  font-size: clamp(1.5rem, 2.6vw, 2.05rem);
+  line-height: 1.02;
+  letter-spacing: -0.01em;
+  text-transform: uppercase;
+  margin-bottom: 14px;
+}
+.card-body { font-size: 1rem; color: var(--text2); }
+
+/* ==========================================================================
+   StatCard
+   ========================================================================== */
+.stat-card {
+  background: var(--card-surface-2);
+  border: 1px solid var(--hair2);
+  border-radius: 18px;
+  padding: 26px 22px 24px;
+  transition: border-color 0.25s, transform 0.25s;
+}
+.stat-card:hover,
+.stat-card:focus-within {
+  border-color: color-mix(in srgb, var(--accent) 40%, transparent);
+  transform: translateY(-3px);
+}
+.stat-num {
+  font-family: var(--display);
+  font-weight: 800;
+  font-size: clamp(2rem, 3.4vw, 2.8rem);
+  line-height: 1;
+  letter-spacing: -0.02em;
+  display: block;
+}
+.stat-body { font-size: 0.92rem; color: var(--text2); margin-top: 10px; }
+.stat-cite {
+  display: block;
+  font-family: var(--mono);
+  font-style: normal;
+  font-size: 0.64rem;
+  color: var(--text3);
+  letter-spacing: 0.04em;
+  margin-top: 14px;
+}
+
+/* ==========================================================================
+   Pillar
+   ========================================================================== */
+.pillar {
+  background: var(--card-surface-2);
+  border: 1px solid var(--hair2);
+  border-radius: 18px;
+  padding: 30px 26px 34px;
+}
+.pillar-word {
+  font-family: var(--display);
+  font-weight: 800;
+  font-size: 2rem;
+  text-transform: uppercase;
+  letter-spacing: -0.01em;
+  background: var(--grad);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  display: block;
+  margin-bottom: 10px;
+}
+.pillar p { font-size: 0.96rem; color: var(--text2); }
+
+/* ==========================================================================
+   Chip (proof chip)
+   ========================================================================== */
+.proof-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-family: var(--mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.04em;
+  color: var(--text2);
+  padding: 7px 13px;
+  border: 1px solid var(--hair2);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.02);
+}
+
+/* ==========================================================================
+   Field (input / textarea)
+   ========================================================================== */
+.field label {
+  display: block;
+  font-family: var(--mono);
+  font-size: 0.64rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text3);
+  margin-bottom: 7px;
+}
+.field input,
+.field textarea {
+  width: 100%;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid var(--hair2);
+  border-radius: 12px;
+  padding: 13px 16px;
+  color: var(--text);
+  font-family: var(--sans);
+  font-size: 0.95rem;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+.field textarea { resize: vertical; min-height: 96px; }
+.field input:focus,
+.field textarea:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 16%, transparent);
+}
+.field input.is-invalid,
+.field textarea.is-invalid { border-color: var(--red); }
+
+/* ==========================================================================
+   Modal (dialog)
+   ========================================================================== */
+.modal {
+  width: min(420px, calc(100vw - 32px));
+  margin: auto;
+  background: var(--panel);
+  border: 1px solid var(--hair2);
+  border-radius: 18px;
+  padding: 24px;
+  color: var(--text);
+  box-shadow: 0 40px 120px -40px rgba(0, 0, 0, 0.9);
+}
+.modal[open] { animation: modalIn 0.24s cubic-bezier(0.2, 0.7, 0.3, 1); }
+.modal::backdrop { background: rgba(8, 7, 13, 0.72); backdrop-filter: blur(4px); }
+.modal-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 22px;
+}
+.modal-eyebrow {
+  font-family: var(--mono);
+  font-size: 0.62rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+.modal-title {
+  font-family: var(--display);
+  font-weight: 800;
+  font-size: 1.9rem;
+  text-transform: uppercase;
+  line-height: 1;
+  margin-top: 8px;
+}
+.modal-sub { color: var(--text2); font-size: 0.9rem; margin-top: 8px; }
+.modal-close {
+  flex: none;
+  background: none;
+  border: 1px solid var(--hair2);
+  color: var(--text2);
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  cursor: pointer;
+  font-size: 1.1rem;
+  line-height: 1;
+}
+.modal-close:hover { color: var(--text); border-color: var(--hair); }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; }
+}

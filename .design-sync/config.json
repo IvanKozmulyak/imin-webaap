@@ -1,0 +1,15 @@
+{
+  "pkg": "@imin/night-kit",
+  "globalName": "NightKit",
+  "projectId": "be4496a1-6139-4b2d-ad53-928c995195d0",
+  "shape": "package",
+  "buildCmd": "npm run build --prefix design-system",
+  "cssEntry": "src/styles.css",
+  "readmeHeader": ".design-sync/conventions.md",
+  "overrides": {
+    "Modal": { "cardMode": "single", "primaryStory": "ApplyForm", "viewport": "560x640" },
+    "Button": { "cardMode": "column" },
+    "Card": { "cardMode": "column" },
+    "Field": { "cardMode": "column" }
+  }
+}
