@@ -24,7 +24,7 @@ const mono = DM_Mono({
 });
 
 const description =
-  'The operating system that runs the night for organizers — and the app that helps people find an event, and someone to go with. Live product, one paying client, raising our first round.';
+  'The operating system that runs the night for organizers — and the app that helps people find an event, and someone to go with. Live product, validated on real events, raising our first round.';
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://imin.wtf'),

@@ -263,7 +263,7 @@ export default function Page() {
               </a>
             </div>
             <p className="hero-proof">
-              Live product · 1 paying client · Web&nbsp;Summit &rsquo;24 &amp;
+              Live product · validated on real nights · Web&nbsp;Summit &rsquo;24 &amp;
               &rsquo;25 · Metz Startup Challenge winner
             </p>
           </div>
@@ -326,7 +326,7 @@ export default function Page() {
             Not a concept. The wedge is shipping.
           </h2>
           <p className="section-lead product-lead reveal" style={delay(120)}>
-            Real revenue, real organizer, running live today at{' '}
+            Real nights, real organizer, running live today at{' '}
             <a
               href="https://dashboard.imin.wtf"
               target="_blank"
@@ -341,7 +341,7 @@ export default function Page() {
           {/* 01 FORECAST */}
           <div id="forecast" className="feature-row">
             <div className="feature-copy reveal">
-              <span className="feature-eyebrow">01 — Forecast</span>
+              <span className="feature-eyebrow">01 — Forecast · in development</span>
               <h3 className="feature-h3">Know before it&rsquo;s too late.</h3>
               <p className="feature-body">
                 IMIN flags a soft night two weeks out — while you can still push
@@ -364,7 +364,7 @@ export default function Page() {
           {/* 02 MARKETING (flipped) */}
           <div id="marketing" className="feature-row feature-row--flip">
             <div className="feature-copy reveal">
-              <span className="feature-eyebrow">02 — Marketing</span>
+              <span className="feature-eyebrow">02 — Marketing · shipping next</span>
               <h3 className="feature-h3">Marketing that runs itself.</h3>
               <p className="feature-body">
                 Meta Ads, email, SMS and AI-generated posters — built from the
@@ -404,8 +404,8 @@ export default function Page() {
               </div>
               <div className="post-caption">
                 <span className="live-dot live-dot--sm" />
-                Audience: <strong>1,240</strong> past buyers · built
-                automatically
+                Audience: <strong>1,240</strong> past buyers · builds
+                automatically · demo view
               </div>
             </div>
           </div>
@@ -457,7 +457,7 @@ export default function Page() {
       {/* AI POSTER SHOWCASE */}
       <section id="posters" className="section section--bordered">
         <div className="container">
-          <span className="eyebrow reveal">AI creative · inside the dashboard</span>
+          <span className="eyebrow reveal">AI creative · inside the dashboard · live today</span>
           <h2 className="h2 posters-h2 reveal" style={delay(60)}>
             Generate event posters. On-brand. In seconds.
           </h2>
@@ -668,8 +668,8 @@ export default function Page() {
             </div>
             <div className="market-cell">
               <span className="market-label">SAM</span>
-              <span className="market-num">$5.5→21.7B</span>
-              <p>EU event software · 16.5%/yr.</p>
+              <span className="market-num">$9.9B</span>
+              <p>Global event software 2025 · ~16%/yr (Fortune Business Insights).</p>
             </div>
             <div className="market-cell">
               <span className="market-label">SOM</span>
@@ -679,7 +679,7 @@ export default function Page() {
           </div>
           <p className="market-footnote reveal" style={delay(80)}>
             The category is fundable —{' '}
-            <strong>Posh $64M · Fever $527M · Timeleft €18M ARR.</strong> None do
+            <strong>Posh $64M · Fever $500M+ · Timeleft €18M ARR.</strong> None do
             both sides with AI underneath. We do.
           </p>
         </div>
@@ -719,12 +719,21 @@ export default function Page() {
                 co-founder — building the full product.
               </p>
             </li>
-            <li className="timeline-item timeline-item--now reveal" style={delay(200)}>
+            <li className="timeline-item reveal" style={delay(200)}>
+              <span className="timeline-dot" />
+              <span className="timeline-date">Jul 2026 · Luxembourg</span>
+              <p>
+                Completed the University of Luxembourg Incubator&rsquo;s Summer
+                School — the 6M entrepreneurship programme.
+              </p>
+            </li>
+            <li className="timeline-item timeline-item--now reveal" style={delay(250)}>
               <span className="timeline-dot" />
               <span className="timeline-date">Now · Vechirka</span>
               <p>
-                First paying client — house &amp; techno, Metz. Real events live.
-                The flywheel&rsquo;s first node is turning.
+                Customer zero — the founder&rsquo;s own house &amp; techno night
+                in Metz, running on the platform end to end. The
+                flywheel&rsquo;s first node is turning.
               </p>
             </li>
           </ol>
@@ -926,7 +935,7 @@ export default function Page() {
               </span>
               <span className="proof-chip">
                 <span className="live-dot live-dot--sm live-dot--static" />
-                Paying client
+                Validated on real nights
               </span>
               <span className="proof-chip">Web Summit ×2</span>
               <span className="proof-chip">Metz winner</span>
