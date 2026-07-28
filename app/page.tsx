@@ -946,6 +946,7 @@ export default function Page() {
                 target={BOOK_CALL_HREF.startsWith('http') ? '_blank' : undefined}
                 rel={BOOK_CALL_HREF.startsWith('http') ? 'noreferrer' : undefined}
                 className="btn btn--primary"
+                onClick={() => navigator.sendBeacon('/api/call-click')}
               >
                 Book a call with Bohdan →
               </a>
