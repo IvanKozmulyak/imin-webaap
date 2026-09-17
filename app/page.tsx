@@ -219,7 +219,7 @@ export default function Page() {
       {/* NAV */}
       <nav id="iminNav" className="nav">
         <a href="#top" className="nav-logo" aria-label="IMIN home">
-          <img src="/assets/logo-imin.png" alt="IMIN" />
+          <img src="/assets/logo-imin.png" alt="IMIN" width={49} height={65} />
         </a>
         <div className="nav-sections">
           <a href="#problem">Problem</a>
@@ -238,6 +238,7 @@ export default function Page() {
         </div>
       </nav>
 
+      <main id="main">
       {/* HERO */}
       <header id="top" className="hero">
         <div className="hero-grid">
@@ -270,9 +271,13 @@ export default function Page() {
           <div className="hero-visual">
             <div className="hero-mark" data-ambient>
               <div className="hero-mark-glow" />
-              <img
-                src="/assets/imin-logo-mark.png"
+              <Image
+                src="/assets/imin-logo-mark.webp"
                 alt="IM IN — the night, in the letters"
+                width={526}
+                height={696}
+                sizes="(max-width: 700px) 92vw, 400px"
+                priority
               />
               <span className="hero-mark-shine" data-ambient aria-hidden="true" />
             </div>
@@ -352,9 +357,12 @@ export default function Page() {
             <figure className="feature-figure reveal" style={delay(100)}>
               <div className="feature-figure-glow" />
               <div className="screenshot">
-                <img
+                <Image
                   src="/assets/dashboard-home.webp"
                   alt="IMIN dashboard — live event overview with tickets sold, revenue and cycle metrics"
+                  width={2000}
+                  height={992}
+                  sizes="(max-width: 700px) 92vw, 560px"
                   loading="lazy"
                 />
               </div>
@@ -383,7 +391,7 @@ export default function Page() {
                 </div>
                 <div className="post-media">
                   <Image
-                    src="/assets/vechirka-poster.png"
+                    src="/assets/vechirka-poster.webp"
                     alt="Vechirka × Aerogare — AI-generated event poster, Berlin, 7 Jun 2026"
                     width={896}
                     height={1120}
@@ -471,7 +479,7 @@ export default function Page() {
               <div className="poster-frame">
                 <div className="poster-glow poster-glow--alt" />
                 <Image
-                  src="/assets/poster-studio-variants.png"
+                  src="/assets/poster-studio-variants.webp"
                   alt="IMIN Poster Studio — three AI-generated, export-ready poster variants"
                   width={1942}
                   height={1440}
@@ -494,7 +502,7 @@ export default function Page() {
               <div className="poster-frame">
                 <div className="poster-glow" />
                 <Image
-                  src="/assets/poster-studio-vibe.png"
+                  src="/assets/poster-studio-vibe.webp"
                   alt="IMIN Poster Studio — pick a vibe from genre-matched aesthetic references"
                   width={1942}
                   height={1440}
@@ -750,7 +758,7 @@ export default function Page() {
           <div className="team-grid">
             <div className="team-card reveal">
               <div className="team-avatar">
-                <img src="/assets/team-bohdan.jpg" alt="Bohdan Shostak" />
+                <img src="/assets/team-bohdan.jpg" alt="Bohdan Shostak" width={280} height={280} />
               </div>
               <div>
                 <h3 className="team-name">
@@ -776,7 +784,7 @@ export default function Page() {
             </div>
             <div className="team-card reveal" style={delay(90)}>
               <div className="team-avatar">
-                <img src="/assets/team-ivan.jpg" alt="Ivan Kozmulyak" />
+                <img src="/assets/team-ivan.jpg" alt="Ivan Kozmulyak" width={280} height={280} />
               </div>
               <div>
                 <h3 className="team-name">
@@ -1059,13 +1067,15 @@ export default function Page() {
         </div>
       </section>
 
+      </main>
+
       {/* FOOTER */}
       <footer className="footer">
         <div className="container">
           <div className="footer-top">
             <div>
               <div className="footer-logo">
-                <img src="/assets/logo-imin.png" alt="IMIN" />
+                <img src="/assets/logo-imin.png" alt="IMIN" width={49} height={65} />
               </div>
               <div className="footer-tagline">Join · Create · Earn</div>
             </div>
@@ -1097,6 +1107,14 @@ export default function Page() {
                   className="footer-link"
                 >
                   Organizer dashboard ↗
+                </a>
+                <a
+                  href="https://app.imin.wtf/events"
+                  target="_blank"
+                  rel="noopener"
+                  className="footer-link"
+                >
+                  Find events ↗
                 </a>
               </div>
             </div>

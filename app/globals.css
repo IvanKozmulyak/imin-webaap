@@ -11,7 +11,7 @@
   --hair2: rgba(255, 255, 255, 0.15);
   --text: #f4f2fb;
   --text2: #9a96ad;
-  --text3: #5f5b70;
+  --text3: #7f7b95;
   --accent: #16b877;
   --accent2: #0e8f86;
   --green: #16b877;
@@ -396,8 +396,8 @@ img { display: block; max-width: 100%; }
   position: absolute;
   inset: 0;
   pointer-events: none;
-  -webkit-mask-image: url(/assets/imin-logo-mark.png);
-  mask-image: url(/assets/imin-logo-mark.png);
+  -webkit-mask-image: url(/assets/imin-logo-mark.webp);
+  mask-image: url(/assets/imin-logo-mark.webp);
   -webkit-mask-size: 100% 100%;
   mask-size: 100% 100%;
   -webkit-mask-repeat: no-repeat;
@@ -929,7 +929,7 @@ img { display: block; max-width: 100%; }
   border-top: 1px solid var(--hair);
   /* ponytail: no border-bottom — a white hairline read as a seam over the dark photo */
   background-image: linear-gradient(180deg, rgba(8, 7, 13, 0.35) 0%, rgba(8, 7, 13, 0.6) 55%, rgba(8, 7, 13, 0.94) 100%),
-    url(/assets/night.jpg);
+    url(/assets/night.webp);
   background-size: cover;
   background-position: center 38%;
 }

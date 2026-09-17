@@ -23,19 +23,68 @@ const mono = DM_Mono({
   variable: '--font-mono',
 });
 
+const SITE_URL = 'https://imin.wtf';
+const title = 'IMIN — The two-sided platform for nightlife';
+// ≤160 chars so Google shows it whole.
 const description =
-  'The operating system that runs the night for organizers — and the app that helps people find an event, and someone to go with. Live product, validated on real events, raising our first round.';
+  'IMIN runs the night for organizers — AI marketing, ticketing and posters in one dashboard — and helps people find an event, and someone to go with.';
 
 export const metadata: Metadata = {
-  metadataBase: new URL('https://imin.wtf'),
-  title: 'IMIN — The two-sided platform for nightlife',
+  metadataBase: new URL(SITE_URL),
+  title,
   description,
+  applicationName: 'IMIN',
+  alternates: { canonical: '/' },
+  robots: { index: true, follow: true },
   openGraph: {
-    title: 'IMIN — The two-sided platform for nightlife',
+    type: 'website',
+    url: '/',
+    siteName: 'IMIN',
+    locale: 'en_US',
+    title,
     description,
-    images: ['/assets/og-image.svg'],
+    // og:image comes from app/opengraph-image.tsx (PNG — crawlers ignore SVG).
   },
+  twitter: { card: 'summary_large_image', title, description },
   icons: { icon: '/assets/favicon.svg' },
+  // Search Console HTML-tag verification; the tag is omitted while the env var is unset.
+  verification: { google: process.env.GOOGLE_SITE_VERIFICATION },
+};
+
+// Only facts that are already on the page.
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'Organization',
+      '@id': `${SITE_URL}/#organization`,
+      name: 'IMIN',
+      url: `${SITE_URL}/`,
+      logo: `${SITE_URL}/icon.png`,
+      description,
+      founder: [
+        {
+          '@type': 'Person',
+          name: 'Bohdan Shostak',
+          jobTitle: 'CEO',
+          sameAs: 'https://www.linkedin.com/in/bohdan-shostak-653006212/',
+        },
+        {
+          '@type': 'Person',
+          name: 'Ivan Kozmulyak',
+          jobTitle: 'CTO',
+          sameAs: 'https://www.linkedin.com/in/ivan-kozmulyak-a72b2120a/',
+        },
+      ],
+    },
+    {
+      '@type': 'WebSite',
+      '@id': `${SITE_URL}/#website`,
+      url: `${SITE_URL}/`,
+      name: 'IMIN',
+      publisher: { '@id': `${SITE_URL}/#organization` },
+    },
+  ],
 };
 
 export default function RootLayout({
@@ -57,6 +106,10 @@ export default function RootLayout({
             }}
           />
         </noscript>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        />
         {children}
       </body>
     </html>
