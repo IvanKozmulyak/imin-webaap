@@ -142,3 +142,13 @@ Source: proposal prototypes in the session scratchpad (`proposals/{guest,pro}`: 
 - Guest g1–g10 ported onto the built page. g2's price/date line reads the live night (`/api/nights` adds an all-in price: "Sold out" / "Free" / "From €X"). g7 was already done by Track A. g10 label is **"For organizers"** (Ivan's note), not "For creators".
 - Pro p1–p7, p9 ported outside the regions Track M owns. p8 (sideways-scroll hint for screenshots) is superseded by Track M's phone-ready mocks. p5 keeps the scroll-trigger fix and photo right-sizing, not the app-screenshot variants (those images go).
 - b1, b2 (hero states) are Track A, already in.
+
+### Track E design (after M + P are merged)
+
+- URLs: `/` `/pro` (EN, x-default), `/fr` `/fr/pro`, `/es` `/es/pro`, `/uk` `/uk/pro`. Files `public/<lang>/index.html` and `public/<lang>/pro/index.html`, rewrites `/:lang(fr|es|uk)` and `/:lang(fr|es|uk)/pro`, `.html` URLs 308 to the clean ones. `<html lang>`, canonical per page, `hreflang` alternates (en, fr, es, uk, x-default) in every head, `og:locale`, sitemap entries with `alternates.languages`.
+- JS strings: EN stays in the `STR` tables; each language ships `public/assets/js/i18n/<lang>.js` (`window.IMIN_I18N = { guest: {...}, pro: {...} }`), loaded only by that language's pages before `client.js` / `pro.js`, merged over EN. One language = three files, so FR, ES and UK translate in parallel without touching shared files.
+- Dates and prices: `/api/nights?lang=<lang>` already formats day/time per language; prices are formatted in the page with `Intl.NumberFormat(lang)`.
+- Switcher: each item links to the same page in that language, `aria-current` on the active one; footer language list links too.
+- Drift guard: `scripts/check-i18n.mjs` (stdlib) compares each translated page's tag/attribute skeleton with EN (text and translatable attributes ignored) and checks every `IMIN_I18N` key exists in EN `STR`; `npm run check:i18n`, also run by `npm test`.
+- Hand-offs stay English for now: app.imin.wtf ships only EN (`imin-public` `lib/i18n/core.ts:30` `ENABLED_LOCALES = ["en"]`) and dashboard.imin.wtf picks its own language.
+- Copy is translated for meaning and tone: short, casual, second person, informal on both pages (FR "tu", ES "tú", UK "ти") to match the brand voice, unless Ivan says otherwise. Native review recommended for FR.
