@@ -339,7 +339,8 @@
 
   /* ---------- Hero: the night lands on both sides, the creator's questions get answered ---------- */
   const hero = $('#hero');
-  const spots = $$('.dash-shot .spot');
+  // each thought's answer on the drawn dashboard: the poster, the public page and share, check-ins, revenue
+  const spots = $$('.dash-shot [data-spot]').sort((a, b) => a.dataset.spot - b.dataset.spot);
   const thoughts = $$('[data-thoughts] li');
   gsap.set(thoughts, { autoAlpha: 0 });
   gsap.set(['.hero-copy > *', '.dash', '.poster'], { autoAlpha: 0 });
@@ -365,6 +366,9 @@
       .from('.alt-line', { autoAlpha: 0, duration: .8 }, .9)
       .from('.dash', { y: 60, rotateX: 12, transformPerspective: 1200, transformOrigin: '50% 100%', autoAlpha: 0, duration: 1.2, clearProps: 'transform' }, .2)
       .from('.poster', { y: -90, x: 40, rotation: 14, autoAlpha: 0, duration: 1.2, ease: 'power4.out', clearProps: 'transform' }, .5);
+    // the dashboard's figures count up and its chart draws as it lands (pro-motion.js)
+    const figures = window.IMIN_MO && IMIN_MO.m1 && IMIN_MO.m1.heroIn();
+    if (figures) tl.add(figures, .45);
     // four thoughts, about 2.4 s; each one lights up its answer on the dashboard
     const t0 = 1.6;
     thoughts.forEach((b, i) => {

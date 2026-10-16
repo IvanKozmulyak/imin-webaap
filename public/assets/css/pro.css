@@ -131,7 +131,6 @@ button{font:inherit;color:inherit;cursor:pointer}
 .dash-url{flex:1;max-width:220px;padding:3px 10px;border-radius:4px;background:rgba(244,239,231,.06);font-size:11px;color:var(--quiet);overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
 .dash-shot{position:relative;overflow:hidden;border-radius:0 0 8px 8px}
 .dash-shot img{display:block;width:100%;height:auto}
-.spot{position:absolute;left:var(--x);top:var(--y);width:var(--w);height:var(--h);border:2px solid var(--haze);border-radius:8px;box-shadow:0 0 0 4px rgba(156,140,255,.18),0 0 24px rgba(156,140,255,.35);opacity:0;visibility:hidden;pointer-events:none;will-change:transform,opacity}
 @keyframes blink{50%{opacity:.3}}
 
 .poster{position:absolute;right:0;bottom:0;width:38%;rotate:3deg;transition:rotate .6s var(--ease)}

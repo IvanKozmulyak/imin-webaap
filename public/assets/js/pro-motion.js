@@ -56,7 +56,136 @@ window.IMIN_MO = (() => {
 })();
 
 /* === M1: overview (hero, six-tabs end state) and analytics === */
+(() => {
+  const MO = window.IMIN_MO;
+  const N = MO.night;
+  // Numbers only these mocks show, on top of the shared night; each one adds up to the night's own totals.
+  Object.assign(N, {
+    // Standard tickets sold on each of the 7 days up to the night (8–14 Nov); Early Bird had sold out before. Sums to 44.
+    standardByDay: [3, 4, 4, 6, 7, 9, 11],
+    // Tagged links: the tickets per tier bought through each (65 of the 84) and the visitors each brought.
+    links: [
+      { source: 'instagram', visitors: 412, tickets: [18, 20, 0] },
+      { source: 'telegram', visitors: 96, tickets: [8, 9, 0] },
+      { source: 'poster', visitors: 58, tickets: [4, 6, 0] }
+    ]
+  });
 
+  // The dashboard's "Revenue" is what buyers paid, fee included; night.revenue (ticket prices) is its "after imin fee".
+  const cents = t => Math.round((t.price + MO.fee(t.price)) * 100);
+  const paid = counts => counts.reduce((a, n, i) => a + n * cents(N.tiers[i]), 0) / 100;
+  N.revenueGross = paid(N.tiers.map(t => t.sold)); // 1196.16 = 40 × 11.49 + 44 × 16.74
+  // percentages are whole, as prod rounds them: never 100% before a sell-out, never 0% once something sold
+  const pct = (a, b) => { const p = Math.round(a / b * 100); return p >= 100 && a < b ? 99 : p <= 0 && a > 0 ? 1 : p; };
+  const VAL = {
+    sold: [N.sold, 'int'], in: [N.checkedIn, 'int'], net: [N.revenue, 'eur'], gross: [N.revenueGross, 'eur'],
+    cap: [pct(N.sold, N.capacity), 'pct'], rate: [pct(N.checkedIn, N.sold), 'pct']
+  };
+  N.links.forEach((l, i) => { VAL['src' + i] = [paid(l.tickets), 'eur']; });
+  MO.m1 = { values: VAL, heroIn: () => null };
+
+  const gsap = window.gsap;
+  if (!gsap) return;
+  const motion = !MO.reduce;
+  const $$ = (s, r) => Array.from(r.querySelectorAll(s));
+  const LOCALE = { en: 'en-GB', fr: 'fr-FR', es: 'es-ES', uk: 'uk-UA' };
+  let F;
+  const fmt = (f, v) => {
+    if (!F) {
+      const nf = o => new Intl.NumberFormat(LOCALE[document.documentElement.lang] || 'en-GB', o);
+      const int = nf({ maximumFractionDigits: 0 }), eur = nf({ style: 'currency', currency: 'EUR', minimumFractionDigits: 2, maximumFractionDigits: 2 }), per = nf({ style: 'percent', maximumFractionDigits: 0 });
+      F = { int: n => int.format(Math.round(n)), eur: n => eur.format(n), pct: n => per.format(Math.round(n) / 100) };
+    }
+    return F[f](v);
+  };
+
+  // whether words follow el on its line: a text run right after it, or the next box beside it rather than below
+  const wordsAfter = el => {
+    let s = el.nextSibling;
+    while (s && s.nodeType === 3 && !s.textContent.trim()) s = s.nextSibling;
+    if (!s) return false;
+    return s.nodeType === 3 || s.offsetTop < el.offsetTop + el.offsetHeight * .66;
+  };
+
+  // One paused timeline per mock: figures count up from 0, bars grow, the chart draws, the links' page comes in last.
+  // It sets its first frame now, so nothing jumps when it starts; its last frame puts the page's own text back.
+  const build = root => {
+    const tl = gsap.timeline({ paused: true });
+    const late = el => !!el.closest('.m1-page');
+    const nums = [];
+    $$('[data-m1-n]', root).forEach((el, i) => {
+      const [to, f] = VAL[el.dataset.m1N] || [];
+      if (to == null) return;
+      const n = { el, f, text: el.dataset.m1Text = el.dataset.m1Text || el.textContent, at: late(el) ? 1.25 + (i % 3) * .12 : 0 };
+      nums.push(n);
+      const o = { v: 0 };
+      el.textContent = fmt(f, 0);
+      tl.to(o, { v: to, duration: late(el) ? .7 : 1.1, ease: 'power2.out', onUpdate: () => { if (!n.tick) el.textContent = fmt(f, o.v); }, onComplete: () => { el.textContent = n.text; el.style.minWidth = ''; } }, n.at);
+    });
+    // As it starts, fonts in: DM Sans has no tabular digits here, so a counting figure would nudge the words on its line.
+    // Those figures tick in at their value, the way the dashboard shows a changed figure; figures on their own count up.
+    let started = false;
+    tl.eventCallback('onStart', () => {
+      if (started) return;
+      started = true;
+      nums.forEach(n => { n.el.textContent = n.text; });
+      nums.forEach(n => { n.tick = wordsAfter(n.el); n.w = parseFloat(getComputedStyle(n.el).width); });
+      nums.forEach(n => {
+        if (n.tick) gsap.fromTo(n.el, { display: 'inline-block', y: '.45em', autoAlpha: 0 }, { y: 0, autoAlpha: 1, duration: .45, delay: n.at + .15, ease: 'power3.out', clearProps: 'all' });
+        else { if (n.w) n.el.style.minWidth = n.w + 'px'; n.el.textContent = fmt(n.f, 0); }
+      });
+    });
+    const grow = (bars, at, stagger) => bars.length && tl.fromTo(bars, { scaleX: 0 }, { scaleX: (i, el) => parseFloat(getComputedStyle(el.parentNode).getPropertyValue('--v')) || 0, duration: 1, ease: 'power2.out', stagger, clearProps: 'transform' }, at);
+    grow($$('.m1-bar i', root).filter(b => !b.closest('.m1-sell')), 0, .06);
+    grow($$('.m1-sell .m1-bar i', root), .45, .15);
+    const plot = root.querySelector('.m1-plot svg');
+    if (plot) {
+      tl.fromTo(plot, { clipPath: 'inset(0% 100% 0% 0%)' }, { clipPath: 'inset(0% 0% 0% 0%)', duration: 1.1, ease: 'power1.inOut', clearProps: 'clipPath' }, .1)
+        .fromTo($$('.m1-dot', root), { scale: 0 }, { scale: 1, duration: .3, ease: 'back.out(2.2)', stagger: 1.1 / 7, clearProps: 'transform' }, .12);
+    }
+    const page = root.querySelector('.m1-page');
+    if (page) {
+      tl.from(page, { autoAlpha: 0, y: 14, duration: .6, ease: 'power3.out' }, 1)
+        .from($$('tbody tr', page), { autoAlpha: 0, x: -10, duration: .45, ease: 'power2.out', stagger: .12 }, 1.2);
+    }
+    return tl;
+  };
+
+  // the live dot pulses only while its dashboard is on screen
+  const pulse = el => { if ('IntersectionObserver' in window) new IntersectionObserver(([e]) => el.classList.toggle('is-in', e.isIntersecting)).observe(el); };
+
+  // Hero: pro.js adds this to the dashboard's entrance, then lights the four answers.
+  const ov = document.querySelector('.dash-shot [data-m1-ov]');
+  if (ov) {
+    pulse(ov);
+    MO.m1.heroIn = () => (motion ? build(ov).paused(false) : gsap.timeline());
+  }
+
+  // Six tabs: when they close, the same Overview fills the browser frame; it counts up once, as it appears.
+  const host = document.querySelector('[data-m1-clone]');
+  if (ov && host) {
+    const view = ov.cloneNode(true);
+    view.querySelector('.m1-sprite').remove();
+    view.querySelectorAll('.m1-ring').forEach(r => r.remove());
+    // the frame carries the label; the copy inside is its picture
+    ['data-m1-ov', 'role', 'aria-label'].forEach(a => view.removeAttribute(a));
+    view.classList.add('is-tab');
+    host.replaceChildren(view);
+    pulse(view);
+    if (motion) {
+      const tl = build(view);
+      const watch = new MutationObserver(() => { if (host.classList.contains('is-on')) { watch.disconnect(); tl.play(0); } });
+      watch.observe(host, { attributes: true, attributeFilter: ['class'] });
+    }
+  }
+
+  // Step 06: plays once, when a third of it is on screen.
+  const an = document.querySelector('[data-m1-an]');
+  if (an && motion) {
+    const tl = build(an);
+    MO.onView(an, () => tl.play(0));
+  }
+})();
 /* === end M1 === */
 
 

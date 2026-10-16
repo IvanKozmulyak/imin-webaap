@@ -127,11 +127,93 @@
             <span class="side-tag">What you see</span>
             <div class="dash-bar"><span class="dash-dots" aria-hidden="true"><i></i><i></i><i></i></span><span class="dash-url">dashboard.imin.wtf</span></div>
             <div class="dash-shot">
-              <img src="/assets/img/app/overview.webp" width="1185" height="990" alt="The IMIN dashboard for one night: tickets sold, revenue, check-ins and sales over time" loading="eager" decoding="async">
-              <span class="spot" data-spot="0" style="--x:23.6%;--y:14.7%;--w:11.3%;--h:16.7%" aria-hidden="true"></span>
-              <span class="spot" data-spot="1" style="--x:21.6%;--y:42.5%;--w:18.1%;--h:18.1%" aria-hidden="true"></span>
-              <span class="spot" data-spot="2" style="--x:60.4%;--y:42.5%;--w:18.1%;--h:18.1%" aria-hidden="true"></span>
-              <span class="spot" data-spot="3" style="--x:41%;--y:42.5%;--w:18.1%;--h:18.1%" aria-hidden="true"></span>
+              <!-- M1: the event Overview as dashboard.imin.wtf draws it, for the example night. pro-motion.js clones it into the six-tabs scene. -->
+              <div class="mo m1-ov" data-m1-ov role="img" aria-label="Example: the IMIN dashboard for Saturday Night, live on Sat 14 Nov 2026 at 23:00 in Metz. 84 of 120 tickets sold, €1,196.16 revenue, €1,060.00 after the imin fee, 72 checked in, and sales by day over the last 7 days.">
+                <svg class="m1-sprite" aria-hidden="true" focusable="false">
+                  <defs><linearGradient id="m1-area" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-opacity=".35"/><stop offset="1" stop-opacity="0"/></linearGradient></defs>
+                  <symbol id="m1-plus" viewBox="0 0 24 24"><path d="M5 12h14M12 5v14"/></symbol>
+                  <symbol id="m1-home" viewBox="0 0 24 24"><rect width="7" height="9" x="3" y="3" rx="1"/><rect width="7" height="5" x="14" y="3" rx="1"/><rect width="7" height="9" x="14" y="12" rx="1"/><rect width="7" height="5" x="3" y="16" rx="1"/></symbol>
+                  <symbol id="m1-cal" viewBox="0 0 24 24"><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></symbol>
+                  <symbol id="m1-mail" viewBox="0 0 24 24"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></symbol>
+                  <symbol id="m1-bars" viewBox="0 0 24 24"><path d="M18 20V10M12 20V4M6 20v-6"/></symbol>
+                  <symbol id="m1-users" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></symbol>
+                  <symbol id="m1-gear" viewBox="0 0 24 24"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></symbol>
+                  <symbol id="m1-spark" viewBox="0 0 24 24"><path d="M9.94 15.5A2 2 0 0 0 8.5 14.06l-6.14-1.58a.5.5 0 0 1 0-.96L8.5 9.94A2 2 0 0 0 9.94 8.5l1.58-6.14a.5.5 0 0 1 .96 0l1.58 6.14a2 2 0 0 0 1.44 1.44l6.14 1.58a.5.5 0 0 1 0 .96l-6.14 1.58a2 2 0 0 0-1.44 1.44l-1.58 6.14a.5.5 0 0 1-.96 0z"/></symbol>
+                  <symbol id="m1-scan" viewBox="0 0 24 24"><path d="M3 7V5a2 2 0 0 1 2-2h2M17 3h2a2 2 0 0 1 2 2v2M21 17v2a2 2 0 0 1-2 2h-2M7 21H5a2 2 0 0 1-2-2v-2M7 12h10"/></symbol>
+                  <symbol id="m1-ext" viewBox="0 0 24 24"><path d="M15 3h6v6M10 14 21 3M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/></symbol>
+                  <symbol id="m1-share" viewBox="0 0 24 24"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m8.59 13.51 6.83 3.98M15.41 6.51l-6.82 3.98"/></symbol>
+                  <symbol id="m1-pin" viewBox="0 0 24 24"><path d="M20 10c0 5-5.54 10.19-7.4 11.8a1 1 0 0 1-1.2 0C9.54 20.19 4 15 4 10a8 8 0 0 1 16 0"/><circle cx="12" cy="10" r="3"/></symbol>
+                  <symbol id="m1-dl" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></symbol>
+                  <symbol id="m1-refresh" viewBox="0 0 24 24"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8M21 3v5h-5M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16M8 16H3v5"/></symbol>
+                </svg>
+                <span class="mo-example">Example</span>
+                <div class="m1-o">
+                  <div class="m1-side">
+                    <span class="m1-btn m1-btn--go m1-new"><svg class="m1-i"><use href="#m1-plus"/></svg>New event</span>
+                    <ul class="m1-nav">
+                      <li><svg class="m1-i"><use href="#m1-home"/></svg>Dashboard</li>
+                      <li class="is-on"><svg class="m1-i"><use href="#m1-cal"/></svg>Events</li>
+                      <li><svg class="m1-i"><use href="#m1-mail"/></svg>Marketing</li>
+                      <li><svg class="m1-i"><use href="#m1-bars"/></svg>Analytics</li>
+                      <li><svg class="m1-i"><use href="#m1-users"/></svg>Audience</li>
+                      <li><svg class="m1-i"><use href="#m1-gear"/></svg>Settings</li>
+                    </ul>
+                    <p class="m1-tools">Tools</p>
+                    <ul class="m1-nav">
+                      <li><svg class="m1-i"><use href="#m1-spark"/></svg>AI Studio</li>
+                      <li><svg class="m1-i"><use href="#m1-scan"/></svg>Door scanner</li>
+                    </ul>
+                  </div>
+                  <div class="m1-main">
+                    <p class="m1-crumbs"><span>Events</span><i>›</i><b>Saturday Night</b></p>
+                    <div class="m1-hero">
+                      <span class="m1-poster">
+                        <img src="/assets/img/photos/p-dj.jpg" alt="" width="1066" height="1600" decoding="async">
+                        <svg viewBox="0 0 169.58 224.95" fill="currentColor"><use href="#logo-s"/></svg>
+                        <b>Saturday Night</b>
+                        <i class="m1-ring" data-spot="0"></i>
+                      </span>
+                      <div class="m1-tb"><span class="m1-chip"><i></i>Live</span><b class="m1-title">Saturday Night</b></div>
+                      <div class="m1-acts">
+                        <span class="m1-lit"><span class="m1-btn m1-btn--go"><svg class="m1-i"><use href="#m1-ext"/></svg>View public page</span><span class="m1-btn"><svg class="m1-i"><use href="#m1-share"/></svg>Share</span><i class="m1-ring" data-spot="1"></i></span>
+                        <span class="m1-btn">Edit</span>
+                      </div>
+                      <p class="m1-meta"><span><svg class="m1-i"><use href="#m1-cal"/></svg>Sat, 14 Nov 2026 · 23:00</span><span><svg class="m1-i"><use href="#m1-pin"/></svg>Metz</span><span><svg class="m1-i"><use href="#m1-users"/></svg>120 cap</span></p>
+                      <div class="m1-figs">
+                        <div class="m1-sold">
+                          <p class="m1-fl"><span><b class="m1-fv" data-m1-n="sold">84</b> / 120 sold</span> <em>70%</em> <span class="m1-w">all time</span></p>
+                          <span class="m1-bar" style="--v:.7"><i></i></span>
+                        </div>
+                        <p class="m1-fl"><span class="m1-lit"><span><b data-m1-n="gross">€1,196.16</b> revenue</span> <span><b data-m1-n="net">€1,060.00</b> after imin fee</span> <span class="m1-w">all time</span><i class="m1-ring" data-spot="3"></i></span></p>
+                        <p class="m1-fl"><span class="m1-lit"><span><b data-m1-n="in">72</b> checked in</span> <span class="m1-w">all time</span><i class="m1-ring" data-spot="2"></i></span></p>
+                        <p class="m1-note">Service fee included, less refunds and open or lost chargebacks</p>
+                      </div>
+                    </div>
+                    <p class="m1-tabs"><span class="is-on">Overview</span><span>Predictor</span><span>Tickets<i>3</i></span><span>Orders</span><span>Media</span><span>Promote</span><span>Audience</span><span>Analytics</span><span>Refund requests</span></p>
+                    <div class="m1-kpis">
+                      <div class="m1-k"><span class="m1-kl">Sold</span><p class="m1-kv"><b data-m1-n="sold">84</b> <span class="m1-w">all time</span></p><span class="m1-bar" style="--v:.7"><i></i></span><span class="m1-ks">of 120 · 70%</span></div>
+                      <div class="m1-k"><span class="m1-kl">Revenue</span><p class="m1-kv"><b data-m1-n="gross">€1,196.16</b> <span class="m1-w">all time</span></p><span class="m1-ks">After imin fee · €1,060.00</span><span class="m1-ks m1-note">Service fee included, less refunds and open or lost chargebacks</span></div>
+                      <div class="m1-k"><span class="m1-kl">Checked in</span><p class="m1-kv"><b data-m1-n="in">72</b> <span class="m1-w">all time</span></p><span class="m1-ks">of 84 sold · 86% at the door</span></div>
+                      <div class="m1-k"><span class="m1-kl">Days out</span><p class="m1-kv"><b>0</b></p></div>
+                    </div>
+                    <div class="m1-row">
+                      <div class="m1-card m1-chart">
+                        <p class="m1-ch"><b>Sales by day · last 7 days</b><span class="m1-range"><i class="is-on">7d</i><i>14d</i><i>30d</i><i>90d</i></span></p>
+                        <div class="m1-plot">
+                          <svg viewBox="0 0 572 142" preserveAspectRatio="none"><path class="m1-area" d="M0 107.15L95.33 95.53L190.67 95.53L286 72.29L381.33 60.67L476.67 37.44L572 14.2L572 142L0 142Z"/><path class="m1-line" d="M0 107.15L95.33 95.53L190.67 95.53L286 72.29L381.33 60.67L476.67 37.44L572 14.2"/><path class="m1-base" d="M0 142H572"/></svg>
+                          <i class="m1-dot" style="--x:0;--y:75.46"></i><i class="m1-dot" style="--x:16.67;--y:67.27"></i><i class="m1-dot" style="--x:33.33;--y:67.27"></i><i class="m1-dot" style="--x:50;--y:50.91"></i><i class="m1-dot" style="--x:66.67;--y:42.73"></i><i class="m1-dot" style="--x:83.33;--y:26.36"></i><i class="m1-dot" style="--x:100;--y:10"></i>
+                        </div>
+                        <p class="m1-days"><span style="--x:0">8 Nov</span><span style="--x:16.67">9 Nov</span><span style="--x:33.33">10 Nov</span><span style="--x:50">11 Nov</span><span style="--x:66.67">12 Nov</span><span style="--x:83.33">13 Nov</span><b style="--x:100">14 Nov</b></p>
+                      </div>
+                      <div class="m1-card m1-quick">
+                        <p class="m1-ch"><b>Quick actions</b></p>
+                        <span class="m1-act"><span class="m1-ai"><svg class="m1-i"><use href="#m1-dl"/></svg></span><span><b>Download attendee CSV</b><small>One row per sold ticket, with check-in time</small></span></span>
+                        <span class="m1-act"><span class="m1-ai"><svg class="m1-i"><use href="#m1-scan"/></svg></span><span><b>Open door scanner</b><small>t.imin.wtf</small></span></span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
           <!-- the guest's side -->
@@ -141,11 +223,11 @@
             <img src="/assets/img/photos/p-dj.jpg" alt="A DJ playing, hands up in front" loading="eager" decoding="async">
             <div class="p-top">
               <svg viewBox="0 0 169.58 224.95" aria-label="IMIN" role="img" fill="currentColor"><use href="#logo-s"/></svg>
-              <p class="p-when">Sat 31.10<small>15:00 – 18:00</small></p>
+              <p class="p-when">Sat 14.11<small>23:00 – 05:00</small></p>
             </div>
             <div class="p-body">
-              <p class="p-title">Halloween CoffeeShop Rave</p>
-              <p class="p-meta">DJ · Costume contest · Metz</p>
+              <p class="p-title">Saturday Night</p>
+              <p class="p-meta">House &amp; Techno · Metz</p>
             </div>
             <div class="beat" aria-hidden="true"><i></i></div>
             </figure>
@@ -211,7 +293,8 @@
               <div class="cw cw-sheets" style="--x:370;--y:292;--w:540;--r:-0.6;--mx:0;--my:480;--mw:460"><div class="cw-h"><span class="fv fv-sheets"><svg viewBox="0 0 16 16" aria-hidden="true"><path fill="#fff" d="M4 3h8v10H4z"/><path fill="#0F9D58" d="M5 7h6v1H5zm0 2h6v1H5zm0 2h6v1H5zM7.5 7h1v5h-1z"/></svg></span><b>Sheets</b><span>Guest list SAT (copy) (2)</span></div><div class="cw-b"><p class="gs-fx"><i>fx</i>=IF(C4="paid";"✓";"?")</p><table class="gs"><tr><th></th><th>A</th><th>B</th><th>C</th><th>D</th></tr><tr><th>1</th><td><b>Name</b></td><td><b>+1</b></td><td><b>Paid?</b></td><td><b>In</b></td></tr><tr><th>2</th><td>Marta K.</td><td>1</td><td>paid</td><td>✓</td></tr><tr><th>3</th><td>Andrii</td><td>2</td><td class="q">?</td><td></td></tr><tr><th>4</th><td>sofiia_dnb</td><td>0</td><td class="q sel">stripe?</td><td></td></tr><tr><th>5</th><td>Max + friend</td><td>1</td><td>paid</td><td></td></tr><tr><th>6</th><td>Olena (DJ)</td><td>3</td><td>guest</td><td>✓</td></tr><tr><th>7</th><td>from DMs</td><td>?</td><td class="q">?</td><td></td></tr></table></div></div>
               <div class="cw cw-ig" style="--x:772;--y:312;--w:360;--r:2;--mx:100;--my:540;--mw:360"><div class="cw-h"><span class="fv fv-ig"><i></i></span><b class="ig-logo">Instagram</b><span>Insights · last 7 days</span></div><div class="cw-b"><p class="ig-top"><b>2,341</b><span>accounts reached</span></p><div class="ig-bars"><i style="--h:30%"></i><i style="--h:44%"></i><i style="--h:38%"></i><i style="--h:66%"></i><i style="--h:88%"></i><i style="--h:100%"></i><i style="--h:50%"></i></div><p class="ig-row"><span>Link taps</span><span>312</span></p><p class="ig-row"><span>Tickets sold</span><em>not tracked</em></p><p class="ig-row"><span>Who came back</span><em>not tracked</em></p></div></div>
             </div>
-            <div class="bv-imin"><img src="/assets/img/app/overview.webp" alt="IMIN dashboard: the whole night in one place" loading="lazy" decoding="async"></div>
+            <!-- M1: pro-motion.js fills this with a copy of the hero's Overview -->
+            <div class="bv-imin" data-m1-clone role="img" aria-label="Example: the same night in one IMIN tab. The event page shows 84 of 120 tickets sold, €1,196.16 revenue, 72 checked in and sales by day."></div>
           </div>
         </div>
         <p class="brw-count" data-count>6 tabs for one night</p>
@@ -399,7 +482,46 @@
             <h3 class="t-h2">The after</h3>
             <p>Who came, what sold and which links worked, in your dashboard.</p>
           </div>
-          <figure class="mock m-after"><div class="shot"><img src="/assets/img/app/analytics.webp" width="1818" height="1200" alt="How it sold: tickets, net revenue, capacity, check-in and sell-through by tier" loading="lazy" decoding="async"></div></figure>
+          <figure class="mock m-after"><div class="shot">
+            <!-- M1: the event's Analytics tab after the night, and the Analytics page's tagged links -->
+            <div class="mo m1-an" data-m1-an role="img" aria-label="Example: the dashboard after the night. How it sold: 84 tickets sold, €1,196.16 revenue, 70% of capacity, and 72 of 84 ticket holders scanned at the door. Sell-through by tier, and on the Analytics page the revenue and visitors from each tagged link: Instagram, Telegram and the poster QR code.">
+              <span class="mo-example">Example</span>
+              <div class="m1-a">
+                <div class="m1-ah">
+                  <b class="m1-at">How it sold</b>
+                  <span class="m1-acts"><span class="m1-btn"><svg class="m1-i"><use href="#m1-refresh"/></svg>Refresh</span><span class="m1-btn"><svg class="m1-i"><use href="#m1-dl"/></svg>Export attendees (CSV)</span></span>
+                </div>
+                <div class="m1-tiles">
+                  <div class="m1-t"><span class="m1-kl">Tickets sold</span><p class="m1-kv"><b data-m1-n="sold">84</b> <span class="m1-w">refunded and revoked tickets not counted · all time</span></p></div>
+                  <div class="m1-t"><span class="m1-kl">Revenue</span><p class="m1-kv"><b data-m1-n="gross">€1,196.16</b> <span class="m1-w">service fee included, less refunds and open or lost chargebacks · all time</span></p></div>
+                  <div class="m1-t"><span class="m1-kl">Capacity</span><p class="m1-kv"><b data-m1-n="cap">70%</b> <span class="m1-w">84 of 120 sold · all time</span></p><span class="m1-bar" style="--v:.7"><i></i></span></div>
+                  <div class="m1-t"><span class="m1-kl">Check-in rate</span><p class="m1-kv"><b data-m1-n="rate">86%</b> <span class="m1-w">72 of 84 scanned at the door · all time</span></p><span class="m1-bar" style="--v:.8571"><i></i></span></div>
+                </div>
+                <div class="m1-cols">
+                  <div class="m1-card m1-sell">
+                    <p class="m1-ch"><b>Sell-through</b><span>sold of each tier’s tickets · all time</span></p>
+                    <div class="m1-sr"><p><b>Early Bird <span>€10.00</span></b> <em>40/40 · 100%</em></p><span class="m1-bar" style="--v:1"><i></i></span></div>
+                    <div class="m1-sr"><p><b>Standard <span>€15.00</span></b> <em>44/60 · 73%</em></p><span class="m1-bar" style="--v:.7333"><i></i></span></div>
+                    <div class="m1-sr"><p><b>Door <span>€20.00</span></b> <em>0/20 · 0%</em></p><span class="m1-bar" style="--v:0"><i></i></span></div>
+                    <p class="m1-total"><span>All tiers</span> <em>84/120 · 70%</em></p>
+                  </div>
+                  <!-- another page of the dashboard: Analytics, in the sidebar -->
+                  <div class="m1-page">
+                    <p class="m1-ph"><b>Analytics</b><span>Where your buyers come from. Tag your links and sales from them show up here.</span></p>
+                    <p class="m1-ch"><b>Revenue by source</b><span>all time</span></p>
+                    <table class="m1-table">
+                      <thead><tr><th>Source</th><th>Revenue</th><th>Visitors</th></tr></thead>
+                      <tbody>
+                        <tr><td>instagram</td><td><span data-m1-n="src0">€541.62</span></td><td>412</td></tr>
+                        <tr><td>telegram</td><td><span data-m1-n="src1">€242.58</span></td><td>96</td></tr>
+                        <tr><td>poster</td><td><span data-m1-n="src2">€146.40</span></td><td>58</td></tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div></figure>
         </li>
       </ol>
       <div class="sec-foot">
