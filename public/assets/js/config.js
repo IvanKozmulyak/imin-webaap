@@ -41,7 +41,5 @@ window.IMIN = {
   /* Nights shown on the guest page, by their app.imin.wtf event id. Name, date, time and place
      come live from the event itself; a night that is over, cancelled or unpublished drops out,
      and with none left the page shows its "no date yet" state. */
-  events: [
-    { id: 'ef3b1f87-2cc6-4697-94e6-1cd37881905d' }
-  ]
+  events: []
 };
