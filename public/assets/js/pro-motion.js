@@ -191,7 +191,258 @@ window.IMIN_MO = (() => {
 
 
 /* === M2: create, studio, tickets === */
+// Step 01 builder, step 02 concepts to posters, step 03 tiers. Counts come from IMIN_MO.night;
+// the words they type or swap are read from the HTML, so a translated page animates its own copy.
+(() => {
+  const MO = window.IMIN_MO;
+  if (!MO) return;
+  const N = MO.night;
+  N.type = 'Club';      // step 01: the event type picked in the builder (a club night)
+  N.country = 'France'; // step 01: the builder's country field (Metz)
 
+  const q = (r, k) => r.querySelector(`[data-m2="${k}"]`);
+  const qa = (r, k) => Array.from(r.querySelectorAll(`[data-m2="${k}"]`));
+  const set = (el, c, on = true) => { if (el) el.classList.toggle(c, on); };
+  const val = el => el.querySelector('.m2-v');
+  const wait = MO.wait;
+  const press = async el => { set(el, 'is-press'); await wait(150); set(el, 'is-press', false); };
+
+  // Types `text` back into a field one character at a time; `each` mirrors every step elsewhere.
+  const typeIn = async (box, text, ms, each) => {
+    set(box, 'is-typing');
+    for (let i = 1; i <= text.length; i++) {
+      val(box).textContent = text.slice(0, i);
+      set(box, 'is-empty', false);
+      if (each) each(text.slice(0, i), i);
+      await wait(ms);
+    }
+    set(box, 'is-typing', false);
+  };
+
+  // Arms a board in its first state and plays it once in view. Reduced motion never arms,
+  // so the HTML (the final state) stays as it is; `done` lands on that same final state.
+  const board = (root, arm, play, done) => {
+    if (!root || MO.reduce) return;
+    // the first state is set without transitions, so nothing rewinds on screen at load
+    set(root, 'm2-still');
+    arm();
+    void root.offsetWidth;
+    requestAnimationFrame(() => set(root, 'm2-still', false));
+    MO.onView(root, final => (final ? done() : play().then(done, done)));
+  };
+
+  /* ---- 01 the page: type the night in, the preview follows ---- */
+  const page = document.querySelector('.m2-page');
+  if (page) {
+    const f = k => q(page, k);
+    const name = f('name'), genre = f('genre'), type = f('type'), starts = f('starts'), ends = f('ends');
+    const country = f('country'), city = f('city'), scroll = f('scroll'), chips = f('chips');
+    const chipG = f('chip-genre'), chipT = f('chip-type');
+    const pvName = f('pv-name'), pvDate = f('pv-date'), pvDur = f('pv-dur'), pvPlace = f('pv-place');
+    const nameText = val(name).textContent, cityText = val(city).textContent;
+    const empties = [name, genre, starts, ends, country, city, pvName, pvDate, pvPlace];
+    const fields = [name, genre, starts, ends, country, city];
+    board(page,
+      () => {
+        empties.forEach(el => set(el, 'is-empty'));
+        [name, city, pvName].forEach(el => { val(el).textContent = ''; });
+        set(type, 'is-on', false);
+        [chips, pvDur].forEach(el => set(el, 'is-shut'));
+        [chipG, chipT].forEach(el => set(el, 'is-off'));
+        set(scroll, 'is-top');
+        ['is-a', 'is-dis'].forEach(c => set(city, c));
+      },
+      async () => {
+        await wait(300);
+        set(name, 'is-focus');
+        await typeIn(name, nameText, 50, s => { val(pvName).textContent = s; set(pvName, 'is-empty', false); });
+        await wait(200);
+        set(name, 'is-focus', false);
+        set(genre, 'is-focus');
+        await wait(250);
+        set(genre, 'is-empty', false);
+        set(chips, 'is-shut', false);
+        set(chipG, 'is-off', false);
+        await wait(300);
+        set(genre, 'is-focus', false);
+        set(type, 'is-on');
+        set(chipT, 'is-off', false);
+        await wait(400);
+        // on to the date: a start presets the end two hours later, as the builder does, then the end is moved
+        set(scroll, 'is-top', false);
+        set(scroll, 'is-mid');
+        await wait(450);
+        set(starts, 'is-focus');
+        await wait(200);
+        [starts, ends, pvDate].forEach(el => set(el, 'is-empty', false));
+        [ends, pvDate, pvDur].forEach(el => set(el, 'is-a'));
+        set(pvDur, 'is-shut', false);
+        await wait(400);
+        set(starts, 'is-focus', false);
+        set(ends, 'is-focus');
+        await wait(300);
+        [ends, pvDate, pvDur].forEach(el => set(el, 'is-a', false));
+        await wait(300);
+        set(ends, 'is-focus', false);
+        // then the place: the country first, the city search opens after it
+        set(scroll, 'is-mid', false);
+        await wait(300);
+        set(country, 'is-focus');
+        await wait(200);
+        [country, pvPlace].forEach(el => set(el, 'is-empty', false));
+        set(pvPlace, 'is-a');
+        ['is-a', 'is-dis'].forEach(c => set(city, c, false));
+        await wait(250);
+        set(country, 'is-focus', false);
+        set(city, 'is-focus');
+        await typeIn(city, cityText, 70);
+        await wait(200);
+        set(pvPlace, 'is-a', false);
+        set(city, 'is-focus', false);
+      },
+      () => {
+        empties.forEach(el => set(el, 'is-empty', false));
+        val(name).textContent = val(pvName).textContent = nameText;
+        val(city).textContent = cityText;
+        fields.forEach(el => { set(el, 'is-focus', false); set(el, 'is-typing', false); });
+        set(type, 'is-on');
+        [chips, pvDur].forEach(el => set(el, 'is-shut', false));
+        [chipG, chipT].forEach(el => set(el, 'is-off', false));
+        [ends, pvDate, pvDur, pvPlace, city].forEach(el => set(el, 'is-a', false));
+        set(city, 'is-dis', false);
+        set(scroll, 'is-top', false);
+        set(scroll, 'is-mid', false);
+      });
+  }
+
+  /* ---- 02 the poster: a brief, three concepts, one picked; a vibe, three posters ---- */
+  const pst = document.querySelector('.m2-poster');
+  if (pst) {
+    const f = k => q(pst, k);
+    const brief = f('brief'), count = f('count'), gen = f('gen'), status = f('status'), empty = f('empty');
+    const c1 = f('c1'), c2 = f('c2'), d1 = f('d1'), d2 = f('d2'), use = f('use'), aiIn = f('ai-in'), aiR = f('ai-r');
+    const v1 = f('v1'), v2 = f('v2'), genp = f('genp'), vars = f('vars'), p1 = f('p1');
+    const step1 = pst.querySelector('.m2-st1'), vibeLabel = pst.querySelector('.m2-pfl .m2-f1');
+    const briefText = val(brief).textContent, t1 = d1.textContent, t2 = d2.textContent;
+    count.textContent = briefText.length;
+    // descriptions arrive the way AI Studio streams them: 6 characters every 18 ms
+    const stream = async (el, text) => {
+      set(el.parentNode, 'is-run');
+      for (let i = 6; i < text.length + 6; i += 6) { el.textContent = text.slice(0, i); await wait(18); }
+      set(el.parentNode, 'is-run', false);
+    };
+    board(pst,
+      () => {
+        ['is-ai', 'is-v1'].forEach(c => set(pst, c));
+        set(brief, 'is-empty');
+        val(brief).textContent = '';
+        count.textContent = '0';
+        set(gen, 'is-dim');
+        status.dataset.s = '0';
+        set(empty, 'is-on');
+        [c1, c2].forEach(el => set(el, 'is-off'));
+        d1.textContent = d2.textContent = '';
+        [step1, vibeLabel].forEach(el => set(el, 'is-a'));
+        set(v1, 'is-on');
+        set(v2, 'is-on', false);
+        set(p1, 'is-sel', false);
+      },
+      async () => {
+        await wait(300);
+        set(brief, 'is-focus');
+        await typeIn(brief, briefText, 10, (s, i) => { count.textContent = i; if (i >= 10) set(gen, 'is-dim', false); });
+        await wait(150);
+        set(brief, 'is-focus', false);
+        await press(gen);
+        set(gen, 'is-a');
+        set(empty, 'is-a');
+        // on a phone the studio is one column: the page scrolls on to the concepts
+        const y = aiR.getBoundingClientRect().top - aiIn.getBoundingClientRect().top - parseFloat(getComputedStyle(aiIn).paddingTop);
+        if (y > 4) aiIn.style.translate = `0 ${-Math.round(y)}px`;
+        await wait(450);
+        set(gen, 'is-a', false);
+        ['is-on', 'is-a'].forEach(c => set(empty, c, false));
+        status.dataset.s = '1';
+        [c1, c2].forEach(el => set(el, 'is-off', false));
+        await stream(d1, t1);
+        await stream(d2, t2);
+        delete status.dataset.s;
+        await wait(250);
+        await press(use);
+        await wait(200);
+        // the concept becomes a draft night; its posters are made in Poster Studio
+        set(pst, 'is-ai', false);
+        await wait(700);
+        set(v1, 'is-on', false);
+        set(v2, 'is-on');
+        set(vibeLabel, 'is-a', false);
+        await wait(400);
+        await press(genp);
+        set(vars, 'is-a');
+        set(pst, 'is-gen');
+        set(pst, 'is-v1', false);
+        set(step1, 'is-a', false);
+        await wait(700);
+        set(vars, 'is-a', false);
+        set(pst, 'is-gen', false);
+        set(p1, 'is-sel');
+        await wait(500);
+      },
+      () => {
+        ['is-ai', 'is-v1', 'is-gen'].forEach(c => set(pst, c, false));
+        ['is-empty', 'is-focus', 'is-typing'].forEach(c => set(brief, c, false));
+        val(brief).textContent = briefText;
+        count.textContent = briefText.length;
+        ['is-dim', 'is-a'].forEach(c => set(gen, c, false));
+        delete status.dataset.s;
+        ['is-on', 'is-a'].forEach(c => set(empty, c, false));
+        [c1, c2].forEach(el => set(el, 'is-off', false));
+        d1.textContent = t1;
+        d2.textContent = t2;
+        [step1, vibeLabel, vars].forEach(el => set(el, 'is-a', false));
+        set(v1, 'is-on', false);
+        set(v2, 'is-on');
+        set(p1, 'is-sel');
+        aiIn.style.translate = '';
+      });
+  }
+
+  /* ---- 03 tickets: the night's tiers fill up, Early Bird sells out ---- */
+  const tix = document.querySelector('.m2-tix');
+  if (tix) (() => {
+    const T = N.tiers, n = T.length;
+    const fills = qa(tix, 'fill'), sold = qa(tix, 'sold'), caps = qa(tix, 'cap'), left = qa(tix, 'left'), state = qa(tix, 'state'), price = qa(tix, 'price');
+    const share = t => (t.cap > 0 ? Math.min(1, t.sold / t.cap) : 0);
+    if (sold.length !== 2 * n || left.length !== n) return; // the markup draws one row per tier of the night
+    // the legend lists the tiers first, then the rows do: index i and i + n are the same tier
+    const show = (i, s) => {
+      const t = T[i];
+      sold[i].textContent = sold[i + n].textContent = s;
+      left[i].textContent = Math.max(0, t.cap - s);
+      set(state[i], 'is-out', t.cap > 0 && s >= t.cap);
+    };
+    qa(tix, 'cols').forEach(el => { el.style.gridTemplateColumns = T.map(t => `${t.cap}fr`).join(' '); });
+    q(tix, 'total').textContent = N.capacity;
+    T.forEach((t, i) => {
+      [fills[i], fills[i + n]].forEach(el => el.style.setProperty('--f', share(t).toFixed(4)));
+      caps[i].textContent = caps[i + n].textContent = t.cap;
+      price[i].textContent = MO.eur(t.price);
+      show(i, t.sold);
+    });
+    board(tix,
+      () => { set(tix, 'is-zero'); T.forEach((t, i) => show(i, 0)); },
+      async () => {
+        await wait(250);
+        set(tix, 'is-zero', false);
+        // the bars ease to their share in CSS over 1.6 s; the counts follow the same curve
+        await Promise.all(T.map(async (t, i) => {
+          await wait(i * 120);
+          await MO.countUp(sold[i + n], t.sold, { dur: 1.6, fmt: x => { const s = Math.round(x); show(i, s); return String(s); } });
+        }));
+      },
+      () => { set(tix, 'is-zero', false); T.forEach((t, i) => show(i, t.sold)); });
+  })();
+})();
 /* === end M2 === */
 
 
