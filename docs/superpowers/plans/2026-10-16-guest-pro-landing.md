@@ -166,3 +166,28 @@ Build: imin-api `POST /api/v1/public/orgs/{slug}/follow` reusing DoorOptInServic
 - Branch `feat/guest-pro-landing` (local only, NOT pushed) at the commit adding this note; preview `next start -p 3401` from this worktree.
 - In flight when paused (may be incomplete): translators in worktrees `landing-fr`, `landing-es`, `landing-uk` (patches → scratchpad `track-<lang>.patch`); fresh reviewer of 9fb3f95..HEAD. On resume: check their worktrees/patches, merge translations (add `<script src="/assets/js/beat.js" defer>` before i18n/en.js in all six translated pages), `npm test` (check:i18n), triage review findings.
 - Still open: Spotify playlist URL; ask Ivan before pushing `main` (= prod deploy); one real form submission after deploy.
+
+## Review 2026-10-16 (fresh reviewer, 9fb3f95..1fc8181): triage
+
+Verdict FIX_REQUIRED (0 critical, 3 high, 9 medium, 9 low). Approved fixes (worker, review-fix mode), in this worktree, EN pages + shared code; markup deltas are ported to the translated pages when they merge:
+1. `/api/pitch` and `/api/call-click` (and `/api/subscribe` while it exists): reject unless `Content-Type: application/json`, `Sec-Fetch-Site` (when sent) is `same-origin`, and `Origin` (when sent) is this site; per-IP in-memory limit (ponytail: per instance, Vercel WAF rule if abused). Guard logic in `lib/`, one `node --test` per branch. Separate Resend key for site mail is Ivan's call.
+2. No push until FR/ES/UK pages are merged; `check:i18n` fails when the English heads declare a language whose pages are missing.
+3. Price: `free` only when every open tier is €0; mixed free + paid → new kind `freeOrFrom` (minor = cheapest paid, all-in) → "Free or from €X"; the test that locked the wrong behaviour changes.
+4. Date-soon state: "I'm in" scrolls/focuses the email form without the "sent" ✓ or the reply bubble.
+5. (Consent text from the client) → closed by the Audience follow change (server-checked version, double opt-in); no change here.
+6. Honeypots: `hidden` (not off-screen), names no autofill matches; client never returns silently.
+7. Reduced motion (or no GSAP): six-tabs shows its end state (`.bv-imin.is-on`, IMIN tab active, `tabsOne`).
+8. /pro hero guest poster gets the `mo-example` chip and "Example" in its label.
+9. "Bohdan writes to you within 24 hours" / "set up your first nights with you" → HUMAN PROMISE rows for Ivan; no sign-up alert exists (imin-api `AuthService`). Ask Ivan.
+10. `check-i18n.mjs`: hreflang languages ⊆ existing pages; compare `src`/`name`/`type`/`for` values; `IMIN_I18N.pick` survives every language file and `en` stays; `JSON.parse` every ld+json; identical-copy ratio over all copy (not only Latin), names list excluded.
+11. Tests for the route guards via `lib/` functions (UUID/5-id guard, upstream 404 vs 502, pitch validation and caps).
+12. Language control: accessible name starts with the visible code (visually hidden text after it), no mismatching `aria-label`.
+13. Mock consistency: Eventbrite "Standard · €15 — 16 left", Canva poster "SAT · 23:00".
+14. Tests for the weekday-dot strip and the `startsAt` guard in `lib/nights.ts`.
+15. No-JS: hide both forms under `.no-js` (contact line stays).
+16. `client.js`: sane fallback when `i18n/en.js` is missing; intro lock always cleared (`finally`).
+17. `/api/nights`: 400 on unknown query params and on `lang` outside en/fr/es/uk.
+18. No change: `/legal/notice` is 404 in prod, `/legal` is the notice (imin-public `lib/legal/docs.ts`).
+19. Sitemap: `x-default` alternate.
+20. `/api/nights` `s-maxage=60`.
+21. Nights lasting 24 h or more show the end date ("Fri 06.11, 20:00 – Sun 08.11, 23:00"), event timezone, with a UTC-vs-zone fixture.
