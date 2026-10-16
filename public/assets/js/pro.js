@@ -62,25 +62,23 @@
   /* tells the team someone started booking; a failed beacon never holds up the visitor's click */
   const ping = url => { try { navigator.sendBeacon(url); } catch (e) {} };
 
-  /* links from config; channels without a link yet are hidden, the call falls back to the form */
+  /* links from config (page links, then the shared ones); a link with no URL yet stays hidden, the call falls back to the form */
   $$('[data-link]').forEach(a => {
     const k = a.dataset.link;
-    const u = L[k];
+    const u = L[k] || ((window.IMIN && window.IMIN.links) || {})[k];
     if (u) {
       a.href = u;
       a.hidden = false;
       if (k === 'call') a.addEventListener('click', () => ping('/api/call-click'));
       return;
     }
-    if (k === 'whatsapp' || k === 'telegram') a.hidden = true;
-    if (k === 'call') {
-      a.removeAttribute('target');
-      a.removeAttribute('rel');
-      if (!a.dataset.pitch) a.dataset.pitch = 'planned';
-      a.href = '#pitch';
-      const ico = $('use', a);
-      if (ico) ico.setAttribute('href', '#i-arrow-right');
-    }
+    if (k !== 'call') { a.hidden = true; return; }
+    a.removeAttribute('target');
+    a.removeAttribute('rel');
+    if (!a.dataset.pitch) a.dataset.pitch = 'planned';
+    a.href = '#pitch';
+    const ico = $('use', a);
+    if (ico) ico.setAttribute('href', '#i-arrow-right');
   });
 
   /* CREATE YOUR NIGHT: count it, and remember the visit so a return shows the softer ways in */

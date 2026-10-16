@@ -8,10 +8,8 @@ window.IMIN = {
     signIn: 'https://app.imin.wtf/auth/sign-in',      // guest account
     creatorSignIn: 'https://dashboard.imin.wtf/auth/login', // "Already creating? Sign in"
     allNights: 'https://app.imin.wtf/events',
-    channel: 'https://www.instagram.com/imin.wtf/',   // TODO: the "I'm in" broadcast channel link
     instagram: 'https://www.instagram.com/imin.wtf/',
-    threads: 'https://www.threads.net/@imin.wtf',
-    tiktok: '',                                       // shown once it is active
+    threads: 'https://www.threads.com/@imin.wtf',
     playlist: '',                                     // TODO: Spotify "Friday playlist" link
     privacy: 'https://app.imin.wtf/legal/privacy'
   },
@@ -22,10 +20,7 @@ window.IMIN = {
       signUp: 'https://dashboard.imin.wtf/auth/signup',
       signIn: 'https://dashboard.imin.wtf/auth/login',
       nights: '/',                                     // the guest page
-      instagramCreators: 'https://www.instagram.com/imin.wtf/', // TODO: @imin.pro or the creators account once it exists
       instagram: 'https://www.instagram.com/imin.wtf/',
-      whatsapp: '',                                    // TODO: https://wa.me/<Bohdan's number>
-      telegram: '',                                    // TODO: https://t.me/<username>
       call: 'https://cal.com/bohdan-shostak',
       privacy: 'https://app.imin.wtf/legal/privacy'
     },
