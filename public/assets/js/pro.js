@@ -1,5 +1,33 @@
 /* IMIN · creators page imin.wtf/pro */
 (() => {
+  /* Every sentence and amount this script writes into the page, by <html lang>. {name} slots go through fill(). */
+  const STR = {
+    en: {
+      whatPlanned: 'What’s the night?',
+      whatIdea: 'What’s the idea?',
+      whatCompany: 'What’s the occasion?',
+      errName: 'Add your name, then send.',
+      errContact: 'Add an email or Instagram, then send.',
+      errWhat: 'Add a few words about the night, then send.',
+      errLink: 'The link should start with https://',
+      errConsent: 'Tick the box so we can use these details to answer you.',
+      errSend: 'That didn’t go through. Try again, or write to contact@imin.support.',
+      doneTitle: 'Got it, {name}.',
+      doneText: 'We’ll answer within 24 hours at {contact}.',
+      free: 'Free',
+      eur: n => '€' + (Number.isInteger(n) ? n : n.toFixed(2)),
+      cents: n => '€' + n.toFixed(2),
+      zero: '€0',
+      feeNote: 'The fee is on top of your price, and the buyer sees it before paying.',
+      freeNote: 'Free nights are free. No fee for you, no fee for your guests.',
+      tabsMany: '6 tabs for one night',
+      tabsOne: '1 tab for the whole night',
+      you: 'You'
+    }
+  };
+  const T = STR[document.documentElement.lang] || STR.en;
+  const fill = (s, v) => s.replace(/\{(\w+)\}/g, (_, k) => v[k] ?? '');
+
   const $ = (s, r = document) => r.querySelector(s);
   const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
   const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -25,11 +53,19 @@
     $$('details.lang[open]').forEach(d => { if (!d.contains(e.target)) d.open = false; });
   });
 
+  /* tells the team someone started booking; a failed beacon never holds up the visitor's click */
+  const ping = url => { try { navigator.sendBeacon(url); } catch (e) {} };
+
   /* links from config; channels without a link yet are hidden, the call falls back to the form */
   $$('[data-link]').forEach(a => {
     const k = a.dataset.link;
     const u = L[k];
-    if (u) { a.href = u; return; }
+    if (u) {
+      a.href = u;
+      a.hidden = false;
+      if (k === 'call') a.addEventListener('click', () => ping('/api/call-click'));
+      return;
+    }
     if (k === 'whatsapp' || k === 'telegram') a.hidden = true;
     if (k === 'call') {
       a.removeAttribute('target');
@@ -70,7 +106,7 @@
   const pitch = $('#pitch');
   const form = $('#pitch-form');
   const whatLabel = $('[data-what-label]');
-  const WHAT = { planned: 'What’s the night?', idea: 'What’s the idea?', company: 'What’s the occasion?' };
+  const WHAT = { planned: T.whatPlanned, idea: T.whatIdea, company: T.whatCompany };
   const setType = t => {
     const r = form.elements.type;
     Array.from(r).forEach(i => { i.checked = i.value === t; });
@@ -89,43 +125,53 @@
 
   const err = $('[data-pitch-err]');
   const done = $('[data-pitch-done]');
+  const ERR = { name: T.errName, contact: T.errContact, what: T.errWhat };
+  const fail = (msg, field) => { err.textContent = msg; err.hidden = false; if (field) field.focus(); };
+  let sending = false;
   form.addEventListener('submit', async e => {
     e.preventDefault();
+    if (sending) return;
     err.hidden = true;
     if (form.elements.company_site.value) return;
     const bad = ['name', 'contact', 'what'].map(n => form.elements[n]).find(f => !f.value.trim());
-    if (bad) { err.textContent = 'Add ' + ({ name: 'your name', contact: 'an email or Instagram', what: 'a few words about the night' })[bad.name] + ', then send.'; err.hidden = false; bad.focus(); return; }
+    if (bad) return fail(ERR[bad.name], bad);
     const link = form.elements.link;
-    if (link.value && !link.checkValidity()) { err.textContent = 'The link should start with https://'; err.hidden = false; link.focus(); return; }
-    if (!form.elements.ok.checked) { err.textContent = 'Tick the box so we can use these details to answer you.'; err.hidden = false; return; }
+    // the server takes https links only, so say so here rather than after a failed send
+    if (link.value && (!link.checkValidity() || !/^https:\/\//i.test(link.value.trim()))) return fail(T.errLink, link);
+    if (!form.elements.ok.checked) return fail(T.errConsent);
     const data = Object.fromEntries(new FormData(form));
     delete data.company_site;
     data.consent = true;
     data.lang = document.documentElement.lang;
     track('pitch_form_submit', { type: data.type });
-    if (C.pitchEndpoint) {
-      try { await fetch(C.pitchEndpoint, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) }); }
-      catch (x) { err.textContent = 'That didn’t go through. Try again, or write to contact@imin.support.'; err.hidden = false; return; }
+    sending = true;
+    try {
+      if (!C.pitchEndpoint) throw new Error('no pitch endpoint');
+      const res = await fetch(C.pitchEndpoint, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
+      if (!res.ok) throw new Error('pitch ' + res.status);
+    } catch (x) {
+      return fail(T.errSend);
+    } finally {
+      sending = false;
     }
     form.hidden = true;
     done.innerHTML = '<svg class="ico gen" aria-hidden="true"><use href="#i-check"/></svg><div class="gen"><b></b><p></p></div>';
-    $('b', done).textContent = 'Got it, ' + data.name.trim().split(/\s+/)[0] + '.';
-    $('p', done).textContent = 'We’ll answer within 24 hours at ' + data.contact.trim() + '.';
+    $('b', done).textContent = fill(T.doneTitle, { name: data.name.trim().split(/\s+/)[0] });
+    $('p', done).textContent = fill(T.doneText, { contact: data.contact.trim() });
     if (window.ScrollTrigger) ScrollTrigger.refresh();
   });
 
   /* ---------- Earn: what the buyer pays ---------- */
   const range = $('#calc-price');
   if (range) {
-    const eur = n => '€' + (Number.isInteger(n) ? n : n.toFixed(2));
-    const cents = n => '€' + n.toFixed(2);
+    const { eur, cents } = T;
     const paint = () => {
       const p = Number(range.value);
       const fee = p ? Math.round((p * 0.05 + 0.99) * 100) / 100 : 0;
-      $('[data-price]').textContent = p ? eur(p) : 'Free';
-      $('[data-total]').textContent = p ? cents(p + fee) : '€0';
-      $('[data-fee]').textContent = p ? cents(fee) : '€0';
-      $('[data-note]').textContent = p ? 'The fee is on top of your price, and the buyer sees it before paying.' : 'Free nights are free. No fee for you, no fee for your guests.';
+      $('[data-price]').textContent = p ? eur(p) : T.free;
+      $('[data-total]').textContent = p ? cents(p + fee) : T.zero;
+      $('[data-fee]').textContent = p ? cents(fee) : T.zero;
+      $('[data-note]').textContent = p ? T.feeNote : T.freeNote;
       range.style.setProperty('--p', (p / Number(range.max) * 100) + '%');
     };
     range.addEventListener('input', paint);
@@ -135,7 +181,7 @@
   /* ---------- IMIN x you ---------- */
   const you = $('[data-you]');
   const yourName = $('#imx-name');
-  if (you && yourName) yourName.addEventListener('input', () => { you.textContent = yourName.value.trim() || 'You'; });
+  if (you && yourName) yourName.addEventListener('input', () => { you.textContent = yourName.value.trim() || T.you; });
 
   /* ---------- FAQ: smooth open and close ---------- */
   $$('.acc details').forEach(d => {
@@ -373,7 +419,7 @@
       onUpdate: () => {
         const t = pile.time();
         show(t >= 6.6 ? 6 : Math.min(5, Math.floor(t + .35)));
-        count.textContent = t >= 6.6 ? '1 tab for the whole night' : '6 tabs for one night';
+        count.textContent = t >= 6.6 ? T.tabsOne : T.tabsMany;
       }
     });
     wins.slice(1).forEach((w, i) => pile.fromTo(w, { y: 90, scale: .9, opacity: 0, rotation: 4 }, { y: 0, scale: 1, opacity: 1, rotation: 0, duration: .55, ease: 'back.out(1.4)' }, i + .65));

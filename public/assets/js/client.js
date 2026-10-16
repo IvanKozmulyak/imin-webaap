@@ -1,8 +1,43 @@
 
 (() => {
+  /* Every string this script puts on the page. Another language adds its own key, picked by <html lang>. */
+  const STRINGS = {
+    en: {
+      intro: ['should I go out tonight?', 'Don’t overthink it.', 'Music first. Come as you are.', 'I’m in'],
+      typing: 'IMIN is typing',
+      imIn: 'I’m in',
+      soon: 'Coming soon',
+      ready: { playlist: 'Listen' },
+      night: {
+        label: 'The next night',
+        notif: n => (n.city ? `Hey. ${n.day} in ${n.city}. Music first. You in?` : `Hey. ${n.day}. Music first. You in?`)
+      },
+      noDate: {
+        label: 'The next night, date to come',
+        when: '??.??',
+        time: 'Date soon',
+        title: 'The next one',
+        meta: 'Music first · Metz',
+        notif: 'Next date’s not out yet. Want it first?',
+        dockWhen: 'Next date soon',
+        dockWhat: 'Want it first?'
+      },
+      mail: {
+        needConsent: 'Switch on “Send me IMIN news” first.',
+        badEmail: 'That email doesn’t look right.',
+        failed: 'That didn’t go through. Try again, or write to ',
+        done: 'You’re on the list. See you soon.'
+      }
+    }
+  };
+  const LANG = (document.documentElement.lang || 'en').toLowerCase().slice(0, 2);
+  const STR = STRINGS[LANG] || STRINGS.en;
+  const CFG = window.IMIN || {};
+
   const $ = (s, r = document) => r.querySelector(s);
   const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
   const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  let lenis = null;
   const wait = ms => new Promise(res => setTimeout(res, reduce ? 0 : ms));
   const two = n => String(n).padStart(2, '0');
   const now = () => { const d = new Date(); return two(d.getHours()) + ':' + two(d.getMinutes()); };
@@ -55,13 +90,13 @@
     const pageLoaded = document.readyState === 'complete' ? Promise.resolve() : new Promise(r => addEventListener('load', r, { once: true }));
     const chat = (async () => {
       await pause(350);  load(.2);
-      await say('b out', 'should I go out tonight?');
+      await say('b out', STR.intro[0]);
       await pause(250);  load(.4);
-      await say('b in', 'Don’t overthink it.', 750);
+      await say('b in', STR.intro[1], 750);
       load(.6);
-      await say('b in', 'Music first. Come as you are.', 450);
+      await say('b in', STR.intro[2], 450);
       await pause(450);  load(.85);
-      await say('b out yes', 'I’m in');
+      await say('b out yes', STR.intro[3]);
       await pause(550);
     })();
     return Promise.race([Promise.all([chat, pageLoaded]), skipped.then(() => pageLoaded)]).then(() => {
@@ -75,26 +110,134 @@
 
   const iminSays = async (parent, text) => {
     const t = add(parent, 'b in typing', DOTS);
-    t.setAttribute('aria-label', 'IMIN is typing');
+    t.setAttribute('aria-label', STR.typing);
     await wait(1000);
     t.remove();
     add(parent, 'b in', '<p>' + text + '</p>');
   };
+  const scrollToEl = (el, center) => {
+    if (lenis) lenis.scrollTo(el, { offset: center ? -(innerHeight - el.offsetHeight) / 2 : -72 });
+    else el.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: center ? 'center' : 'start' });
+  };
+  const plainClick = e => !(e.button > 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey);
 
-  /* hero: the night's poster and IMIN's message */
+  /* hero: the night's poster and IMIN's message.
+     The markup is the neutral state (no JS, before the nights load, API down): no date, "I'm in" opens all nights.
+     'night' = a pinned night is on; 'soon' = the API answered and nothing is upcoming. */
+  const root = document.documentElement;
   const notif = $('[data-notif]');
   const btnIn = $('[data-reply="in"]');
+  const poster = $('[data-poster]');
+  const pWhen = $('[data-pwhen]');
+  const pTitle = $('[data-ptitle]');
+  const pMeta = $('[data-pmeta]');
+  const notifText = $('[data-notif-text]');
+  const dockWhat = $('[data-dock-what]');
+  const dockGo = $('[data-dock-go]');
+  const picks = $('[data-picks]');
+  let heroState = 'neutral';
 
-  /* I'M IN answers IMIN's message */
-  btnIn.addEventListener('click', () => {
-    if (btnIn.classList.contains('sent')) return;
+  const paintPoster = (label, when, time, title, meta) => {
+    poster.setAttribute('aria-label', label);
+    const day = document.createElement('span');
+    day.textContent = when;
+    const small = document.createElement('small');
+    small.textContent = time;
+    pWhen.replaceChildren(day, small);
+    pWhen.hidden = false;
+    pTitle.textContent = title;
+    // ponytail: two size steps by name length, not a measured fit; a 70+ character name can still crowd the sticker.
+    pTitle.classList.toggle('is-long', title.length > 26 && title.length <= 40);
+    pTitle.classList.toggle('is-xlong', title.length > 40);
+    pMeta.textContent = meta;
+    pMeta.hidden = !meta;
+  };
+  const paintDock = (when, what, href) => {
+    const b = document.createElement('b');
+    b.textContent = when;
+    dockWhat.replaceChildren(b, what);
+    dockGo.href = href;
+  };
+  let pickChips = [];
+  const showNight = n => {
+    heroState = 'night';
+    poster.dataset.state = 'night';
+    paintPoster(STR.night.label, n.day, n.time, n.name, n.meta);
+    notifText.textContent = STR.night.notif(n);
+    btnIn.href = n.url;
+    paintDock(n.dock, n.name, n.url);
+    pickChips.forEach(c => c.setAttribute('aria-pressed', String(c.night === n)));
+  };
+  const showNights = list => {
+    if (list.length > 1) {
+      pickChips = list.map(n => {
+        const chip = document.createElement('button');
+        chip.type = 'button';
+        chip.className = 'chip pick';
+        chip.night = n;
+        const day = document.createElement('b');
+        day.textContent = n.day;
+        chip.append(day, n.name);
+        chip.addEventListener('click', () => showNight(n));
+        return chip;
+      });
+      $('[data-picks-row]', picks).replaceChildren(...pickChips);
+      picks.hidden = false;
+      picks.parentElement.classList.add('has-picks');
+    }
+    showNight(list[0]);
+  };
+  const showNoDate = () => {
+    const s = STR.noDate;
+    heroState = 'soon';
+    poster.dataset.state = 'soon';
+    paintPoster(s.label, s.when, s.time, s.title, s.meta);
+    notifText.textContent = s.notif;
+    btnIn.href = '#stay';
+    paintDock(s.dockWhen, s.dockWhat, '#stay');
+  };
+  const isNight = n => n && typeof n.name === 'string' && typeof n.day === 'string' && typeof n.time === 'string'
+    && typeof n.dock === 'string' && typeof n.meta === 'string' && typeof n.url === 'string' && /^https:\/\//.test(n.url);
+  // No config at all says nothing about the nights; an empty list means none is pinned.
+  const ids = Array.isArray(CFG.events) ? CFG.events.map(e => e && e.id).filter(Boolean).slice(0, 5) : null;
+  (!ids ? Promise.reject(new Error('nights: no config'))
+    : ids.length
+      ? fetch('/api/nights?' + new URLSearchParams({ ids: ids.join(','), lang: LANG }))
+          .then(res => (res.ok ? res.json() : Promise.reject(new Error('nights ' + res.status))))
+          .then(data => {
+            const list = data && Array.isArray(data.nights) ? data.nights : null;
+            if (!list || !list.every(isNight)) throw new Error('nights: unexpected answer');
+            if (list.length) showNights(list); else showNoDate();
+          })
+      : Promise.resolve().then(showNoDate)
+  ).catch(() => { /* the neutral markup stays: no date claim, "I'm in" opens all nights */ })
+    .finally(() => root.classList.remove('night-wait'));
+
+  /* "Stay close": scroll to the email form and put the cursor in it */
+  const toMail = () => {
+    const mailForm = $('#mail-form');
+    scrollToEl(mailForm, true);
+    mailForm.elements.email.focus({ preventScroll: true });
+  };
+
+  /* I'M IN answers IMIN's message, then opens the night (or, with no date yet, the email form) */
+  const replyIn = () => {
+    if (btnIn.classList.contains('sent')) return false;
     const reply = document.createElement('div');
     reply.className = 'b out yes gen';
-    reply.innerHTML = '<p>I’m in</p>';
+    reply.innerHTML = '<p>' + STR.imIn + '</p>';
     notif.appendChild(reply);
     btnIn.classList.add('sent');
-    btnIn.setAttribute('aria-pressed', 'true');
-    btnIn.innerHTML = '<svg class="ico" aria-hidden="true"><use href="#i-check"/></svg>I’m in';
+    btnIn.innerHTML = '<svg class="ico" aria-hidden="true"><use href="#i-check"/></svg>' + STR.imIn;
+    return true;
+  };
+  btnIn.addEventListener('click', e => {
+    if (!plainClick(e)) return; // a new tab or window: let the link go as it is
+    e.preventDefault();
+    const fresh = replyIn();
+    if (heroState === 'soon') { wait(fresh ? 450 : 0).then(toMail); return; }
+    const to = btnIn.href;
+    wait(fresh ? 700 : 0).then(() => { location.assign(to); });
   });
 
   /* FAQ: one answer at a time */
@@ -155,26 +298,58 @@
     }
   }
 
-  /* email */
+  /* email: "Keep me posted" emails the team; the bubble shows only once the server took it */
+  const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  const CONTACT = CFG.contact || 'contact@imin.support';
   const form = $('#mail-form');
   const done = $('[data-mail-done]');
   const err = $('[data-mail-err]');
+  const send = $('button[type="submit"]', form);
+  const showErr = (text, contact) => {
+    err.replaceChildren(text);
+    if (contact) {
+      const a = document.createElement('a');
+      a.href = 'mailto:' + contact;
+      a.textContent = contact;
+      err.append(a, '.');
+    }
+    err.hidden = false;
+  };
   form.addEventListener('submit', async e => {
     e.preventDefault();
+    if (send.disabled) return;
     err.hidden = true;
     const field = form.elements.email;
     if (!field.checkValidity()) { field.reportValidity(); return; }
-    if (form.elements.company.value) return;
-    if (!form.elements.ok.checked) {
-      err.textContent = 'Switch on “Send me IMIN news” first.';
-      err.hidden = false;
-      return;
-    }
+    const email = field.value.trim();
+    if (!EMAIL_RE.test(email)) { showErr(STR.mail.badEmail); return; }
+    if (!form.elements.ok.checked) { showErr(STR.mail.needConsent); return; }
+    send.disabled = true;
+    form.setAttribute('aria-busy', 'true');
+    let ok = false;
+    try {
+      const res = await fetch(CFG.subscribeEndpoint || '/api/subscribe', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email,
+          consent: true,
+          consent_text: $('[data-consent-text]', form).textContent.trim(),
+          source: 'guest-stay',
+          lang: LANG,
+          company: form.elements.company.value
+        })
+      });
+      ok = res.ok;
+    } catch (_) { /* offline or blocked: same as a failed send */ }
+    send.disabled = false;
+    form.removeAttribute('aria-busy');
+    if (!ok) { showErr(STR.mail.failed, CONTACT); return; }
     done.replaceChildren();
     const bubble = add(done, 'b out', '<p></p>');
-    bubble.firstChild.textContent = field.value.trim();
+    bubble.firstChild.textContent = email;
     form.reset();
-    await iminSays(done, 'You’re on the list. See you soon.');
+    await iminSays(done, STR.mail.done);
   });
 
   /* phone: sticky bar after the hero's buttons scroll away */
@@ -188,24 +363,33 @@
       links.forEach(a => { a.tabIndex = show ? 0 : -1; });
     }).observe(btnIn);
   }
-  $('[data-dock-go]').addEventListener('click', e => {
+  dockGo.addEventListener('click', e => {
+    if (!plainClick(e)) return;
     e.preventDefault();
+    if (heroState === 'soon') { toMail(); return; }
     go($('#hero'));
     setTimeout(() => btnIn.click(), reduce ? 0 : 600);
   });
 
 
-  /* links from config */
-  const L = (window.IMIN && window.IMIN.links) || {};
+  /* links from config; one with no address yet is "coming soon" on a tile and hidden elsewhere */
+  const L = CFG.links || {};
   $$('[data-link]').forEach(a => {
     const u = L[a.dataset.link];
-    if (u) a.href = u;
-    else if (a.classList.contains('tile2')) {
-      // no link yet: the tile stays, marked as coming soon
+    const tile = a.classList.contains('tile2');
+    if (u) {
+      a.href = u;
+      a.hidden = false;
+      const label = STR.ready[a.dataset.link];
+      if (tile && a.classList.contains('is-soon') && label) {
+        a.classList.remove('is-soon');
+        $('.text-link', a).innerHTML = label + ' <svg class="ico" aria-hidden="true"><use href="#i-arrow-up-right"/></svg>';
+      }
+    } else if (tile) {
       a.removeAttribute('href');
       a.classList.add('is-soon');
-      $('.text-link', a).textContent = 'Coming soon';
-    }
+      $('.text-link', a).textContent = STR.soon;
+    } else a.hidden = true;
   });
 
   /* ---------------------------------------------------------
@@ -253,7 +437,7 @@
 
   /* smooth scroll */
   if (window.Lenis) {
-    const lenis = new Lenis({ lerp: .12 });
+    lenis = new Lenis({ lerp: .12 });
     if (introEl && !introEl.classList.contains('gone')) { lenis.stop(); intro.then(() => lenis.start()); }
     lenis.on('scroll', ScrollTrigger.update);
     gsap.ticker.add(t => lenis.raf(t * 1000));
@@ -379,7 +563,7 @@
   gsap.from('.np-list li', { x: -16, opacity: 0, duration: .6, stagger: .08, scrollTrigger: { trigger: '.np', start: 'top 85%' } });
 
   /* ---------- FAQ: the chips arrive like a keyboard of questions ---------- */
-  gsap.from('.chip', { y: 14, opacity: 0, scale: .9, duration: .5, ease: 'back.out(2)', stagger: .035, scrollTrigger: { trigger: '.chips', start: 'top 88%' } });
+  gsap.from('.chips .chip', { y: 14, opacity: 0, scale: .9, duration: .5, ease: 'back.out(2)', stagger: .035, scrollTrigger: { trigger: '.chips', start: 'top 88%' } });
   gsap.from('#faq .answer:not([hidden]) .b', { scale: .5, opacity: 0, duration: .5, ease: 'back.out(2.4)', stagger: .35, scrollTrigger: { trigger: '.chips', start: 'top 70%' } });
 
   /* ---------- Stay close ---------- */

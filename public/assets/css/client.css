@@ -3,6 +3,9 @@
    Then photo-led sections (the idea, the nights) with one or two lines each, and compact FAQ, stay-close and creators blocks.
    12-column grid from 960px; on phones one column, photo rows scroll sideways.
    Nostalgia = the iPhone of 2010-2013, kept to the phone, the glossy bubbles on photos, the player and the switches. */
+/* page shell: notch-safe edges and a [hidden] that no display rule can override */
+:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+[hidden]:not([hidden=until-found i]){display:none!important}
 :root{
   --midnight:#0B0A14;   /* ground: the room before the first track */
   --paper:#F4EFE7;      /* text; IMIN's bubbles */
@@ -460,3 +463,27 @@ html.lenis,html.lenis body{height:auto}
 }
 .sw-on{margin-right:-13px;padding-right:13px}
 .sw-off{margin-left:-13px;padding-left:13px}
+
+/* ---------- The next night, live from the event ---------- */
+/* while the nights load (2.5 s at most) the poster keeps its words back instead of flashing the neutral ones */
+.night-wait [data-pwhen],.night-wait [data-pbody],.night-wait [data-notif-text],.night-wait [data-dock-what]{visibility:hidden}
+/* a real night's name can run long: two smaller steps, and a word wider than the poster breaks */
+.p-title{min-width:0;overflow-wrap:break-word}
+.p-title.is-long{font-size:clamp(34px,4.2vw,62px)}
+.p-title.is-xlong{font-size:clamp(30px,3.4vw,50px)}
+/* no date yet: the date slot blinks like a clock nobody has set */
+.poster[data-state="soon"] .p-when > span{animation:unset-clock 2.4s ease-in-out infinite}
+@keyframes unset-clock{50%{opacity:.3}}
+/* more than one night: pick one, the poster follows. Under the poster on phones, under I'M IN on wide screens. */
+.picks{min-width:0;display:grid;grid-template-columns:minmax(0,1fr);gap:12px;animation:pop .45s var(--ease) both}
+@media (min-width:960px){
+  .hero-grid.has-picks{grid-template-rows:1fr auto auto 1fr;row-gap:0}
+  .hero-grid.has-picks .hero-copy{grid-column:1;grid-row:2}
+  .hero-grid.has-picks .picks{grid-column:1;grid-row:3;margin-top:40px}
+  .hero-grid.has-picks .hero-visual{grid-column:2;grid-row:1 / -1}
+}
+.picks .label{color:var(--haze)}
+.picks-row{display:flex;flex-wrap:wrap;gap:8px}
+.chip.pick{display:block;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;line-height:36px}
+.chip.pick b{margin-right:8px;font:800 17px/1 var(--display);letter-spacing:.02em;text-transform:uppercase}
+.chip.pick[aria-pressed="true"]{background:linear-gradient(rgba(0,0,0,.25),rgba(0,0,0,.08)),#2B2741;color:var(--haze);box-shadow:inset 0 1px 3px rgba(0,0,0,.7)}

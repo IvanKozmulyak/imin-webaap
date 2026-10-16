@@ -99,3 +99,27 @@ FR, ES, UK versions of both pages at `/fr`, `/es`, `/uk`, `/fr/pro`, … (static
 1. Merge A and B into the task worktree as diffs (`git diff | git apply`), rebuild, browser-check both pages at both widths.
 2. Fresh `reviewer` on the full diff against this plan.
 3. Ship = push `main` of `imin-webaap` (Vercel prod). **Ask Ivan before pushing.** After deploy: curl `/`, `/pro`, `/api/nights`, `/sitemap.xml`; one real "Keep me posted" and one real pitch to confirm Resend delivery.
+
+## Track C result: copy fixes (applied at integration, main session)
+
+Audit 2026-10-16 against origin `api` 44fc71f, `webapp` b53be94, `public` bc655da, `gate` e0351a9. Every edit is mirrored in the page's FAQPage JSON-LD and in image alt text.
+
+| Claim | Verdict | Evidence | New copy |
+|---|---|---|---|
+| Pro "Describe the night… three poster concepts" | PARTIAL | concepts are text (`api ConceptController.java:46-52`); posters are a separate 3-variant step (`webapp postersApi.ts:49-87`) | "Describe the night in a few words. Get three concepts: a name, a description, starting prices. Then pick a style and get three posters." |
+| Pro "Apple Pay and Google Pay" | unverified | hosted Checkout, no wallet config (`public buy-modal.tsx:114-120`); Apple Pay domain file 404 | "Free or paid, paid by card through Stripe. Promo codes when you need them." |
+| Pro crowd "Write to them" | LIVE via campaigns; "Email ticket holders" action NOT LIVE | `api CampaignService.java:461-472` | "Everyone who bought, and who came, in one list. Email the ones who said yes to news." |
+| Pro "A report the next day" | NOT LIVE | `postEventReport` is a preference with no producer (`api NotificationPreferences.java:21`) | "Who came, what sold and which links worked, in your dashboard."; reasons "Page, poster, tickets, door, numbers."; road "Share the link, sell, scan at the door, check the numbers." |
+| Pro sign-up "email and a 6-digit code" | PARTIAL | form asks name, org, country, email, password (`api SignupRequest.java:8-14`); Google on | "Sign up with Google, or with your name, email and a password. A 6-digit code confirms your email. A few minutes." |
+| Pro "The tutorial walks you through it" | NOT LIVE | no tutorial in webapp/api | "The builder takes you from details to poster to tickets to publish. Connect Stripe when you're ready to sell." |
+| Pro FAQ refunds "You do" | NOT LIVE | no refund-policy field; buyer page prints a constant (`public event-detail.tsx:240-243`) | "IMIN's refund policy applies to every night. You approve or decline each request, and a cancelled night is refunded in full." |
+| Pro FAQ team "owners or members" | PARTIAL | invites accept `admin|member` (`api InviteRequest.java:9`) | "Yes. Invite them as admins or members." |
+| Pro "Our own nights run on IMIN, starting 31.10" | PARTIAL | real night is The Midnight Bean Society, 31.10 | "Our own nights run on IMIN. Next up: Sat 31.10 in Metz." |
+| Pro hero guest poster (Halloween CoffeeShop Rave) | not the real night | prod event `ef3b1f87…` | fill from `/api/nights` like the guest hero; generic "Your night" when none |
+| Pro six-tabs mock "+ €2.80 service fee per ticket", `imin.wtf/your-night` | invented competitor figure; wrong URL shape | share link is `app.imin.wtf/e/<id>` (`webapp publicLink.ts:4-6`) | "+ service fee per ticket"; `app.imin.wtf/e/your-night` |
+| Pro dashboard screenshots (7) | not captures of shipped UI; `studio.webp` is a mock; `crowd.webp` shows a real Gmail address | `webapp` dashboard-redesign plans list the cut elements | **open: needs re-shooting from prod (Ivan's decision)**; alt text corrected either way |
+| Guest FAQ "How does it work?" | NOT LIVE as written | guest checkout, no account needed (`public en.ts:214,273`) | "Pick a night. Get your ticket, free or paid, no account needed. Show your QR at the door." |
+| Guest FAQ "Why do I need an account?" | PARTIAL; "someone to go with" not built | account area live (`public nav-model.ts:29-35`) | Q "Do I need an account?" A "No. Buy as a guest, or make an account to keep all your nights and tickets in one place." |
+| Guest FAQ data | LIVE, undersold | `public privacy.md:4,9` | "We use it for your ticket, your payment and the door. News only if you tick the box." |
+
+Product follow-ups found (not in this task): team invites send no email (`api TeamService.java:69-106`) while the UI says "Invite sent"; Google sign-up defaults the org country to NL (`api OAuthProperties.java:63`), which sets the Stripe account country for FR/LU creators; `APPLE_PAY_DOMAIN_VERIFICATION` unset on app.imin.wtf.

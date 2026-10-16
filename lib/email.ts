@@ -1,6 +1,6 @@
 // Shared branded email sender (Resend REST API — no SDK).
-// One dark IMIN-themed template, parameterized by kind/accent, used by both
-// the access-request and growth-application routes.
+// One dark IMIN-themed template, parameterized by kind/accent, used by the
+// subscribe, pitch and call-click routes.
 
 export interface EmailField {
   label: string;
@@ -9,7 +9,7 @@ export interface EmailField {
 }
 
 export interface SendTeamEmailOptions {
-  eyebrow: string; // small label, e.g. "New access request" / "Growth application"
+  eyebrow: string; // small label, e.g. "Keep me posted" / "Night pitch"
   accent: string; // hex, colours the strip, eyebrow and links
   heading: string; // big display line, e.g. the applicant's name
   fields: EmailField[];

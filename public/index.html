@@ -1,22 +1,43 @@
-<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
-<meta charset="utf-8">
+<!doctype html>
+<html lang="en" class="no-js">
+<head>
+  <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <title>IMIN Guest Page</title>
-  <meta name="robots" content="noindex">
+  <title>IMIN: music-first nights in Metz</title>
   <meta name="description" content="IMIN throws music-first nights in Metz. Tap I'm in, come as you are.">
+  <link rel="canonical" href="https://imin.wtf/">
   <meta name="theme-color" content="#0B0A14">
-  <link rel="canonical" href="https://imin.wtf/en/">
+  <link rel="icon" href="/assets/img/favicon.svg" type="image/svg+xml">
   <meta property="og:type" content="website">
+  <meta property="og:url" content="https://imin.wtf/">
+  <meta property="og:site_name" content="IMIN">
+  <meta property="og:locale" content="en_US">
   <meta property="og:title" content="Don't overthink the night.">
   <meta property="og:description" content="Music first. Come as you are.">
-  <meta property="og:image" content="https://imin.wtf/assets/img/og-guest.png">
-  <link rel="icon" href="/assets/img/favicon.svg" type="image/svg+xml">
+  <meta property="og:image" content="https://imin.wtf/opengraph-image">
+  <meta property="og:image:type" content="image/png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="IMIN: Don't overthink the night. Music first. Come as you are.">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Don't overthink the night.">
+  <meta name="twitter:description" content="Music first. Come as you are.">
+  <meta name="twitter:image" content="https://imin.wtf/opengraph-image">
   <link rel="preload" href="/assets/fonts/barlow-condensed-800-latin.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="preload" href="/assets/fonts/dm-sans-var-latin.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="/assets/css/fonts.css">
-  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700;800&family=DM+Sans:opsz,wght@9..40,400..700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/assets/css/client.css">
-  <script>document.documentElement.classList.remove('no-js');document.documentElement.classList.add('js');</script>
+  <script>(function(d){d.classList.remove('no-js');d.classList.add('js','night-wait');setTimeout(function(){d.classList.remove('night-wait')},2500)})(document.documentElement);</script>
+  <script type="application/ld+json">
+{"@context":"https://schema.org","@graph":[
+{"@type":"Organization","@id":"https://imin.wtf/#organization","name":"IMIN","url":"https://imin.wtf/","logo":"https://imin.wtf/icon.png","description":"IMIN throws music-first nights in Metz. Tap I'm in, come as you are.","founder":[
+{"@type":"Person","name":"Bohdan Shostak","jobTitle":"CEO","sameAs":"https://www.linkedin.com/in/bohdan-shostak-653006212/"},
+{"@type":"Person","name":"Ivan Kozmulyak","jobTitle":"CTO","sameAs":"https://www.linkedin.com/in/ivan-kozmulyak-a72b2120a/"}]},
+{"@type":"WebSite","@id":"https://imin.wtf/#website","url":"https://imin.wtf/","name":"IMIN","publisher":{"@id":"https://imin.wtf/#organization"}}
+]}
+  </script>
+</head>
+<body>
 
 <svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
   <symbol id="i-arrow-right" viewBox="0 0 256 256"><path d="M220.24,132.24l-72,72a6,6,0,0,1-8.48-8.48L201.51,134H40a6,6,0,0,1,0-12H201.51L139.76,60.24a6,6,0,0,1,8.48-8.48l72,72A6,6,0,0,1,220.24,132.24Z"/></symbol>
@@ -69,7 +90,7 @@
     <a class="logo" href="#hero" aria-label="IMIN, back to the top"><svg viewBox="0 0 348.33 107.29" aria-hidden="true" fill="currentColor"><use href="#logo-h"/></svg></a>
     <nav class="nav" aria-label="Main">
       <a class="nav-a" href="#create">Create</a>
-      <a class="nav-a" href="#hero">Sign in</a>
+      <a class="nav-a" href="https://app.imin.wtf/auth/sign-in" data-link="signIn">Sign in</a>
       <details class="lang">
         <summary aria-label="Language: English">EN <svg class="ico" aria-hidden="true"><use href="#i-caret-down"/></svg></summary>
         <div class="lang-menu">
@@ -89,22 +110,22 @@
       <div class="hero-copy">
         <h1 class="t-display" id="hero-h">Don’t overthink the night.</h1>
         <p class="hero-lead">IMIN throws music-first nights in Metz.</p>
-        <button type="button" class="btn-door" data-reply="in" aria-pressed="false">I’m in</button>
+        <a class="btn-door" href="https://app.imin.wtf/events" data-reply="in">I’m in</a>
       </div>
 
       <div class="hero-visual">
         <div class="flyers">
           <div class="flyer-back" aria-hidden="true"><svg viewBox="0 0 169.58 224.95" fill="currentColor"><use href="#logo-s"/></svg></div>
-          <figure class="poster" aria-label="The next night">
+          <figure class="poster" aria-label="IMIN nights in Metz" data-poster>
             <img src="/assets/img/photos/p-dj.jpg" alt="A DJ playing, hands up in front" loading="eager">
             <span class="grain" aria-hidden="true"></span>
             <div class="p-top">
               <svg viewBox="0 0 169.58 224.95" aria-label="IMIN" role="img" fill="currentColor"><use href="#logo-s"/></svg>
-              <p class="p-when" data-pwhen>Sat 31.10<small>15:00 – 18:00</small></p>
+              <p class="p-when" data-pwhen hidden></p>
             </div>
             <div class="p-body" data-pbody>
-              <p class="p-title">Halloween CoffeeShop Rave</p>
-              <p class="p-meta">DJ · Pumpkin spice · Costume contest · Metz</p>
+              <p class="p-title" data-ptitle>Music first</p>
+              <p class="p-meta" data-pmeta>Nights in Metz</p>
             </div>
             <span class="sticker" aria-hidden="true">Come<br>as you<br>are</span>
             <div class="beat" aria-hidden="true"></div>
@@ -118,6 +139,11 @@
             </div>
           </div>
         </div>
+      </div>
+
+      <div class="picks" data-picks hidden>
+        <p class="label" id="picks-h">Pick your night</p>
+        <div class="picks-row" role="group" aria-labelledby="picks-h" data-picks-row></div>
       </div>
     </div>
     <div class="beat-band" data-beat aria-hidden="true"></div>
@@ -192,22 +218,22 @@
           <button type="button" class="chip" role="tab" id="q2" aria-controls="a2" aria-selected="false" tabindex="-1">Can I come alone?</button>
           <button type="button" class="chip" role="tab" id="q3" aria-controls="a3" aria-selected="false" tabindex="-1">How much is it?</button>
           <button type="button" class="chip" role="tab" id="q4" aria-controls="a4" aria-selected="false" tabindex="-1">Is this a dating thing?</button>
-          <button type="button" class="chip" role="tab" id="q5" aria-controls="a5" aria-selected="false" tabindex="-1">Why do I need an account?</button>
+          <button type="button" class="chip" role="tab" id="q5" aria-controls="a5" aria-selected="false" tabindex="-1">Do I need an account?</button>
           <button type="button" class="chip" role="tab" id="q6" aria-controls="a6" aria-selected="false" tabindex="-1">Do I have to drink?</button>
           <button type="button" class="chip" role="tab" id="q7" aria-controls="a7" aria-selected="false" tabindex="-1">How old do I need to be?</button>
           <button type="button" class="chip" role="tab" id="q8" aria-controls="a8" aria-selected="false" tabindex="-1">Will I be in photos?</button>
           <button type="button" class="chip" role="tab" id="q9" aria-controls="a9" aria-selected="false" tabindex="-1">What do you do with my data?</button>
           <button type="button" class="chip" role="tab" id="q10" aria-controls="a10" aria-selected="false" tabindex="-1">Who’s behind IMIN?</button>
         </div>
-        <div class="answer" role="tabpanel" id="a1" aria-labelledby="q1"><div class="b out">How does it work?</div><div class="b in"><p>Pick a night. Make an account. Tap I’m in. Show your QR at the door.</p></div></div>
+        <div class="answer" role="tabpanel" id="a1" aria-labelledby="q1"><div class="b out">How does it work?</div><div class="b in"><p>Pick a night. Get your ticket, free or paid, no account needed. Show your QR at the door.</p></div></div>
         <div class="answer" role="tabpanel" id="a2" aria-labelledby="q2" hidden><div class="b out">Can I come alone?</div><div class="b in"><p>Yes. That’s kind of the point.</p></div></div>
         <div class="answer" role="tabpanel" id="a3" aria-labelledby="q3" hidden><div class="b out">How much is it?</div><div class="b in"><p>Depends on the night. The price is on each night’s page, and any fee is shown before you pay.</p></div></div>
         <div class="answer" role="tabpanel" id="a4" aria-labelledby="q4" hidden><div class="b out">Is this a dating thing?</div><div class="b in"><p>No. It’s a night out.</p></div></div>
-        <div class="answer" role="tabpanel" id="a5" aria-labelledby="q5" hidden><div class="b out">Why do I need an account?</div><div class="b in"><p>One place for all your nights and tickets. It’s also where we’re building the “someone to go with” part.</p></div></div>
+        <div class="answer" role="tabpanel" id="a5" aria-labelledby="q5" hidden><div class="b out">Do I need an account?</div><div class="b in"><p>No. Buy as a guest, or make an account to keep all your nights and tickets in one place.</p></div></div>
         <div class="answer" role="tabpanel" id="a6" aria-labelledby="q6" hidden><div class="b out">Do I have to drink?</div><div class="b in"><p>No. What’s in your cup is your business.</p></div></div>
         <div class="answer" role="tabpanel" id="a7" aria-labelledby="q7" hidden><div class="b out">How old do I need to be?</div><div class="b in"><p>18+. You may be asked for ID at the door.</p></div></div>
         <div class="answer" role="tabpanel" id="a8" aria-labelledby="q8" hidden><div class="b out">Will I be in photos?</div><div class="b in"><p>Probably. We film and take photos at our nights, and there’s a sign at the door. See a photo of you that you want gone? Message us and we’ll take it down.</p></div></div>
-        <div class="answer" role="tabpanel" id="a9" aria-labelledby="q9" hidden><div class="b out">What do you do with my data?</div><div class="b in"><p>We use it to get you in the door. News only if you tick the box. <a href="https://app.imin.wtf/legal">Privacy</a></p></div></div>
+        <div class="answer" role="tabpanel" id="a9" aria-labelledby="q9" hidden><div class="b out">What do you do with my data?</div><div class="b in"><p>We use it for your ticket, your payment and the door. News only if you tick the box. <a href="https://app.imin.wtf/legal/privacy" data-link="privacy">Privacy</a></p></div></div>
         <div class="answer" role="tabpanel" id="a10" aria-labelledby="q10" hidden><div class="b out">Who’s behind IMIN?</div><div class="b in"><p>Four of us: Bohdan, Ivan, Violeta and Viktor. Say hi: <span class="sel">contact@imin.support</span></p><div class="team"><img src="/assets/img/photos/bohdan.jpg" alt="Bohdan" loading="lazy"><img src="/assets/img/photos/ivan.jpg" alt="Ivan" loading="lazy"><span title="Violeta">V</span><span title="Viktor">V</span></div></div></div>
       </div>
     </div>
@@ -234,15 +260,15 @@
           <b>Instagram</b><span>Nights, people, behind the scenes.</span>
           <em class="text-link">@imin.wtf <svg class="ico" aria-hidden="true"><use href="#i-arrow-up-right"/></svg></em>
         </a>
-        <a class="tile2" href="#stay" data-link="playlist" target="_blank" rel="noopener">
+        <a class="tile2 is-soon" data-link="playlist" target="_blank" rel="noopener">
           <svg class="ico ico--lg" aria-hidden="true"><use href="#i-spotify-logo"/></svg>
           <b>Friday playlist</b><span>The sound of our nights, every Friday.</span>
-          <em class="text-link">Listen <svg class="ico" aria-hidden="true"><use href="#i-arrow-up-right"/></svg></em>
+          <em class="text-link">Coming soon</em>
         </a>
       </div>
 
       <div class="stay-foot">
-        <form class="mail" id="mail-form" novalidate>
+        <form class="mail" id="mail-form" method="post" novalidate>
           <label class="mail-label" for="mail-email">Rather get it by email?</label>
           <div class="mail-row">
             <input class="mail-in" id="mail-email" name="email" type="email" placeholder="your@email.com" autocomplete="email" required>
@@ -251,13 +277,13 @@
           <label class="sw-row" for="mail-ok">
             <input class="sw-input" type="checkbox" id="mail-ok" name="ok" role="switch">
             <span class="sw" aria-hidden="true"><span class="sw-strip"><span class="sw-on">ON</span><span class="sw-knob"></span><span class="sw-off">OFF</span></span></span>
-            <span>Send me IMIN news. Unsubscribe anytime.</span>
+            <span data-consent-text>Send me IMIN news. Unsubscribe anytime.</span>
           </label>
           <input class="hp" type="text" name="company" tabindex="-1" autocomplete="off" aria-hidden="true">
-          <p class="sw-err" data-mail-err hidden></p>
+          <p class="sw-err" data-mail-err role="alert" hidden></p>
           <p class="cap">Only when there’s a night.</p>
         </form>
-        <div class="mail-done" data-mail-done></div>
+        <div class="mail-done" data-mail-done aria-live="polite"></div>
         <div class="socials" aria-label="IMIN elsewhere">
           <span class="cap">Also on</span>
           <a href="https://www.threads.net/@imin.wtf" data-link="threads" target="_blank" rel="noopener" aria-label="Threads"><svg class="ico ico--lg" aria-hidden="true"><use href="#i-threads-logo"/></svg></a>
@@ -278,8 +304,8 @@
       <h2 class="t-display room__h" id="create-h" data-split>The other side of the room.</h2>
       <p class="lead room__text">Create the night. We carry the rest: page, tickets, promo, the door. You sell, you get paid.</p>
       <div class="room__actions">
-        <a class="btn-paper btn-paper--lg" href="pro/" data-link="create"><span>Create your night</span><svg class="ico" aria-hidden="true"><use href="#i-arrow-right"/></svg></a>
-        <a class="room__signin" href="https://app.imin.wtf/" data-link="creatorSignIn">Already creating? Sign in <svg class="ico" aria-hidden="true"><use href="#i-arrow-right"/></svg></a>
+        <a class="btn-paper btn-paper--lg" href="/pro" data-link="create"><span>Create your night</span><svg class="ico" aria-hidden="true"><use href="#i-arrow-right"/></svg></a>
+        <a class="room__signin" href="https://dashboard.imin.wtf/auth/login" data-link="creatorSignIn">Already creating? Sign in <svg class="ico" aria-hidden="true"><use href="#i-arrow-right"/></svg></a>
       </div>
     </div>
   </section>
@@ -294,11 +320,11 @@
       <p class="foot-tag">Join. Create. Earn.</p>
     </div>
     <div class="foot-cols">
-      <div><p class="label">Nights</p><a href="#hero">Next night</a><a href="#nights">All nights</a></div>
-      <div><p class="label">Create</p><a href="#create">For creators</a><a href="#create">Sign in</a></div>
+      <div><p class="label">Nights</p><a href="#hero">Next night</a><a href="https://app.imin.wtf/events" data-link="allNights">All nights</a></div>
+      <div><p class="label">Create</p><a href="/pro" data-link="create">For creators</a><a href="https://dashboard.imin.wtf/auth/login" data-link="creatorSignIn">Sign in</a></div>
       <div><p class="label">IMIN</p><a href="#idea">Our idea</a><a href="#faq">FAQ</a><span class="sel">contact@imin.support</span></div>
-      <div><p class="label">Follow</p><a href="https://www.instagram.com/imin.wtf/">Instagram</a><a href="https://www.threads.net/@imin.wtf">Threads</a><a href="#stay">Friday playlist</a></div>
-      <div><p class="label">Legal</p><a href="https://app.imin.wtf/legal">Legal notice</a><a href="https://app.imin.wtf/legal">Terms</a><a href="https://app.imin.wtf/legal">Privacy</a><a href="https://app.imin.wtf/legal">Refunds</a><a href="https://app.imin.wtf/legal">Cookies</a><a href="#hero">Cookie settings</a></div>
+      <div><p class="label">Follow</p><a href="https://www.instagram.com/imin.wtf/">Instagram</a><a href="https://www.threads.net/@imin.wtf">Threads</a><a data-link="playlist" hidden>Friday playlist</a></div>
+      <div><p class="label">Legal</p><a href="https://app.imin.wtf/legal">Legal notice</a><a href="https://app.imin.wtf/legal/terms">Terms</a><a href="https://app.imin.wtf/legal/privacy">Privacy</a><a href="https://app.imin.wtf/legal/refunds">Refunds</a><a href="https://app.imin.wtf/legal/cookies">Cookies</a></div>
     </div>
     <div class="foot-bottom"><span>© 2026 IMIN</span><span>EN · FR · ES · UA</span></div>
   </div>
@@ -306,22 +332,22 @@
 
 <div class="dock" data-dock aria-hidden="true">
   <div class="dock-in">
-    <p class="dock-what" data-dock-what><b>Sat 31.10 · 15:00</b>Halloween CoffeeShop Rave</p>
-    <a class="btn-door" href="#hero" data-dock-go tabindex="-1">I’m in</a>
+    <p class="dock-what" data-dock-what><b>Nights in Metz</b>Music first. Come as you are.</p>
+    <a class="btn-door" href="https://app.imin.wtf/events" data-dock-go tabindex="-1">I’m in</a>
   </div>
 </div>
 
 <script type="application/ld+json">
 {"@context":"https://schema.org","@type":"FAQPage","mainEntity":[
-{"@type":"Question","name":"How does it work?","acceptedAnswer":{"@type":"Answer","text":"Pick a night. Make an account. Tap I'm in. Show your QR at the door."}},
+{"@type":"Question","name":"How does it work?","acceptedAnswer":{"@type":"Answer","text":"Pick a night. Get your ticket, free or paid, no account needed. Show your QR at the door."}},
 {"@type":"Question","name":"Can I come alone?","acceptedAnswer":{"@type":"Answer","text":"Yes. That's kind of the point."}},
 {"@type":"Question","name":"How much is it?","acceptedAnswer":{"@type":"Answer","text":"Depends on the night. The price is on each night's page, and any fee is shown before you pay."}},
 {"@type":"Question","name":"Is this a dating thing?","acceptedAnswer":{"@type":"Answer","text":"No. It's a night out."}},
-{"@type":"Question","name":"Why do I need an account?","acceptedAnswer":{"@type":"Answer","text":"One place for all your nights and tickets. It's also where we're building the \"someone to go with\" part."}},
+{"@type":"Question","name":"Do I need an account?","acceptedAnswer":{"@type":"Answer","text":"No. Buy as a guest, or make an account to keep all your nights and tickets in one place."}},
 {"@type":"Question","name":"Do I have to drink?","acceptedAnswer":{"@type":"Answer","text":"No. What's in your cup is your business."}},
 {"@type":"Question","name":"How old do I need to be?","acceptedAnswer":{"@type":"Answer","text":"18+. You may be asked for ID at the door."}},
 {"@type":"Question","name":"Will I be in photos?","acceptedAnswer":{"@type":"Answer","text":"Probably. We film and take photos at our nights, and there's a sign at the door. See a photo of you that you want gone? Message us and we'll take it down."}},
-{"@type":"Question","name":"What do you do with my data?","acceptedAnswer":{"@type":"Answer","text":"We use it to get you in the door. News only if you tick the box."}},
+{"@type":"Question","name":"What do you do with my data?","acceptedAnswer":{"@type":"Answer","text":"We use it for your ticket, your payment and the door. News only if you tick the box."}},
 {"@type":"Question","name":"Who's behind IMIN?","acceptedAnswer":{"@type":"Answer","text":"Four of us: Bohdan, Ivan, Violeta and Viktor. Say hi: contact@imin.support"}}
 ]}
 </script>
@@ -331,5 +357,5 @@
 <script src="/assets/vendor/SplitText.min.js" defer></script>
 <script src="/assets/vendor/lenis.min.js" defer></script>
 <script src="/assets/js/client.js" defer></script>
-
-</body></html>
+</body>
+</html>
