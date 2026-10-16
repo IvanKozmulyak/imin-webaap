@@ -156,3 +156,13 @@ Source: proposal prototypes in the session scratchpad (`proposals/{guest,pro}`: 
 ## Beat strip animation (Ivan, 2026-10-16)
 
 "Replace the animation with this": the beat strips (hero, footer, guest intro) now run **Neon Unfold Flicker** from the beat gallery artifact (https://claude.ai/artifact/E51ZHTrN7cuoN3sepjDeSn, `imin-beat-core.js`). Only that animation is extracted into `public/assets/js/beat.js` (12 KB of 120 KB): the gallery's drawing code, its own namespace (the gallery's global `IMIN` would overwrite the site config), a fixed 100 BPM clock instead of the audio engine (no AudioContext), transparent background, drawing only while a strip is on screen, one still frame under reduced motion. Hero strips use the artifact's height `clamp(64px,7vw,112px)`. The old SVG level meter is removed from `client.js` and `pro.js`.
+
+## Keep me posted → IMIN Audience (Ivan, 2026-10-16) — NEXT, not started
+
+Decisions: sign-ups go to IMIN's own Audience (Option A), not the team inbox; rename the org "by IMIN" (slug `vechirka`) to **"IMIN"** so the consent line "Send me IMIN news" names the organizer (DoorOptInService.validText requires it); turn on `IMIN_CONSENT_CONFIRMATION_EMAILS_ENABLED=true` on Railway (double opt-in; also starts door-QR/survey confirmations).
+Build: imin-api `POST /api/v1/public/orgs/{slug}/follow` reusing DoorOptInService's checks (erasure, opt-out, suppression, consent capture with text/version/source, confirmation request, per-IP rate limit, uniform OK), org allowlist, new consent text versions, integration tests (@IminIntegrationTest, Docker up). Then imin.wtf `/api/subscribe` proxies to it; success copy "Check your inbox to confirm" in EN/FR/ES/UK. Ship api first.
+
+## State at pause (2026-10-16)
+- Branch `feat/guest-pro-landing` (local only, NOT pushed) at the commit adding this note; preview `next start -p 3401` from this worktree.
+- In flight when paused (may be incomplete): translators in worktrees `landing-fr`, `landing-es`, `landing-uk` (patches → scratchpad `track-<lang>.patch`); fresh reviewer of 9fb3f95..HEAD. On resume: check their worktrees/patches, merge translations (add `<script src="/assets/js/beat.js" defer>` before i18n/en.js in all six translated pages), `npm test` (check:i18n), triage review findings.
+- Still open: Spotify playlist URL; ask Ivan before pushing `main` (= prod deploy); one real form submission after deploy.
