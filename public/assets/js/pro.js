@@ -18,7 +18,7 @@
       eur: n => '€' + (Number.isInteger(n) ? n : n.toFixed(2)),
       cents: n => '€' + n.toFixed(2),
       zero: '€0',
-      feeNote: 'The fee is on top of your price, and the buyer sees it before paying.',
+      feeNote: 'The fee goes on top of your price, and your guest sees it before paying. You pay IMIN €0 during early access.',
       freeNote: 'Free nights are free. No fee for you, no fee for your guests.',
       tabsMany: '6 tabs for one night',
       tabsOne: '1 tab for the whole night',
@@ -31,6 +31,8 @@
   const $ = (s, r = document) => r.querySelector(s);
   const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
   const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  // the six-tabs scene is pinned to the scroll only where it can be read whole; phones play it once instead
+  const pinTabs = window.matchMedia('(min-width: 760px)').matches;
   const wait = ms => new Promise(res => setTimeout(res, reduce ? 0 : ms));
   const C = (window.IMIN && window.IMIN.pro) || {};
   const L = C.links || {};
@@ -38,8 +40,12 @@
   /* images: resolve once decoded, so a reveal never animates an empty frame */
   const ready = img => !img ? Promise.resolve() : (img.complete && img.naturalWidth ? (img.decode ? img.decode().catch(() => {}) : Promise.resolve())
     : new Promise(res => { img.addEventListener('load', () => res(img.decode ? img.decode().catch(() => {}) : null), { once: true }); img.addEventListener('error', res, { once: true }); setTimeout(res, 4000); }));
-  // after the page has loaded, fetch the lazy images in the background so they are there before the reader is
-  addEventListener('load', () => setTimeout(() => { $$('img[loading="lazy"]').forEach(i => { i.loading = 'eager'; }); }, 600), { once: true });
+  // after the page has loaded, fetch the lazy images in the background so they are there before the reader is,
+  // unless the visitor asked to save data; each image's srcset still picks the right-sized file
+  addEventListener('load', () => setTimeout(() => {
+    if (navigator.connection && navigator.connection.saveData) return;
+    $$('img[loading="lazy"]').forEach(i => { i.loading = 'eager'; });
+  }, 600), { once: true });
 
   /* analytics: events from the spec, pushed to a dataLayer for whatever reads it */
   const track = (event, params = {}) => { (window.dataLayer = window.dataLayer || []).push({ event, ...params }); };
@@ -161,7 +167,7 @@
     if (window.ScrollTrigger) ScrollTrigger.refresh();
   });
 
-  /* ---------- Earn: what the buyer pays ---------- */
+  /* ---------- Earn: your price + the IMIN fee = what your guest pays ---------- */
   const range = $('#calc-price');
   if (range) {
     const { eur, cents } = T;
@@ -169,6 +175,7 @@
       const p = Number(range.value);
       const fee = p ? Math.round((p * 0.05 + 0.99) * 100) / 100 : 0;
       $('[data-price]').textContent = p ? eur(p) : T.free;
+      $('[data-yours]').textContent = p ? cents(p) : T.zero;
       $('[data-total]').textContent = p ? cents(p + fee) : T.zero;
       $('[data-fee]').textContent = p ? cents(fee) : T.zero;
       $('[data-note]').textContent = p ? T.feeNote : T.freeNote;
@@ -245,8 +252,10 @@
   if (heroBtn && 'IntersectionObserver' in window) {
     const dockLinks = $$('a', dock);
     let past = false, atForm = false;
+    // the dock steps aside while a Create button in the page itself is on screen
+    const inline = new Set();
     const paint = () => {
-      const show = past && !atForm;
+      const show = past && !atForm && !inline.size;
       dock.classList.toggle('show', show);
       dock.setAttribute('aria-hidden', String(!show));
       dockLinks.forEach(a => { a.tabIndex = show ? 0 : -1; });
@@ -254,6 +263,11 @@
     };
     new IntersectionObserver(([en]) => { past = !en.isIntersecting && en.boundingClientRect.top < 0; paint(); }).observe(heroBtn);
     new IntersectionObserver(([en]) => { atForm = en.isIntersecting; paint(); }).observe($('#pitch'));
+    const inPage = new IntersectionObserver(ens => {
+      ens.forEach(en => { if (en.isIntersecting) inline.add(en.target); else inline.delete(en.target); });
+      paint();
+    });
+    $$('main .btn-door[data-create]').filter(b => b !== heroBtn).forEach(b => inPage.observe(b));
   }
 
   /* which sections get read */
@@ -270,10 +284,10 @@
   const view = $('[data-view]');
   if (view) {
     const fit = () => {
-      // fit both the width and the height of the screen, so the whole browser and its caption are visible at once
+      // pinned: fit the width and the height, so the whole browser and its caption are visible at once; phones: the width
       const cs = getComputedStyle(view), W = +cs.getPropertyValue('--W'), H = +cs.getPropertyValue('--H');
       const box = view.closest('.brw'), room = box.parentElement.clientWidth;
-      const s = Math.min(1, (room - 26) / W, (innerHeight - (innerWidth < 560 ? 360 : 300)) / H);
+      const s = Math.min(1, (room - 26) / W, pinTabs ? (innerHeight - 300) / H : 1);
       view.style.setProperty('--s', s.toFixed(4));
       box.style.maxWidth = Math.round(W * s + 26) + 'px';
     };
@@ -342,6 +356,9 @@
         return gsap.from(self.lines, { yPercent: 105, rotate: 3, transformOrigin: '0 100%', duration: 1.1, stagger: .1, delay: .1, ease: 'power3.out' });
       } });
     }
+    // what IMIN carries lands under the lead; the founders fade in just before the soft link
+    tl.from('.hero-gets li', { y: 12, autoAlpha: 0, duration: .6, stagger: .05 }, .5)
+      .from('.hero-team', { autoAlpha: 0, duration: .8 }, .8);
     tl.from('.hero-copy .label', { y: 12, autoAlpha: 0, duration: .7 }, 0)
       .from('.hero-lead', { y: 18, autoAlpha: 0, duration: .9 }, .45)
       .from('.hero-act > *', { y: 18, autoAlpha: 0, duration: .9, stagger: .1, ease: 'back.out(1.8)' }, .6)
@@ -427,7 +444,8 @@
       .to(tabs, { maxWidth: 0, paddingLeft: 0, paddingRight: 0, opacity: 0, duration: .4, ease: 'power2.in', stagger: { each: .06, from: 'end' } }, 6)
       .to(imin, { maxWidth: 260, paddingLeft: 12, paddingRight: 12, opacity: 1, duration: .45, ease: 'power3.out' }, 6.5)
       .to({}, { duration: .5 });
-    oneWay(pile, { trigger: brw, start: 'center 54%', end: () => '+=' + Math.round(innerHeight * 1.8), pin: true, anticipatePin: 1 });
+    if (pinTabs) oneWay(pile, { trigger: brw, start: 'center 54%', end: () => '+=' + Math.round(innerHeight * 1.8), pin: true, anticipatePin: 1 });
+    else ScrollTrigger.create({ trigger: brw, start: 'top 65%', once: true, onEnter: () => pile.timeScale(1.6).play() });
     gsap.from('.brw', { y: 60, opacity: 0, duration: 1.1, ease: 'power4.out', scrollTrigger: { trigger: brw, start: 'top 92%' } });
   }
 
@@ -491,6 +509,14 @@
   gsap.from('.final .btn-door', { scale: .9, y: 16, duration: .9, ease: 'back.out(2)', scrollTrigger: { trigger: '.final', start: 'top 85%' } });
   gsap.from('.way', { y: 36, opacity: 0, duration: 1, ease: 'expo.out', stagger: .1, scrollTrigger: { trigger: '.ways', start: 'top 95%' } });
   gsap.from('.foot-cols > div', { y: 24, opacity: 0, duration: .8, stagger: .06, scrollTrigger: { trigger: '.foot-cols', start: 'top 98%' } });
+
+  // an image that lands after the triggers were measured can push down what is below it: measure again then
+  let measured = 0, reflow;
+  ScrollTrigger.addEventListener('refresh', () => { measured = document.documentElement.scrollHeight; });
+  $$('main img').forEach(i => { if (!i.complete) i.addEventListener('load', () => {
+    clearTimeout(reflow);
+    reflow = setTimeout(() => { if (document.documentElement.scrollHeight !== measured) ScrollTrigger.refresh(); }, 150);
+  }, { once: true }); });
 
   /* keep trigger positions right: page order first, then again once everything has loaded */
   ScrollTrigger.sort();
