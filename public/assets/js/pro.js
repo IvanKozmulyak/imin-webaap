@@ -1,31 +1,7 @@
 /* IMIN · creators page imin.wtf/pro */
 (() => {
-  /* Every sentence and amount this script writes into the page, by <html lang>. {name} slots go through fill(). */
-  const STR = {
-    en: {
-      whatPlanned: 'What’s the night?',
-      whatIdea: 'What’s the idea?',
-      whatCompany: 'What’s the occasion?',
-      errName: 'Add your name, then send.',
-      errContact: 'Add an email or Instagram, then send.',
-      errWhat: 'Add a few words about the night, then send.',
-      errLink: 'The link should start with https://',
-      errConsent: 'Tick the box so we can use these details to answer you.',
-      errSend: 'That didn’t go through. Try again, or write to contact@imin.support.',
-      doneTitle: 'Got it, {name}.',
-      doneText: 'We’ll answer within 24 hours at {contact}.',
-      free: 'Free',
-      eur: n => '€' + (Number.isInteger(n) ? n : n.toFixed(2)),
-      cents: n => '€' + n.toFixed(2),
-      zero: '€0',
-      feeNote: 'The fee goes on top of your price, and your guest sees it before paying. You pay IMIN €0 during early access.',
-      freeNote: 'Free nights are free. No fee for you, no fee for your guests.',
-      tabsMany: '6 tabs for one night',
-      tabsOne: '1 tab for the whole night',
-      you: 'You'
-    }
-  };
-  const T = STR[document.documentElement.lang] || STR.en;
+  /* Every sentence and amount this script writes lives in i18n/en.js (and i18n/<lang>.js); {name} slots go through fill(). */
+  const T = window.IMIN_I18N ? window.IMIN_I18N.pick('pro') : {};
   const fill = (s, v) => s.replace(/\{(\w+)\}/g, (_, k) => v[k] ?? '');
 
   const $ = (s, r = document) => r.querySelector(s);
@@ -65,7 +41,10 @@
   /* links from config (page links, then the shared ones); a link with no URL yet stays hidden, the call falls back to the form */
   $$('[data-link]').forEach(a => {
     const k = a.dataset.link;
-    const u = L[k] || ((window.IMIN && window.IMIN.links) || {})[k];
+    const raw = L[k] || ((window.IMIN && window.IMIN.links) || {})[k];
+    // a link inside this site stays in the page's language (/ → /fr)
+    const lang = (document.documentElement.lang || 'en').slice(0, 2);
+    const u = raw && lang !== 'en' && /^\/(?!assets\/|api\/)/.test(raw) ? '/' + lang + (raw === '/' ? '' : raw) : raw;
     if (u) {
       a.href = u;
       a.hidden = false;

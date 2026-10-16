@@ -526,3 +526,8 @@ textarea.field{resize:vertical;min-height:72px}
   html{scroll-behavior:auto}
   *,*::before,*::after{animation:none!important;transition:none!important}
 }
+
+/* footer language links: one per language, a 44 px target each */
+.foot-langs{display:flex;align-items:center;gap:2px}
+.foot-langs a{display:inline-flex;align-items:center;justify-content:center;min-width:44px;min-height:44px;color:inherit}
+.foot-langs a[aria-current]{color:var(--paper)}

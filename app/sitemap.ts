@@ -1,19 +1,19 @@
 import type { MetadataRoute } from 'next';
 
-// In-page anchors (#faq, #create, …) are not URLs.
+const SITE = 'https://imin.wtf';
+const LANGS = ['en', 'fr', 'es', 'uk'] as const;
+type Path = '' | '/pro';
+
+// English sits at the root, the other languages under /<lang>.
+const url = (lang: (typeof LANGS)[number], path: Path) =>
+  lang === 'en' ? `${SITE}${path || '/'}` : `${SITE}/${lang}${path}`;
+
+// One entry per page and language, each listing every translation. In-page anchors are not URLs.
+function page(path: Path, priority: number, changeFrequency: 'weekly' | 'monthly'): MetadataRoute.Sitemap {
+  const languages = Object.fromEntries(LANGS.map(l => [l, url(l, path)]));
+  return LANGS.map(lang => ({ url: url(lang, path), lastModified: new Date(), changeFrequency, priority, alternates: { languages } }));
+}
+
 export default function sitemap(): MetadataRoute.Sitemap {
-  return [
-    {
-      url: 'https://imin.wtf/',
-      lastModified: new Date(),
-      changeFrequency: 'weekly',
-      priority: 1,
-    },
-    {
-      url: 'https://imin.wtf/pro',
-      lastModified: new Date(),
-      changeFrequency: 'monthly',
-      priority: 0.8,
-    },
-  ];
+  return [...page('', 1, 'weekly'), ...page('/pro', 0.8, 'monthly')];
 }

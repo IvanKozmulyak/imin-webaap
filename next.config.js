@@ -12,6 +12,8 @@ const nextConfig = {
       // The rewrite targets below are files too; keep one URL per page.
       { source: '/index.html', destination: '/', permanent: true },
       { source: '/pro/index.html', destination: '/pro', permanent: true },
+      { source: '/:lang(fr|es|uk)/index.html', destination: '/:lang', permanent: true },
+      { source: '/:lang(fr|es|uk)/pro/index.html', destination: '/:lang/pro', permanent: true },
     ];
   },
   // The two landing pages are static HTML in public/ (vanilla JS + GSAP, no React).
@@ -20,6 +22,9 @@ const nextConfig = {
       beforeFiles: [
         { source: '/', destination: '/index.html' },
         { source: '/pro', destination: '/pro/index.html' },
+        // translated copies of both pages: public/<lang>/index.html and public/<lang>/pro/index.html
+        { source: '/:lang(fr|es|uk)', destination: '/:lang/index.html' },
+        { source: '/:lang(fr|es|uk)/pro', destination: '/:lang/pro/index.html' },
       ],
     };
   },

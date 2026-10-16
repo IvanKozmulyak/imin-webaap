@@ -6,12 +6,20 @@
   <title>IMIN: music-first nights in Metz</title>
   <meta name="description" content="IMIN throws music-first nights in Metz. Tap I'm in, come as you are.">
   <link rel="canonical" href="https://imin.wtf/">
+  <link rel="alternate" hreflang="en" href="https://imin.wtf/">
+  <link rel="alternate" hreflang="fr" href="https://imin.wtf/fr">
+  <link rel="alternate" hreflang="es" href="https://imin.wtf/es">
+  <link rel="alternate" hreflang="uk" href="https://imin.wtf/uk">
+  <link rel="alternate" hreflang="x-default" href="https://imin.wtf/">
   <meta name="theme-color" content="#0B0A14">
   <link rel="icon" href="/assets/img/favicon.svg" type="image/svg+xml">
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://imin.wtf/">
   <meta property="og:site_name" content="IMIN">
   <meta property="og:locale" content="en_US">
+  <meta property="og:locale:alternate" content="fr_FR">
+  <meta property="og:locale:alternate" content="es_ES">
+  <meta property="og:locale:alternate" content="uk_UA">
   <meta property="og:title" content="Don't overthink the night.">
   <meta property="og:description" content="Music first. Come as you are.">
   <meta property="og:image" content="https://imin.wtf/opengraph-image">
@@ -97,10 +105,10 @@
       <details class="lang">
         <summary aria-label="Language: English">EN <svg class="ico" aria-hidden="true"><use href="#i-caret-down"/></svg></summary>
         <div class="lang-menu">
-          <a href="#hero" aria-current="true" lang="en">English <span>EN</span></a>
-          <a href="#hero" lang="fr">Français <span>FR</span></a>
-          <a href="#hero" lang="es">Español <span>ES</span></a>
-          <a href="#hero" lang="uk">Українська <span>UA</span></a>
+          <a href="/" aria-current="true" lang="en" hreflang="en">English <span>EN</span></a>
+          <a href="/fr" lang="fr" hreflang="fr">Français <span>FR</span></a>
+          <a href="/es" lang="es" hreflang="es">Español <span>ES</span></a>
+          <a href="/uk" lang="uk" hreflang="uk">Українська <span>UA</span></a>
         </div>
       </details>
       <span class="top-go" data-top-go><span class="top-when" data-top-when hidden></span><a class="btn-door" href="https://app.imin.wtf/events" data-go-in>I’m in</a></span>
@@ -332,7 +340,7 @@
       <div><p class="label">Follow</p><a href="https://www.instagram.com/imin.wtf/">Instagram</a><a href="https://www.threads.com/@imin.wtf">Threads</a><a data-link="playlist" hidden>Friday playlist</a></div>
       <div><p class="label">Legal</p><a href="https://app.imin.wtf/legal">Legal notice</a><a href="https://app.imin.wtf/legal/terms">Terms</a><a href="https://app.imin.wtf/legal/privacy">Privacy</a><a href="https://app.imin.wtf/legal/refunds">Refunds</a><a href="https://app.imin.wtf/legal/cookies">Cookies</a></div>
     </div>
-    <div class="foot-bottom"><span>© 2026 IMIN</span><span>EN · FR · ES · UA</span></div>
+    <div class="foot-bottom"><span>© 2026 IMIN</span><span class="foot-langs"><a href="/" aria-current="true" lang="en" hreflang="en">EN</a> · <a href="/fr" lang="fr" hreflang="fr">FR</a> · <a href="/es" lang="es" hreflang="es">ES</a> · <a href="/uk" lang="uk" hreflang="uk">UA</a></span></div>
   </div>
 </footer>
 
@@ -362,6 +370,7 @@
 <script src="/assets/vendor/ScrollTrigger.min.js" defer></script>
 <script src="/assets/vendor/SplitText.min.js" defer></script>
 <script src="/assets/vendor/lenis.min.js" defer></script>
+<script src="/assets/js/i18n/en.js" defer></script>
 <script src="/assets/js/client.js" defer></script>
 </body>
 </html>

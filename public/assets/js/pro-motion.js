@@ -21,7 +21,9 @@ window.IMIN_MO = (() => {
   const fee = price => price > 0 ? Math.round(price * 5 + 99) / 100 : 0;
 
   const lang = () => document.documentElement.lang || 'en';
-  const eur = (n, digits = 2) => '€' + Number(n).toLocaleString(lang(), { minimumFractionDigits: digits, maximumFractionDigits: digits });
+  // euros the way the dashboard writes them in the page's language (€1,060.00 · 1 060,00 €)
+  const LOCALE = { en: 'en-GB', fr: 'fr-FR', es: 'es-ES', uk: 'uk-UA' };
+  const eur = (n, digits = 2) => new Intl.NumberFormat(LOCALE[lang()] || 'en-GB', { style: 'currency', currency: 'EUR', minimumFractionDigits: digits, maximumFractionDigits: digits }).format(n);
 
   // Runs play() when el is a third on screen; play(true) at once under reduced motion (final state, no movement).
   const onView = (el, play, { repeat = false, threshold = .35 } = {}) => {

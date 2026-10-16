@@ -1,39 +1,8 @@
 
 (() => {
-  /* Every string this script puts on the page. Another language adds its own key, picked by <html lang>. */
-  const STRINGS = {
-    en: {
-      intro: ['should I go out tonight?', 'Don’t overthink it.', 'I’m in'],
-      typing: 'IMIN is typing',
-      imIn: 'I’m in',
-      soon: 'Coming soon',
-      ready: { playlist: 'Listen' },
-      night: {
-        label: 'The next night',
-        notif: n => (n.city ? `Hey. ${n.day} in ${n.city}. Music first. You in?` : `Hey. ${n.day}. Music first. You in?`),
-        when: n => `${n.day}, ${n.time}`,
-        price: { soldout: 'Sold out', free: 'Free', from: amount => `From ${amount}` }
-      },
-      noDate: {
-        label: 'The next night, date to come',
-        when: '??.??',
-        time: 'Date soon',
-        title: 'The next one',
-        meta: 'Music first · Metz',
-        notif: 'Next date’s not out yet. Want it first?',
-        dockWhen: 'Next date soon',
-        dockWhat: 'Want it first?'
-      },
-      mail: {
-        needConsent: 'Switch on “Send me IMIN news” first.',
-        badEmail: 'That email doesn’t look right.',
-        failed: 'That didn’t go through. Try again, or write to ',
-        done: 'You’re on the list. See you soon.'
-      }
-    }
-  };
+  /* Every string this script puts on the page lives in i18n/en.js (and i18n/<lang>.js), picked by <html lang>. */
   const LANG = (document.documentElement.lang || 'en').toLowerCase().slice(0, 2);
-  const STR = STRINGS[LANG] || STRINGS.en;
+  const STR = window.IMIN_I18N ? window.IMIN_I18N.pick('guest') : {};
   const CFG = window.IMIN || {};
 
   const $ = (s, r = document) => r.querySelector(s);
@@ -440,8 +409,10 @@
 
   /* links from config; one with no address yet is "coming soon" on a tile and hidden elsewhere */
   const L = CFG.links || {};
+  // a link inside this site stays in the page's language (/pro → /fr/pro)
+  const local = u => (LANG !== 'en' && /^\/(?!assets\/|api\/)/.test(u) ? '/' + LANG + (u === '/' ? '' : u) : u);
   $$('[data-link]').forEach(a => {
-    const u = L[a.dataset.link];
+    const u = L[a.dataset.link] && local(L[a.dataset.link]);
     const tile = a.classList.contains('tile2');
     if (u) {
       a.href = u;
