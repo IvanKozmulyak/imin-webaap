@@ -16,8 +16,8 @@
   --line-2:rgba(244,239,231,.24);
   --muted:rgba(244,239,231,.76);
   --quiet:rgba(244,239,231,.58);
-  --display:"Barlow Condensed","Arial Narrow",Impact,sans-serif;
-  --text:"DM Sans",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --display:"Barlow Condensed","Fira Sans Condensed","Arial Narrow",Impact,sans-serif;
+  --text:"DM Sans","Onest",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
   --ios:"Helvetica Neue",Helvetica,Arial,sans-serif;  /* the old phone's own type, inside its UI only */
   --gloss:linear-gradient(rgba(255,255,255,.32),rgba(255,255,255,.08) 50%,rgba(255,255,255,0) 50%,rgba(0,0,0,.1));
   --bar:linear-gradient(rgba(255,255,255,.14),rgba(255,255,255,.04) 50%,rgba(255,255,255,0) 50%),linear-gradient(#2F2B46,#110F1B);

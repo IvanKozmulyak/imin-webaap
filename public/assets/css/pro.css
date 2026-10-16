@@ -16,8 +16,8 @@
   --line-2:rgba(244,239,231,.24);
   --muted:rgba(244,239,231,.76);
   --quiet:rgba(244,239,231,.58);
-  --display:"Barlow Condensed","Arial Narrow",Impact,sans-serif;
-  --text:"DM Sans",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --display:"Barlow Condensed","Fira Sans Condensed","Arial Narrow",Impact,sans-serif;
+  --text:"DM Sans","Onest",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
   --gutter:clamp(16px,5vw,72px);
   --max:1320px;
   --hdr:64px;
