@@ -123,3 +123,15 @@ Audit 2026-10-16 against origin `api` 44fc71f, `webapp` b53be94, `public` bc655d
 | Guest FAQ data | LIVE, undersold | `public privacy.md:4,9` | "We use it for your ticket, your payment and the door. News only if you tick the box." |
 
 Product follow-ups found (not in this task): team invites send no email (`api TeamService.java:69-106`) while the UI says "Invite sent"; Google sign-up defaults the org country to NL (`api OAuthProperties.java:63`), which sets the Stripe account country for FR/LU creators; `APPLE_PAY_DOMAIN_VERIFICATION` unset on app.imin.wtf.
+
+## Track M: motion product mocks on /pro (Ivan, 2026-10-16: "create motion version of prod's so it looks more native on the page")
+
+The seven designer screenshots in `/pro` (`public/assets/img/app/*.webp`) are artboards with cut features and a real Gmail address. They are replaced by HTML mocks drawn and animated in the page: structure and labels follow the live dashboard (`imin-webapp` origin/main), every number belongs to one example night ("Saturday Night", the same night as the six-tabs scene) defined once in `IMIN_MO.night`, and every mock carries an "Example" chip. Copy lives in the HTML; scripts only animate and count. Reduced motion shows the final state. Each mock keeps a `role="img"` label that says what it shows.
+
+| Agent | Mocks | Files |
+|---|---|---|
+| M1 | hero dashboard (with the four thought highlights), six-tabs end state, step 06 analytics; hero poster switched to the example night | `pro/index.html` (hero `.dash`, `.bv-imin`, `.m-after`), `pro-motion.*` M1 sections, `pro.js` hero thoughts only |
+| M2 | step 01 create + live preview, step 02 concepts → posters, step 03 ticket tiers | `pro/index.html` (`.m-page`, `.m-poster`, `.m-tix`), `pro-motion.*` M2 sections |
+| M3 | step 04 phone: tonight → door scanner → valid scan, step 05 audience + campaign to those who said yes | `pro/index.html` (`.m-door`, `.m-crowd`), `pro-motion.*` M3 sections |
+
+When all three land: delete `public/assets/img/app/*.webp` that nothing references, re-run the claim grep, browser-check both widths.
