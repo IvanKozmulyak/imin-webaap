@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { sendTeamEmail } from '@/lib/email';
+import { guardPost, windowLimiter } from '@/lib/guard';
 
 export const dynamic = 'force-dynamic';
 
@@ -8,9 +9,14 @@ const MAX_EMAIL = 254;
 const MAX_CONSENT_TEXT = 300;
 const SOURCE_RE = /^[a-z0-9-]{1,40}$/;
 const LANG_RE = /^[a-z]{2}$/;
+// One sign-up, maybe a retry or two.
+const limiter = windowLimiter(5, 10 * 60_000);
 
 // "Keep me posted" on the guest page. The email to the team is the only record, so a failed send is a 500.
 export async function POST(request: NextRequest) {
+  const refused = guardPost(request, limiter);
+  if (refused) return refused;
+
   let body: Record<string, unknown>;
   try {
     const parsed: unknown = await request.json();

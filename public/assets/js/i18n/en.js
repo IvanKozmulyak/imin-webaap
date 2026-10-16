@@ -13,7 +13,7 @@ window.IMIN_I18N = {
         label: 'The next night',
         notif: n => (n.city ? `Hey. ${n.day} in ${n.city}. Music first. You in?` : `Hey. ${n.day}. Music first. You in?`),
         when: n => `${n.day}, ${n.time}`,
-        price: { soldout: 'Sold out', free: 'Free', from: amount => `From ${amount}` }
+        price: { soldout: 'Sold out', free: 'Free', freeOrFrom: amount => `Free or from ${amount}`, from: amount => `From ${amount}` }
       },
       noDate: {
         label: 'The next night, date to come',

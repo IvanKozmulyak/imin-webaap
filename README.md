@@ -21,7 +21,8 @@ The public site: the guest page at `/` and the creators page at `/pro`.
 npm install
 cp .env.example .env.local   # RESEND_API_KEY to send the team emails
 npm run dev
-npm test                     # node --test
+npm test                     # unit tests, then check:i18n (translated pages in step with English)
+npm run test:unit            # unit tests only (node --test)
 ```
 
 ## SEO

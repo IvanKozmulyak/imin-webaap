@@ -1,11 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { sendTeamEmail } from '@/lib/email';
+import { guardPost, windowLimiter } from '@/lib/guard';
 
 export const dynamic = 'force-dynamic';
 
+// A few clicks on the call links per visit; past that the team already knows.
+const limiter = windowLimiter(5, 10 * 60_000);
+
 // Beacon from the 20-minute call links on imin.wtf/pro: tells the team someone started booking.
-// Errors are logged, never surfaced; ponytail: one email per click, no dedupe or rate limit.
+// Errors are logged, never surfaced; ponytail: one email per click up to the limit, no dedupe across visitors.
 export async function POST(request: NextRequest) {
+  const refused = guardPost(request, limiter);
+  if (refused) return refused;
+
   try {
     await sendTeamEmail({
       eyebrow: 'Creator call',

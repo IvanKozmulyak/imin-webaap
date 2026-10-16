@@ -8,9 +8,9 @@ type Path = '' | '/pro';
 const url = (lang: (typeof LANGS)[number], path: Path) =>
   lang === 'en' ? `${SITE}${path || '/'}` : `${SITE}/${lang}${path}`;
 
-// One entry per page and language, each listing every translation. In-page anchors are not URLs.
+// One entry per page and language, each listing every translation and English as x-default. In-page anchors are not URLs.
 function page(path: Path, priority: number, changeFrequency: 'weekly' | 'monthly'): MetadataRoute.Sitemap {
-  const languages = Object.fromEntries(LANGS.map(l => [l, url(l, path)]));
+  const languages = { ...Object.fromEntries(LANGS.map(l => [l, url(l, path)])), 'x-default': url('en', path) };
   return LANGS.map(lang => ({ url: url(lang, path), lastModified: new Date(), changeFrequency, priority, alternates: { languages } }));
 }
 

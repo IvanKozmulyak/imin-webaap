@@ -309,6 +309,8 @@ button{font:inherit;color:inherit;cursor:pointer}
 .sw-input:focus-visible + .sw{outline:2px solid var(--haze);outline-offset:3px}
 .sw-err{font:13px/1.4 var(--text);color:var(--haze)}
 .mail-done{display:flex;flex-direction:column;gap:7px;max-width:26rem;margin-top:16px}
+/* without scripts the form could only post to the page itself: the contact lines in the FAQ and footer stay */
+.no-js .mail{display:none}
 .also{display:flex;align-items:center;gap:8px;margin-top:14px;font-size:13px;color:var(--quiet)}
 .also a{display:inline-flex;align-items:center;gap:6px;color:var(--muted);text-decoration:none}
 .also a:hover{color:var(--paper)}
@@ -360,7 +362,6 @@ button{font:inherit;color:inherit;cursor:pointer}
 html.lenis,html.lenis body{height:auto}
 .lenis.lenis-smooth{scroll-behavior:auto!important}
 .ico--lg{width:28px;height:28px}
-.hp{position:absolute!important;left:-9999px;width:1px;height:1px;opacity:0}
 
 /* the beat: the brand pattern, I Paper · M Haze · N Doorlight */
 .beat-band{position:relative;height:clamp(44px,5vw,72px);margin-top:clamp(48px,7vw,96px);overflow:hidden}

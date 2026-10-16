@@ -2,7 +2,14 @@
 (() => {
   /* Every string this script puts on the page lives in i18n/en.js (and i18n/<lang>.js), picked by <html lang>. */
   const LANG = (document.documentElement.lang || 'en').toLowerCase().slice(0, 2);
-  const STR = window.IMIN_I18N ? window.IMIN_I18N.pick('guest') : {};
+  const I18N = window.IMIN_I18N;
+  // the strings file never arrived: the page stays as it reads without scripts (no intro, no date, no form)
+  if (!I18N || typeof I18N.pick !== 'function') {
+    document.documentElement.classList.remove('js', 'night-wait', 'intro-run');
+    document.documentElement.classList.add('no-js');
+    return;
+  }
+  const STR = I18N.pick('guest');
   const CFG = window.IMIN || {};
 
   const $ = (s, r = document) => r.querySelector(s);
@@ -70,12 +77,13 @@
       await say('b out yes', STR.intro[2]);
       await pause(350);
     })();
-    return Promise.race([chat, skipped]).then(() => {
+    // the page scrolls again however the chat ends, and the hero still comes in after it
+    return Promise.race([chat, skipped]).finally(() => {
+      root.classList.remove('intro-lock');
       load(1);
       introEl.classList.add('out');
-      root.classList.remove('intro-lock');
       setTimeout(() => introEl.classList.add('gone'), 950);
-    });
+    }).catch(() => {});
   })();
 
   const iminSays = async (parent, text) => {
@@ -121,8 +129,8 @@
     if (!p) return '';
     if (p.kind === 'soldout') return STR.night.price.soldout;
     if (p.kind === 'free') return STR.night.price.free;
-    if (p.kind === 'from' && Number.isSafeInteger(p.minor) && p.minor > 0 && /^[A-Z]{3}$/.test(p.currency)) {
-      try { return STR.night.price.from(money(p.minor, p.currency)); } catch (_) { /* a currency this browser can't format: no price */ }
+    if ((p.kind === 'from' || p.kind === 'freeOrFrom') && Number.isSafeInteger(p.minor) && p.minor > 0 && /^[A-Z]{3}$/.test(p.currency)) {
+      try { return STR.night.price[p.kind](money(p.minor, p.currency)); } catch (_) { /* a currency this browser can't format: no price */ }
     }
     return '';
   };
@@ -232,7 +240,7 @@
     mailForm.elements.email.focus({ preventScroll: true });
   };
 
-  /* I'M IN answers IMIN's message, then opens the night (or, with no date yet, the email form) */
+  /* I'M IN answers IMIN's message, then opens the night; with no date yet there is nothing to answer, so it goes to the email form */
   const replyIn = () => {
     if (btnIn.classList.contains('sent')) return false;
     const reply = document.createElement('div');
@@ -246,8 +254,8 @@
   btnIn.addEventListener('click', e => {
     if (!plainClick(e)) return; // a new tab or window: let the link go as it is
     e.preventDefault();
+    if (heroState === 'soon') { toMail(); return; }
     const fresh = replyIn();
-    if (heroState === 'soon') { wait(fresh ? 450 : 0).then(toMail); return; }
     const to = btnIn.href;
     wait(fresh ? 700 : 0).then(() => { location.assign(to); });
   });
@@ -363,7 +371,8 @@
           consent_text: $('[data-consent-text]', form).textContent.trim(),
           source: 'guest-stay',
           lang: LANG,
-          company: form.elements.company.value
+          // the hidden trap field: only a bot fills it, and the server then sends nothing
+          company: form.elements.trap.value
         })
       });
       ok = res.ok;

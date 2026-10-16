@@ -38,10 +38,10 @@ a:hover{color:var(--paper)}
 button{font:inherit;color:inherit;cursor:pointer}
 :focus-visible{outline:2px solid var(--haze);outline-offset:3px}
 .wrap{width:100%;max-width:var(--max);margin-inline:auto;padding-inline:var(--gutter)}
+.vh{position:absolute!important;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
 .ico{width:20px;height:20px;flex:none;fill:currentColor}
 .ico--lg{width:32px;height:32px}
 [hidden]{display:none!important}
-.hp{position:absolute!important;left:-9999px;width:1px;height:1px;opacity:0}
 .sel{-webkit-user-select:all;user-select:all;font-weight:700}
 
 /* type: 13 16 20 25 31 39 49 61 76 95, one step down on phones */
@@ -144,6 +144,8 @@ button{font:inherit;color:inherit;cursor:pointer}
 .p-body{position:absolute;z-index:3;left:12px;right:12px;bottom:26px;display:grid;gap:6px}
 .p-title{font:800 clamp(22px,2.8vw,38px)/.86 var(--display);text-transform:uppercase;text-wrap:balance}
 .p-meta{font:600 clamp(8px,.8vw,10px)/1.35 var(--text);letter-spacing:.12em;text-transform:uppercase;color:rgba(244,239,231,.9)}
+/* the example poster says so, above its title, clear of the date in the corner */
+.poster-card .mo-example{position:static;justify-self:start}
 .beat{position:absolute;z-index:3;left:0;right:0;bottom:0;height:16px;overflow:hidden}
 .beat i{position:absolute;inset:0 auto 0 0;width:calc(100% + 74.5px);will-change:transform;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='149' height='32' viewBox='0 0 149 32'%3E%3Cg fill='none' stroke-width='4' stroke-linecap='round'%3E%3Cpath stroke='%23F4EFE7' d='M2 2v28M46.16 2v28M76.5 2v28M120.66 2v28'/%3E%3Cpath stroke='%239C8CFF' d='M7.84 2v28M13.68 2l7 28M34.52 2l-7 28M40.32 2v28M82.34 2v28M88.18 2l7 28M109.02 2l-7 28M114.82 2v28'/%3E%3Cpath stroke='%2316B877' d='M52 2v28M57.84 2l7 28M70.68 2v28M126.5 2v28M132.34 2l7 28M145.18 2v28'/%3E%3C/g%3E%3C/svg%3E") repeat-x 0 0/74.5px 16px;animation:drift 6s linear infinite}
 @keyframes drift{to{transform:translateX(-74.5px)}}
@@ -464,6 +466,8 @@ textarea.field{resize:vertical;min-height:72px}
   .pitch-head{margin:0;position:sticky;top:calc(var(--hdr) + 24px)}
 }
 .pitch-form{display:grid;gap:14px}
+/* without scripts the form could only post to the page itself: the contact lines in the FAQ and footer stay */
+.no-js .pitch-form{display:none}
 .pitch.lit{animation:lit 1.6s var(--ease)}
 @keyframes lit{0%{box-shadow:0 0 0 0 rgba(156,140,255,.0)}20%{box-shadow:0 0 0 4px rgba(156,140,255,.6)}100%{box-shadow:0 0 0 0 rgba(156,140,255,0)}}
 /* segmented switch: what the person has */

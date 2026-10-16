@@ -2,6 +2,8 @@
 (() => {
   /* Every sentence and amount this script writes lives in i18n/en.js (and i18n/<lang>.js); {name} slots go through fill(). */
   const T = window.IMIN_I18N ? window.IMIN_I18N.pick('pro') : {};
+  // without its strings the page reads as it does with JS off (forms hidden, nothing half-wired)
+  if (!T.eur) { document.documentElement.classList.replace('js', 'no-js'); return; }
   const fill = (s, v) => s.replace(/\{(\w+)\}/g, (_, k) => v[k] ?? '');
 
   const $ = (s, r = document) => r.querySelector(s);
@@ -35,8 +37,11 @@
     $$('details.lang[open]').forEach(d => { if (!d.contains(e.target)) d.open = false; });
   });
 
-  /* tells the team someone started booking; a failed beacon never holds up the visitor's click */
-  const ping = url => { try { navigator.sendBeacon(url); } catch (e) {} };
+  /* tells the team someone started booking, as JSON (the route takes nothing else); a failed beacon never holds up the click */
+  const ping = url => {
+    try { if (navigator.sendBeacon(url, new Blob(['{}'], { type: 'application/json' }))) return; } catch (e) {}
+    fetch(url, { method: 'POST', keepalive: true, headers: { 'Content-Type': 'application/json' }, body: '{}' }).catch(() => {});
+  };
 
   /* links from config (page links, then the shared ones); a link with no URL yet stays hidden, the call falls back to the form */
   $$('[data-link]').forEach(a => {
@@ -115,7 +120,6 @@
     e.preventDefault();
     if (sending) return;
     err.hidden = true;
-    if (form.elements.company_site.value) return;
     const bad = ['name', 'contact', 'what'].map(n => form.elements[n]).find(f => !f.value.trim());
     if (bad) return fail(ERR[bad.name], bad);
     const link = form.elements.link;
@@ -123,7 +127,9 @@
     if (link.value && (!link.checkValidity() || !/^https:\/\//i.test(link.value.trim()))) return fail(T.errLink, link);
     if (!form.elements.ok.checked) return fail(T.errConsent);
     const data = Object.fromEntries(new FormData(form));
-    delete data.company_site;
+    // the hidden trap field goes to the server, which answers a bot as if it worked and sends nothing
+    data.company_site = data.trap;
+    delete data.trap;
     data.consent = true;
     data.lang = document.documentElement.lang;
     track('pitch_form_submit', { type: data.type });
@@ -237,7 +243,20 @@
     addEventListener('resize', fit);
   }
 
-  if (reduce || !window.gsap || !window.ScrollTrigger) return;
+  if (reduce || !window.gsap || !window.ScrollTrigger) {
+    // six tabs without motion: straight to where the scroll would take them, one IMIN tab
+    const brw = $('[data-brw]');
+    if (brw) {
+      const imin = $('.bt-imin', brw);
+      $$('.bt:not(.bt-imin)', brw).forEach(t => { t.hidden = true; });
+      imin.classList.add('is-on');
+      imin.style.display = 'flex';
+      $('.bv-imin', brw).classList.add('is-on');
+      $('[data-url]', $('.brw-url', brw)).innerHTML = imin.dataset.url;
+      $('[data-count]', brw).textContent = T.tabsOne;
+    }
+    return;
+  }
 
   /* =========================================================
      Motion

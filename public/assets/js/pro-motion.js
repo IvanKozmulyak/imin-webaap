@@ -86,9 +86,9 @@ window.IMIN_MO = (() => {
   N.links.forEach((l, i) => { VAL['src' + i] = [paid(l.tickets), 'eur']; });
   MO.m1 = { values: VAL, heroIn: () => null };
 
+  // without GSAP nothing counts or draws, but the six-tabs frame still gets its copy of the Overview
   const gsap = window.gsap;
-  if (!gsap) return;
-  const motion = !MO.reduce;
+  const motion = !MO.reduce && !!gsap;
   const $$ = (s, r) => Array.from(r.querySelectorAll(s));
   const LOCALE = { en: 'en-GB', fr: 'fr-FR', es: 'es-ES', uk: 'uk-UA' };
   let F;
@@ -160,7 +160,7 @@ window.IMIN_MO = (() => {
   const ov = document.querySelector('.dash-shot [data-m1-ov]');
   if (ov) {
     pulse(ov);
-    MO.m1.heroIn = () => (motion ? build(ov).paused(false) : gsap.timeline());
+    MO.m1.heroIn = () => (motion ? build(ov).paused(false) : null);
   }
 
   // Six tabs: when they close, the same Overview fills the browser frame; it counts up once, as it appears.

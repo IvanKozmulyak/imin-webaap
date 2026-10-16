@@ -7,6 +7,7 @@
     "build": "next build",
     "start": "next start",
     "test": "node --test && node scripts/check-i18n.mjs",
+    "test:unit": "node --test",
     "check:i18n": "node scripts/check-i18n.mjs"
   },
   "dependencies": {
