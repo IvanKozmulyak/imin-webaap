@@ -256,7 +256,61 @@
             <h3 class="t-h2">The door</h3>
             <p>Scan tickets from your phone. No list on paper.</p>
           </div>
-          <figure class="mock m-door"><div class="shot shot--phone"><img src="/assets/img/app/mobile.webp" width="1170" height="2535" alt="The phone dashboard with the door scanner one tap away" loading="lazy" decoding="async"></div></figure>
+          <figure class="mock m-door">
+            <div class="mo-door" role="img" aria-label="Example night on a phone. The dashboard’s Tonight screen shows Saturday Night, 84 of 120 tickets sold, and Open door scanner. The door scanner then answers three tickets: Already scanned at 23:41, Early Bird; Do not admit, Invalid QR; Admit, Standard. On the dashboard, Checked in goes to 72, of 84 sold.">
+              <div class="shot shot--phone">
+                <div class="mo mo-door-ph" data-mo-door>
+                  <span class="mo-example">Example</span>
+                  <!-- dashboard.imin.wtf on a phone: the Tonight view -->
+                  <div class="mo-door-scr mo-tonight" data-m3-scene="dash">
+                    <p class="mo-tonight-top"><span class="mo-tonight-ib"><svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16"/></svg></span><svg class="mo-tonight-logo" viewBox="0 0 169.58 224.95"><defs><linearGradient id="mo-mark" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="170" y2="225"><stop offset="0" stop-color="#4a6bff"/><stop offset=".55" stop-color="#2b37c9"/><stop offset="1" stop-color="#8a4bd6"/></linearGradient></defs><use href="#logo-s" fill="url(#mo-mark)"/></svg><svg class="mo-tonight-bell" viewBox="0 0 24 24"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg></p>
+                    <div class="mo-tonight-main">
+                      <p class="mo-tonight-h">Tonight</p>
+                      <p class="mo-tonight-sub">Sat, 14 Nov</p>
+                      <div class="mo-tonight-hero">
+                        <div class="mo-tonight-hb">
+                          <p class="mo-tonight-eye"><i class="mo-tonight-dot"></i>Now</p>
+                          <p class="mo-tonight-name">Saturday Night</p>
+                          <p class="mo-tonight-meta">Under a day away · Sat, 14 Nov 2026 · Metz</p>
+                          <p class="mo-tonight-fl">Tickets sold</p>
+                          <p class="mo-tonight-fv">84 / 120</p>
+                          <p class="mo-tonight-fs">70% of capacity</p>
+                          <span class="mo-tonight-bar" data-door-bar><i></i></span>
+                        </div>
+                        <span class="mo-tonight-poster"></span>
+                        <p class="mo-tonight-acts"><span class="is-fill">Open event →</span><span>↗ Public page</span><span>Door</span></p>
+                      </div>
+                      <p class="mo-tonight-pa"><span class="is-fill" data-m3-press>Open door scanner<i class="mo-m3-tap" data-m3-tap></i></span><span>+ New event</span></p>
+                    </div>
+                    <p class="mo-tonight-tabs">
+                      <span class="is-on"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></svg>Dashboard</span>
+                      <span><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>Events</span>
+                      <span class="mo-tonight-plus"><i><svg viewBox="0 0 24 24"><path d="M5 12h14M12 5v14"/></svg></i></span>
+                      <span><svg viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>Audience</span>
+                      <span><svg viewBox="0 0 24 24"><circle cx="5" cy="12" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/></svg>More</span>
+                    </p>
+                  </div>
+                  <!-- t.imin.wtf: the door scanner -->
+                  <div class="mo-door-scr mo-gate" data-m3-scene="gate">
+                    <span class="mo-gate-cam"></span>
+                    <span class="mo-gate-find"><i></i><i></i><i></i><i></i></span>
+                    <span class="mo-gate-tix" data-door-tix><svg viewBox="-2 -2 25 25"><rect x="-2" y="-2" width="25" height="25" rx="1.5" fill="#fff"/><path fill-rule="evenodd" d="M0 0h7v7h-7zM1 1v5h5v-5zM2 2h3v3h-3zM14 0h7v7h-7zM15 1v5h5v-5zM16 2h3v3h-3zM0 14h7v7h-7zM1 15v5h5v-5zM2 16h3v3h-3z"/><path data-door-qr="check" d="M12 0h1v1h-1zM9 1h4v1h-4zM8 2h5v1h-5zM9 3h3v1h-3zM8 4h1v1h-1zM11 4h2v1h-2zM10 5h1v1h-1zM12 5h1v1h-1zM8 6h1v1h-1zM10 6h1v1h-1zM12 6h1v1h-1zM12 7h1v1h-1zM3 8h2v1h-2zM6 8h2v1h-2zM9 8h5v1h-5zM15 8h1v1h-1zM19 8h2v1h-2zM0 9h2v1h-2zM3 9h3v1h-3zM7 9h1v1h-1zM9 9h2v1h-2zM12 9h2v1h-2zM16 9h2v1h-2zM20 9h1v1h-1zM0 10h8v1h-8zM11 10h1v1h-1zM14 10h2v1h-2zM1 11h1v1h-1zM3 11h1v1h-1zM7 11h2v1h-2zM11 11h2v1h-2zM14 11h1v1h-1zM20 11h1v1h-1zM1 12h3v1h-3zM5 12h3v1h-3zM11 12h6v1h-6zM19 12h1v1h-1zM9 13h5v1h-5zM15 13h3v1h-3zM19 13h1v1h-1zM8 14h1v1h-1zM15 14h1v1h-1zM18 14h1v1h-1zM8 15h3v1h-3zM12 15h3v1h-3zM17 15h1v1h-1zM20 15h1v1h-1zM8 16h1v1h-1zM10 16h3v1h-3zM15 16h4v1h-4zM20 16h1v1h-1zM9 17h1v1h-1zM11 17h4v1h-4zM16 17h2v1h-2zM19 17h2v1h-2zM9 18h1v1h-1zM11 18h2v1h-2zM18 18h2v1h-2zM8 19h1v1h-1zM10 19h5v1h-5zM19 19h2v1h-2zM8 20h1v1h-1zM10 20h2v1h-2zM15 20h2v1h-2zM19 20h1v1h-1z"/><path data-door-qr="stop" d="M9 0h3v1h-3zM10 1h3v1h-3zM8 2h1v1h-1zM10 2h2v1h-2zM9 3h1v1h-1zM12 3h1v1h-1zM10 4h2v1h-2zM8 5h3v1h-3zM8 6h1v1h-1zM10 6h1v1h-1zM12 6h1v1h-1zM12 7h1v1h-1zM6 8h8v1h-8zM15 8h4v1h-4zM1 9h1v1h-1zM3 9h2v1h-2zM12 9h5v1h-5zM19 9h1v1h-1zM0 10h1v1h-1zM2 10h3v1h-3zM6 10h2v1h-2zM10 10h2v1h-2zM14 10h3v1h-3zM19 10h2v1h-2zM0 11h1v1h-1zM5 11h1v1h-1zM10 11h1v1h-1zM12 11h3v1h-3zM17 11h1v1h-1zM19 11h1v1h-1zM1 12h1v1h-1zM4 12h1v1h-1zM6 12h1v1h-1zM10 12h3v1h-3zM16 12h2v1h-2zM20 12h1v1h-1zM8 13h2v1h-2zM12 13h2v1h-2zM15 13h1v1h-1zM17 13h2v1h-2zM8 14h2v1h-2zM12 14h1v1h-1zM14 14h3v1h-3zM18 14h3v1h-3zM9 15h1v1h-1zM12 15h2v1h-2zM15 15h2v1h-2zM19 15h1v1h-1zM9 16h5v1h-5zM17 16h3v1h-3zM8 17h6v1h-6zM15 17h1v1h-1zM18 17h1v1h-1zM11 18h6v1h-6zM18 18h1v1h-1zM20 18h1v1h-1zM8 19h1v1h-1zM13 19h2v1h-2zM19 19h1v1h-1zM10 20h1v1h-1zM12 20h2v1h-2zM16 20h2v1h-2zM19 20h1v1h-1z"/><path data-door-qr="admit" d="M8 0h2v1h-2zM11 0h1v1h-1zM8 1h2v1h-2zM11 1h2v1h-2zM8 2h3v1h-3zM12 2h1v1h-1zM8 3h1v1h-1zM12 3h1v1h-1zM9 4h1v1h-1zM11 4h2v1h-2zM8 5h2v1h-2zM11 5h1v1h-1zM8 6h1v1h-1zM10 6h1v1h-1zM12 6h1v1h-1zM9 7h1v1h-1zM11 7h2v1h-2zM0 8h1v1h-1zM2 8h2v1h-2zM5 8h3v1h-3zM10 8h1v1h-1zM15 8h1v1h-1zM17 8h2v1h-2zM20 8h1v1h-1zM0 9h2v1h-2zM7 9h1v1h-1zM11 9h1v1h-1zM14 9h1v1h-1zM16 9h1v1h-1zM0 10h2v1h-2zM3 10h6v1h-6zM10 10h3v1h-3zM14 10h2v1h-2zM20 10h1v1h-1zM0 11h2v1h-2zM4 11h2v1h-2zM7 11h3v1h-3zM11 11h4v1h-4zM0 12h1v1h-1zM5 12h4v1h-4zM10 12h11v1h-11zM10 13h5v1h-5zM17 13h4v1h-4zM8 14h2v1h-2zM11 14h2v1h-2zM15 14h1v1h-1zM17 14h1v1h-1zM9 15h3v1h-3zM15 15h2v1h-2zM10 16h1v1h-1zM12 16h5v1h-5zM19 16h1v1h-1zM10 17h5v1h-5zM18 17h1v1h-1zM8 18h1v1h-1zM13 18h2v1h-2zM16 18h1v1h-1zM19 18h2v1h-2zM10 19h3v1h-3zM15 19h1v1h-1zM19 19h1v1h-1zM8 20h2v1h-2zM14 20h1v1h-1zM17 20h4v1h-4z"/></svg></span>
+                    <p class="mo-gate-head"><span>← Switch event</span><span><b data-door-scanned>3</b> scanned</span><span>Settings</span></p>
+                    <span class="mo-gate-chk" data-door-checking>Checking…</span>
+                    <p class="mo-gate-v is-check" data-door-verdict="check"><b>!</b><strong>Already scanned</strong><span>at 23:41 · Early Bird</span></p>
+                    <p class="mo-gate-v is-stop" data-door-verdict="stop"><b><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></b><strong>Do not admit</strong><span>Invalid QR</span></p>
+                    <p class="mo-gate-v is-admit" data-door-verdict="admit"><b><svg viewBox="0 0 24 24"><path d="M4.5 12.5l5 5L19.5 7"/></svg></b><strong>Admit</strong><span>Standard</span></p>
+                  </div>
+                </div>
+              </div>
+              <!-- the same night's Overview in the dashboard: Checked in -->
+              <div class="mo mo-door-card" data-door-card>
+                <p class="mo-door-card-l">Checked in</p>
+                <p class="mo-door-card-v"><span class="mo-door-tick"><b data-door-checked>72</b></span><span>all time</span></p>
+                <p class="mo-door-card-s">of 84 sold · <span data-door-pct>86</span>% at the door</p>
+              </div>
+            </div>
+          </figure>
         </li>
         <li class="step">
           <div class="step-text">
@@ -264,7 +318,71 @@
             <h3 class="t-h2">Your crowd</h3>
             <p>Everyone who bought, and who came, in one list. Email the ones who said yes to news.</p>
           </div>
-          <figure class="mock m-crowd"><div class="shot"><img src="/assets/img/app/crowd.webp" width="1818" height="878" alt="Recent buyers and quick actions: attendee list, door scanner, email ticket holders" loading="lazy" decoding="async"></div></figure>
+          <figure class="mock m-crowd">
+            <div class="shot">
+              <div class="mo mo-crowd" data-mo-crowd role="img" aria-label="Example audience after Saturday Night: 84 people, 38 you can email, 79–90% showed up, and the newest members with their consent. Start a campaign leads to the campaign’s review: sent to First-timers, 38 will receive the email and 46 are left out for no lawful basis, as soon as possible, with quiet hours enforced.">
+                <p class="mo-crowd-bar"><span class="mo-crowd-dots"><i></i><i></i><i></i></span><span class="mo-crowd-url"><span data-crowd-url="aud">dashboard.imin.wtf/audience</span><span data-crowd-url="cmp">dashboard.imin.wtf/marketing/campaigns/new</span></span></p>
+                <span class="mo-example">Example</span>
+                <div class="mo-crowd-stage">
+                  <!-- Audience › Overview -->
+                  <div class="mo-aud" data-m3-scene="aud">
+                    <div class="mo-aud-head">
+                      <div><p class="mo-aud-h">Audience</p><p class="mo-aud-sub">Everyone on your list, and what you may send them.</p></div>
+                      <span class="mo-crowd-cta" data-m3-press><svg viewBox="0 0 24 24"><path d="M22 2 11 13M22 2l-7 20-4-9-9-4z"/></svg>Start a campaign<i class="mo-m3-tap" data-m3-tap></i></span>
+                    </div>
+                    <p class="mo-aud-tabs"><span class="is-on">Overview</span><span>Members</span><span>Segments</span><span>Imports</span><span>Consent &amp; suppression</span></p>
+                    <div class="mo-aud-stats">
+                      <p class="mo-aud-stat"><span class="mo-aud-stat-l">People</span><span class="mo-aud-stat-v"><b data-crowd-count="people">84</b><small>right now</small></span></p>
+                      <p class="mo-aud-stat is-accent"><span class="mo-aud-stat-l">You can email (audience plans)</span><span class="mo-aud-stat-v"><b data-crowd-count="newsYes">38</b><small>right now</small></span></p>
+                      <p class="mo-aud-stat"><span class="mo-aud-stat-l">Showed up</span><span class="mo-aud-stat-v"><b data-crowd-fade>79–90%</b><small>ended events, all time</small></span><span class="mo-aud-stat-s">Scanned · of 84 paid tickets · test orders not counted</span></p>
+                    </div>
+                    <div class="mo-aud-mem">
+                      <p class="mo-aud-mem-h"><span><b>Members</b> most recent order first</span><span class="mo-aud-link">Open Members</span></p>
+                      <p class="mo-aud-row is-head"><span>Person</span><span>Class</span><span>Last order</span><span>Consent</span></p>
+                      <p class="mo-aud-row is-yes"><b>Marta K.</b><span>First-timer</span><span>Sat, 14 Nov 2026</span><span>Subscribed</span></p>
+                      <p class="mo-aud-row"><b>Andrii</b><span>First-timer</span><span>Sat, 14 Nov 2026</span><span>No consent</span></p>
+                      <p class="mo-aud-row is-yes"><b>Sofiia</b><span>First-timer</span><span>Fri, 13 Nov 2026</span><span>Subscribed</span></p>
+                      <p class="mo-aud-row"><b>Max</b><span>First-timer</span><span>Fri, 13 Nov 2026</span><span>No consent</span></p>
+                      <p class="mo-aud-row is-yes"><b>Léa</b><span>First-timer</span><span>Thu, 12 Nov 2026</span><span>Subscribed</span></p>
+                    </div>
+                  </div>
+                  <!-- Marketing › New campaign, last step -->
+                  <div class="mo-camp" data-m3-scene="cmp">
+                    <p class="mo-camp-top"><span class="mo-camp-back">← Marketing</span><b>After Saturday Night</b></p>
+                    <div class="mo-camp-body">
+                      <div class="mo-camp-rail">
+                        <p class="mo-camp-step is-done"><i>✓</i><span>Details<small>Name, channel, audience</small></span></p>
+                        <p class="mo-camp-step is-done"><i>✓</i><span>Content<small>Subject + body</small></span></p>
+                        <p class="mo-camp-step is-done"><i>✓</i><span>Audience<small>SendGate preview</small></span></p>
+                        <p class="mo-camp-step is-on"><i>4</i><span>Review<small>Test, then schedule</small></span></p>
+                        <p class="mo-camp-rail-l">Sending as</p>
+                        <p><span class="mo-camp-chan">Email</span></p>
+                      </div>
+                      <div class="mo-camp-pane">
+                        <p class="mo-camp-eyebrow">Step 4</p>
+                        <p class="mo-camp-title">Review &amp; schedule</p>
+                        <div class="mo-camp-card" data-crowd-in>
+                          <p class="mo-camp-card-t">Review</p>
+                          <p class="mo-camp-def is-subject"><span>Subject</span><b>Thanks for Saturday. Next date soon.</b></p>
+                          <p class="mo-camp-def is-aud"><span>Audience</span><b>First-timers</b></p>
+                          <p class="mo-camp-def is-will"><span>Will receive</span><b><span data-crowd-count="newsYes">38</span> people</b></p>
+                          <p class="mo-camp-sg"><span class="mo-camp-sg-big"><b data-crowd-count="newsYes">38</b><small>will receive · email</small></span><span class="mo-camp-sg-meta"><b data-crowd-count="noNews">46</b> left out by SendGate and send limits</span></p>
+                          <p class="mo-camp-sg-row" data-crowd-in><span class="mo-camp-sg-chip"><svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10zM12 8v4M12 16h.01"/></svg>No lawful basis</span><span class="mo-camp-sg-d">No consent record for this channel</span><b data-crowd-count="noNews">46</b></p>
+                        </div>
+                        <div class="mo-camp-card" data-crowd-in>
+                          <p class="mo-camp-card-t">When to send</p>
+                          <p class="mo-camp-radio is-on"><i></i>As soon as possible</p>
+                          <p class="mo-camp-radio"><i></i>Schedule for later</p>
+                          <p class="mo-camp-quiet"><svg viewBox="0 0 24 24"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9z"/></svg>Quiet hours are enforced server-side (email blocked 22:00–09:00, in your organization’s time zone). Anything outside the window waits.</p>
+                        </div>
+                        <p class="mo-camp-foot"><span class="mo-camp-ghost">Back</span><span class="mo-crowd-cta mo-camp-send" data-crowd-send>Send now</span></p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </figure>
         </li>
         <li class="step">
           <div class="step-text">
