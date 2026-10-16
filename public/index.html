@@ -27,7 +27,11 @@
   <link rel="preload" href="/assets/fonts/dm-sans-var-latin.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="/assets/css/fonts.css">
   <link rel="stylesheet" href="/assets/css/client.css">
-  <script>(function(d){d.classList.remove('no-js');d.classList.add('js','night-wait');setTimeout(function(){d.classList.remove('night-wait')},2500)})(document.documentElement);</script>
+  <script>(function(d){d.classList.remove('no-js');d.classList.add('js','night-wait');setTimeout(function(){d.classList.remove('night-wait')},2500);
+  /* the intro plays once per browser session, never with reduced motion */
+  try{if(!matchMedia('(prefers-reduced-motion: reduce)').matches&&!sessionStorage.getItem('imin-intro')){sessionStorage.setItem('imin-intro','1');d.classList.add('intro-run')}}catch(e){}
+  /* set in the first frame: a script that sees it runs after the page is already on screen */
+  requestAnimationFrame(function(){d.classList.add('painted')})})(document.documentElement);</script>
   <script type="application/ld+json">
 {"@context":"https://schema.org","@graph":[
 {"@type":"Organization","@id":"https://imin.wtf/#organization","name":"IMIN","url":"https://imin.wtf/","logo":"https://imin.wtf/icon.png","description":"IMIN throws music-first nights in Metz. Tap I'm in, come as you are.","founder":[
@@ -89,7 +93,7 @@
   <div class="wrap top-in">
     <a class="logo" href="#hero" aria-label="IMIN, back to the top"><svg viewBox="0 0 348.33 107.29" aria-hidden="true" fill="currentColor"><use href="#logo-h"/></svg></a>
     <nav class="nav" aria-label="Main">
-      <a class="nav-a" href="#create">Create</a>
+      <a class="nav-a" href="/pro" data-link="create"><span class="nav-long">For organizers</span><span class="nav-short">Organizers</span></a>
       <a class="nav-a" href="https://app.imin.wtf/auth/sign-in" data-link="signIn">Sign in</a>
       <details class="lang">
         <summary aria-label="Language: English">EN <svg class="ico" aria-hidden="true"><use href="#i-caret-down"/></svg></summary>
@@ -100,6 +104,7 @@
           <a href="#hero" lang="uk">Українська <span>UA</span></a>
         </div>
       </details>
+      <span class="top-go" data-top-go><span class="top-when" data-top-when hidden></span><a class="btn-door" href="https://app.imin.wtf/events" data-go-in>I’m in</a></span>
     </nav>
   </div>
 </header>
@@ -111,13 +116,15 @@
         <h1 class="t-display" id="hero-h">Don’t overthink the night.</h1>
         <p class="hero-lead">IMIN throws music-first nights in Metz.</p>
         <a class="btn-door" href="https://app.imin.wtf/events" data-reply="in">I’m in</a>
+        <p class="hero-night" id="hero-night" data-hero-night hidden></p>
+        <a class="tlink hero-alt" href="#stay" data-hero-alt>Not tonight? Stay close <svg class="ico" aria-hidden="true"><use href="#i-arrow-down"/></svg></a>
       </div>
 
       <div class="hero-visual">
         <div class="flyers">
           <div class="flyer-back" aria-hidden="true"><svg viewBox="0 0 169.58 224.95" fill="currentColor"><use href="#logo-s"/></svg></div>
           <figure class="poster" aria-label="IMIN nights in Metz" data-poster>
-            <img src="/assets/img/photos/p-dj.jpg" alt="A DJ playing, hands up in front" loading="eager">
+            <img src="/assets/img/photos/p-dj.jpg" alt="A DJ playing, hands up in front" loading="eager" fetchpriority="high">
             <span class="grain" aria-hidden="true"></span>
             <div class="p-top">
               <svg viewBox="0 0 169.58 224.95" aria-label="IMIN" role="img" fill="currentColor"><use href="#logo-s"/></svg>
@@ -272,7 +279,6 @@
           <label class="mail-label" for="mail-email">Rather get it by email?</label>
           <div class="mail-row">
             <input class="mail-in" id="mail-email" name="email" type="email" placeholder="your@email.com" autocomplete="email" required>
-            <button class="btn-paper" type="submit">Keep me posted</button>
           </div>
           <label class="sw-row" for="mail-ok">
             <input class="sw-input" type="checkbox" id="mail-ok" name="ok" role="switch">
@@ -281,6 +287,7 @@
           </label>
           <input class="hp" type="text" name="company" tabindex="-1" autocomplete="off" aria-hidden="true">
           <p class="sw-err" data-mail-err role="alert" hidden></p>
+          <button class="btn-paper" type="submit">Keep me posted</button>
           <p class="cap">Only when there’s a night.</p>
         </form>
         <div class="mail-done" data-mail-done aria-live="polite"></div>

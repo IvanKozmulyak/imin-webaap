@@ -44,8 +44,9 @@ export async function GET(request: NextRequest) {
 }
 
 // null = the event is gone or unpublished; any other failure throws.
+// includeUnavailable lists sold-out tiers too, so "sold out" reads apart from "no tickets yet".
 async function fetchEvent(base: string, id: string): Promise<PublicEvent | null> {
-  const res = await fetch(`${base}/api/v1/public/events/${id}`, {
+  const res = await fetch(`${base}/api/v1/public/events/${id}?includeUnavailable=true`, {
     headers: { Accept: 'application/json' },
     next: { revalidate: 300 },
     signal: AbortSignal.timeout(UPSTREAM_TIMEOUT_MS),

@@ -1,5 +1,13 @@
 // The nights the guest page pins by id: which still show, and how their date and line read.
 
+/** The fields of imin-api's PublicTierDto that the price line reads. */
+export interface PublicTier {
+  priceAllInMinor: number; // one ticket, booking fee included
+  currency: string;
+  onSale: boolean;
+  soldOut: boolean;
+}
+
 /** The fields of imin-api's PublicEventResponse that the guest page uses. */
 export interface PublicEvent {
   id: string;
@@ -11,6 +19,7 @@ export interface PublicEvent {
   genre?: string | null;
   type?: string | null;
   venue?: { name?: string | null; city?: string | null } | null;
+  tiers?: PublicTier[] | null;
 }
 
 export interface NightWhen {
@@ -19,15 +28,23 @@ export interface NightWhen {
   dock: string; // "Sat 31.10 · 15:00"
 }
 
+/** Data only: the page words it ("Sold out", "Free", "From €16.74") in the visitor's language. */
+export type NightPrice =
+  | { kind: 'soldout' }
+  | { kind: 'free' }
+  | { kind: 'from'; minor: number; currency: string };
+
 export interface Night extends NightWhen {
   id: string;
   name: string;
   url: string;
   city: string;
   meta: string;
+  price?: NightPrice;
 }
 
 const NIGHT_URL = 'https://app.imin.wtf/e/';
+const CURRENCY_RE = /^[A-Z]{3}$/;
 
 /** Live nights that have not ended yet, soonest first. Without an end time a night drops once it starts. */
 export function pickNights<T extends PublicEvent>(events: T[], now: Date): T[] {
@@ -64,7 +81,23 @@ export function toNight(event: PublicEvent, lang: string): Night {
     ...formatWhen(event, lang),
     city,
     meta: line.join(' · '),
+    price: nightPrice(event.tiers),
   };
+}
+
+/** What a ticket costs, from every enabled tier. All-in (fee included), the only lawful first price in the EU;
+ *  no claim when the tiers can't back one: none listed, none on sale, or an amount missing. */
+export function nightPrice(tiers: PublicTier[] | null | undefined): NightPrice | undefined {
+  if (!tiers || tiers.length === 0) return undefined;
+  if (tiers.every((t) => t.soldOut === true)) return { kind: 'soldout' };
+  const open = tiers.filter((t) => t.onSale === true);
+  if (open.length === 0) return undefined;
+  if (!open.every((t) => Number.isSafeInteger(t.priceAllInMinor) && t.priceAllInMinor >= 0 && CURRENCY_RE.test(t.currency))) {
+    return undefined;
+  }
+  const cheapest = open.reduce((a, b) => (b.priceAllInMinor < a.priceAllInMinor ? b : a));
+  if (cheapest.priceAllInMinor === 0) return { kind: 'free' };
+  return { kind: 'from', minor: cheapest.priceAllInMinor, currency: cheapest.currency };
 }
 
 function clean(value: string | null | undefined): string {

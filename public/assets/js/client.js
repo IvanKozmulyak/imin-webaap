@@ -3,14 +3,16 @@
   /* Every string this script puts on the page. Another language adds its own key, picked by <html lang>. */
   const STRINGS = {
     en: {
-      intro: ['should I go out tonight?', 'Don’t overthink it.', 'Music first. Come as you are.', 'I’m in'],
+      intro: ['should I go out tonight?', 'Don’t overthink it.', 'I’m in'],
       typing: 'IMIN is typing',
       imIn: 'I’m in',
       soon: 'Coming soon',
       ready: { playlist: 'Listen' },
       night: {
         label: 'The next night',
-        notif: n => (n.city ? `Hey. ${n.day} in ${n.city}. Music first. You in?` : `Hey. ${n.day}. Music first. You in?`)
+        notif: n => (n.city ? `Hey. ${n.day} in ${n.city}. Music first. You in?` : `Hey. ${n.day}. Music first. You in?`),
+        when: n => `${n.day}, ${n.time}`,
+        price: { soldout: 'Sold out', free: 'Free', from: amount => `From ${amount}` }
       },
       noDate: {
         label: 'The next night, date to come',
@@ -63,20 +65,23 @@
     return li;
   };
   /* ---------------------------------------------------------
-     Loading screen: a short chat, then the night.
-     Tap to skip; off with reduced motion.
+     Loading screen: a short chat, then the night. Once per session (flag set inline), about 1.2 s.
+     Never waits for images; any tap, scroll or key skips it; off with reduced motion.
      --------------------------------------------------------- */
+  const root = document.documentElement;
+  const introRun = root.classList.contains('intro-run');
+  // scripts that arrive after the first screen has painted skip the intro and the hero entrance
+  const late = introRun ? performance.now() > 1000 : root.classList.contains('painted');
   const introEl = $('[data-intro]');
   const intro = (() => {
     if (!introEl) return Promise.resolve();
-    if (reduce) { introEl.classList.add('gone'); return Promise.resolve(); }
-    const root = document.documentElement;
+    if (reduce || late || !introRun) { introEl.classList.add('gone'); return Promise.resolve(); }
     root.classList.add('intro-lock');
     const thread = $('[data-intro-thread]', introEl);
     const load = v => introEl.style.setProperty('--load', v);
     let skip;
     const skipped = new Promise(res => { skip = res; });
-    introEl.addEventListener('click', () => skip(), { once: true });
+    ['pointerdown', 'touchstart', 'wheel'].forEach(t => introEl.addEventListener(t, () => skip(), { once: true, passive: true }));
     addEventListener('keydown', () => skip(), { once: true });
     const pause = ms => Promise.race([wait(ms), skipped]);
     const say = async (cls, text, typing) => {
@@ -87,24 +92,20 @@
       }
       add(thread, cls, '<p>' + text + '</p>');
     };
-    const pageLoaded = document.readyState === 'complete' ? Promise.resolve() : new Promise(r => addEventListener('load', r, { once: true }));
     const chat = (async () => {
-      await pause(350);  load(.2);
+      await pause(150);  load(.3);
       await say('b out', STR.intro[0]);
-      await pause(250);  load(.4);
-      await say('b in', STR.intro[1], 750);
       load(.6);
-      await say('b in', STR.intro[2], 450);
-      await pause(450);  load(.85);
-      await say('b out yes', STR.intro[3]);
-      await pause(550);
+      await say('b in', STR.intro[1], 450);
+      await pause(250);  load(.85);
+      await say('b out yes', STR.intro[2]);
+      await pause(350);
     })();
-    return Promise.race([Promise.all([chat, pageLoaded]), skipped.then(() => pageLoaded)]).then(() => {
+    return Promise.race([chat, skipped]).then(() => {
       load(1);
       introEl.classList.add('out');
       root.classList.remove('intro-lock');
       setTimeout(() => introEl.classList.add('gone'), 950);
-      return wait(250);
     });
   })();
 
@@ -124,7 +125,6 @@
   /* hero: the night's poster and IMIN's message.
      The markup is the neutral state (no JS, before the nights load, API down): no date, "I'm in" opens all nights.
      'night' = a pinned night is on; 'soon' = the API answered and nothing is upcoming. */
-  const root = document.documentElement;
   const notif = $('[data-notif]');
   const btnIn = $('[data-reply="in"]');
   const poster = $('[data-poster]');
@@ -132,10 +132,31 @@
   const pTitle = $('[data-ptitle]');
   const pMeta = $('[data-pmeta]');
   const notifText = $('[data-notif-text]');
+  const heroNight = $('[data-hero-night]');
+  const heroAlt = $('[data-hero-alt]');
   const dockWhat = $('[data-dock-what]');
   const dockGo = $('[data-dock-go]');
+  const topWhen = $('[data-top-when]');
+  const topGo = $('[data-go-in]');
   const picks = $('[data-picks]');
   let heroState = 'neutral';
+
+  /* the price as the night's own page states it: all-in, in the visitor's language */
+  const money = (minor, currency) => {
+    const digits = new Intl.NumberFormat(LANG, { style: 'currency', currency }).resolvedOptions().maximumFractionDigits;
+    const amount = minor / 10 ** digits;
+    const shown = Number.isInteger(amount) ? 0 : digits; // "€18", not "€18.00"
+    return new Intl.NumberFormat(LANG, { style: 'currency', currency, minimumFractionDigits: shown, maximumFractionDigits: shown }).format(amount);
+  };
+  const priceText = p => {
+    if (!p) return '';
+    if (p.kind === 'soldout') return STR.night.price.soldout;
+    if (p.kind === 'free') return STR.night.price.free;
+    if (p.kind === 'from' && Number.isSafeInteger(p.minor) && p.minor > 0 && /^[A-Z]{3}$/.test(p.currency)) {
+      try { return STR.night.price.from(money(p.minor, p.currency)); } catch (_) { /* a currency this browser can't format: no price */ }
+    }
+    return '';
+  };
 
   const paintPoster = (label, when, time, title, meta) => {
     poster.setAttribute('aria-label', label);
@@ -158,6 +179,23 @@
     dockWhat.replaceChildren(b, what);
     dockGo.href = href;
   };
+  const paintTop = (when, href) => {
+    topWhen.textContent = when;
+    topWhen.hidden = false;
+    topGo.href = href;
+  };
+  // under I'M IN: price, day and time, city; read with the button by screen readers
+  const paintHeroNight = (n, price) => {
+    const parts = [];
+    if (price) { const b = document.createElement('b'); b.textContent = price; parts.push(b); }
+    const when = document.createElement('span');
+    when.textContent = STR.night.when(n);
+    parts.push(when);
+    if (n.city) { const at = document.createElement('span'); at.textContent = n.city; parts.push(at); }
+    heroNight.replaceChildren(...parts.flatMap((el, i) => (i ? [' · ', el] : [el])));
+    heroNight.hidden = false;
+    btnIn.setAttribute('aria-describedby', heroNight.id);
+  };
   let pickChips = [];
   const showNight = n => {
     heroState = 'night';
@@ -165,7 +203,10 @@
     paintPoster(STR.night.label, n.day, n.time, n.name, n.meta);
     notifText.textContent = STR.night.notif(n);
     btnIn.href = n.url;
-    paintDock(n.dock, n.name, n.url);
+    const price = priceText(n.price);
+    paintHeroNight(n, price);
+    paintDock(price ? `${n.dock} · ${price}` : n.dock, n.name, n.url);
+    paintTop(n.dock, n.url);
     pickChips.forEach(c => c.setAttribute('aria-pressed', String(c.night === n)));
   };
   const showNights = list => {
@@ -194,7 +235,9 @@
     paintPoster(s.label, s.when, s.time, s.title, s.meta);
     notifText.textContent = s.notif;
     btnIn.href = '#stay';
+    heroAlt.hidden = true; // I'M IN itself leads to Stay close now
     paintDock(s.dockWhen, s.dockWhat, '#stay');
+    paintTop(s.dockWhen, '#stay');
   };
   const isNight = n => n && typeof n.name === 'string' && typeof n.day === 'string' && typeof n.time === 'string'
     && typeof n.dock === 'string' && typeof n.meta === 'string' && typeof n.url === 'string' && /^https:\/\//.test(n.url);
@@ -243,14 +286,23 @@
   /* FAQ: one answer at a time */
   const chips = $$('.chip[role="tab"]');
   const select = chip => {
+    let typed = Promise.resolve();
     chips.forEach(c => {
       const on = c === chip;
       c.setAttribute('aria-selected', String(on));
       c.tabIndex = on ? 0 : -1;
       const p = $('#' + c.getAttribute('aria-controls'));
       p.hidden = !on;
-      if (on) typeIn(p);
+      if (on) typed = typeIn(p);
     });
+    return typed;
+  };
+  // the answer sits under all the questions: scroll just enough to show it above the dock
+  const reveal = el => {
+    const over = el.getBoundingClientRect().bottom - (innerHeight - 96);
+    if (over <= 0) return;
+    if (lenis) lenis.scrollTo(window.scrollY + over);
+    else window.scrollBy({ top: over, behavior: reduce ? 'auto' : 'smooth' });
   };
   const typeIn = async p => {
     const a = $('.b.in', p);
@@ -266,7 +318,12 @@
     a.hidden = false;
   };
   chips.forEach((c, i) => {
-    c.addEventListener('click', () => select(c));
+    c.addEventListener('click', () => {
+      const p = $('#' + c.getAttribute('aria-controls'));
+      const typed = select(c);
+      reveal(p);
+      typed.then(() => reveal(p)); // a long answer grows once it is typed
+    });
     c.addEventListener('keydown', e => {
       const k = e.key === 'ArrowRight' ? 1 : e.key === 'ArrowLeft' ? -1 : 0;
       if (!k) return;
@@ -322,8 +379,8 @@
     const field = form.elements.email;
     if (!field.checkValidity()) { field.reportValidity(); return; }
     const email = field.value.trim();
-    if (!EMAIL_RE.test(email)) { showErr(STR.mail.badEmail); return; }
-    if (!form.elements.ok.checked) { showErr(STR.mail.needConsent); return; }
+    if (!EMAIL_RE.test(email)) { showErr(STR.mail.badEmail); field.focus(); return; }
+    if (!form.elements.ok.checked) { showErr(STR.mail.needConsent); form.elements.ok.focus(); return; }
     send.disabled = true;
     form.setAttribute('aria-busy', 'true');
     let ok = false;
@@ -352,24 +409,33 @@
     await iminSays(done, STR.mail.done);
   });
 
-  /* phone: sticky bar after the hero's buttons scroll away */
+  /* phone dock and desktop header button, once the hero's button has scrolled away;
+     the dock steps aside while the email form is on screen */
   const dock = $('[data-dock]');
-  if (dock && 'IntersectionObserver' in window) {
+  const topBox = $('[data-top-go]');
+  if ('IntersectionObserver' in window) {
     const links = $$('a', dock);
-    new IntersectionObserver(([entry]) => {
-      const show = !entry.isIntersecting && entry.boundingClientRect.top < 0;
+    let past = false, atForm = false;
+    const paint = () => {
+      const show = past && !atForm;
       dock.classList.toggle('show', show);
       dock.setAttribute('aria-hidden', String(!show));
       links.forEach(a => { a.tabIndex = show ? 0 : -1; });
-    }).observe(btnIn);
+      topBox.classList.toggle('show', past);
+    };
+    new IntersectionObserver(([en]) => { past = !en.isIntersecting && en.boundingClientRect.top < 0; paint(); }).observe(btnIn);
+    new IntersectionObserver(([en]) => { atForm = en.isIntersecting; paint(); }).observe(form);
   }
-  dockGo.addEventListener('click', e => {
+  // both do what the hero's I'M IN does: back to it and press it; with no date yet, straight to the email form
+  const goIn = e => {
     if (!plainClick(e)) return;
     e.preventDefault();
     if (heroState === 'soon') { toMail(); return; }
     go($('#hero'));
     setTimeout(() => btnIn.click(), reduce ? 0 : 600);
-  });
+  };
+  dockGo.addEventListener('click', goIn);
+  topGo.addEventListener('click', goIn);
 
 
   /* links from config; one with no address yet is "coming soon" on a tile and hidden elsewhere */
@@ -454,21 +520,21 @@
   /* ---------- Hero: the flyers land, IMIN texts, the phone buzzes ---------- */
   const hero = $('#hero');
   const notifBox = $('.notif', notif);
-  notifBox.style.animation = 'none';
-  $('.sticker').style.animation = 'none';
-  gsap.set(['.hero-copy > *', '.flyer-back', '.poster', '.tape', '.sticker', notifBox], { autoAlpha: 0 });
+  const heroParts = ['.hero-copy > *', '.flyer-back', '.poster', '.tape', '.sticker', notifBox];
   const heroIn = () => {
     const still = $$('.poster, .hero .btn-door');
     still.forEach(el => { el.style.transition = 'none'; });
-    gsap.set(['.hero-copy > *', '.flyer-back', '.poster', '.tape', '.sticker', notifBox], { autoAlpha: 1 });
+    gsap.set(heroParts, { autoAlpha: 1 });
     const tl = gsap.timeline({ defaults: { ease: 'power3.out' } });
     const h1 = $('#hero-h');
     if (window.SplitText) {
       const sp = SplitText.create(h1, { type: 'lines', mask: 'lines', linesClass: 'line' });
       tl.from(sp.lines, { yPercent: 105, rotate: 3, transformOrigin: '0 100%', duration: 1.1, stagger: .1 }, 0);
     }
-    tl.from('.hero-lead', { y: 18, autoAlpha: 0, duration: .9 }, .35)
-      .from('.hero .btn-door', { y: 18, autoAlpha: 0, scale: .94, duration: .9, ease: 'back.out(2)' }, .5)
+    // the button lands first, so it can be tapped while the rest settles
+    tl.from('.hero .btn-door', { y: 14, autoAlpha: 0, scale: .96, duration: .5, ease: 'back.out(2)' }, .1)
+      .from('.hero-lead', { y: 18, autoAlpha: 0, duration: .7 }, .15)
+      .from('.hero-night, .hero-alt', { y: 10, autoAlpha: 0, duration: .6, stagger: .08 }, .3)
       .from('.flyer-back', { x: 60, y: -40, rotate: 18, autoAlpha: 0, duration: 1.2, clearProps: 'transform' }, .15)
       .from('.poster', { y: -80, rotate: -9, autoAlpha: 0, duration: 1.2, ease: 'power4.out', clearProps: 'transform' }, .3)
       .from('.poster > img', { scale: 1.5, duration: 2.2, ease: 'power2.out', clearProps: 'transform' }, .3)
@@ -482,7 +548,13 @@
       .to(notifBox, { keyframes: { x: [0, -3, 3, -3, 3, -2, 2, 0], ease: 'none' }, duration: .5 }, 3.1)
       .call(() => { $('.sticker').style.animation = ''; still.forEach(el => { el.style.transition = ''; }); }, null, 2.2);
   };
-  Promise.all([intro, document.fonts ? Promise.race([document.fonts.ready, new Promise(r => setTimeout(r, 1500))]) : null]).then(heroIn);
+  // scripts that came late find the hero already on screen: leave it there
+  if (!late) {
+    notifBox.style.animation = 'none';
+    $('.sticker').style.animation = 'none';
+    gsap.set(heroParts, { autoAlpha: 0 });
+    Promise.all([intro, document.fonts ? Promise.race([document.fonts.ready, new Promise(r => setTimeout(r, 1500))]) : null]).then(heroIn);
+  }
 
   // parallax: the back flyer lags, the poster leads, the message floats off last
   gsap.to('.hero-visual', { y: -60, ease: 'none', scrollTrigger: { trigger: hero, start: 'top top', end: 'bottom top', scrub: true } });
