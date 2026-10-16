@@ -1,6 +1,6 @@
 // Shared branded email sender (Resend REST API — no SDK).
 // One dark IMIN-themed template, parameterized by kind/accent, used by the
-// subscribe, pitch and call-click routes.
+// pitch and call-click routes.
 
 export interface EmailField {
   label: string;

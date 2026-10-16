@@ -4,14 +4,13 @@ The public site: the guest page at `/` and the creators page at `/pro`.
 
 ## Stack
 
-- Static pages in `public/` (`index.html`, `pro/index.html`), vanilla JS with GSAP, ScrollTrigger, SplitText and Lenis. `next.config.js` rewrites `/` and `/pro` to them.
+- Static pages in `public/` (`index.html`, `pro/index.html`), vanilla JS with GSAP, ScrollTrigger, SplitText and Lenis. `next.config.js` rewrites `/` and `/pro` to them, and `/fr`, `/es`, `/uk` (and `/fr/pro`, ...) to their translated copies.
 - Next.js 14 serves the API routes, `robots.txt`, `sitemap.xml` and the OG images.
 - `public/assets/js/config.js` holds the links and the nights shown on the guest page (pinned by app.imin.wtf event id).
 
 ## Routes
 
 - `GET /api/nights?ids=<uuid>,…&lang=en`: the pinned nights that are still on, read from the public imin API (cached 5 min).
-- `POST /api/subscribe`: "Keep me posted"; emails the team.
 - `POST /api/pitch`: "Send us your night"; emails the team.
 - `POST /api/call-click`: beacon when someone opens the 20-minute call link.
 
@@ -23,7 +22,22 @@ cp .env.example .env.local   # RESEND_API_KEY to send the team emails
 npm run dev
 npm test                     # unit tests, then check:i18n (translated pages in step with English)
 npm run test:unit            # unit tests only (node --test)
+npm run i18n:build           # write the translated pages from the English ones (see "Changing copy")
 ```
+
+`npm run build` runs `npm test` first (`prebuild`), so a deploy stops when a page is out of date or a translation is missing.
+
+## Changing copy
+
+The English pages are the source. The pages in `public/fr`, `public/es` and `public/uk` are generated from them and from the tables in `scripts/i18n/<lang>/guest.mjs` and `pro.mjs`: never edit them by hand.
+
+1. Edit the English page (`public/index.html`, `public/pro/index.html`). A new designer export goes the same way: replace the English file, then carry on.
+2. Run `npm run i18n:build` (one language: `npm run i18n:build -- --lang fr`). If the English has text no table covers, or a row no longer matches, it writes nothing and lists, per language, what to add or fix.
+3. Add the listed rows to that language's table. A row is `['English text', 'translation']`, plus a count when the text occurs more than once on the page (`['Create your night', 'Crée ta soirée', 6]`). The English side is the whole text of one element or attribute. When a sentence has a link inside it, words move around a tag, or the same English needs two translations, write the HTML as it is on the page instead (`['<p>See <a href="/x">this</a>.</p>', '<p>Voir <a href="/x">ceci</a>.</p>']`); such rows run first. Text that stays English goes in the table's `keep`, or in `scripts/i18n/names.mjs` when it stays English everywhere. In a translation `⍽` is a no-break space and `⎵` a narrow one. The JSON-LD FAQ takes the same rows; `ld` is only for a string that needs different wording there. Run `npm run i18n:build` again until it writes the pages.
+4. Run `npm test`: the pages must equal what the tables build today, and `check:i18n` still compares the script strings and the typography.
+5. Commit the English page, the tables and the generated pages together.
+
+Not generated: `public/assets/js/i18n/{fr,es,uk}.js`, the strings the page scripts show (errors, dates, prices). Edit those by hand next to `en.js`; `check:i18n` compares their keys with English.
 
 ## SEO
 

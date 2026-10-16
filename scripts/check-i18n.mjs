@@ -1,8 +1,10 @@
-// Keeps the translated pages in step with English: same structure, same script-string keys, and
+// Keeps the translated pages in step with English. The pages are generated (npm run i18n:build), so each must equal
+// what the English pages and scripts/i18n/<lang>/ build today; then: same structure, same script-string keys, and
 // each language's typography. Languages = the files in public/assets/js/i18n/ other than en.js.
 // Every page's hreflang links must reach a page that exists. Run by `npm test` and `npm run check:i18n`. Node stdlib only.
 import { readFileSync, readdirSync, existsSync } from 'node:fs';
 import vm from 'node:vm';
+import { buildAll, drift, report, languages as tableLanguages } from './i18n/build.mjs';
 
 const PUB = new URL('../public/', import.meta.url);
 const SITE = 'https://imin.wtf';
@@ -120,6 +122,18 @@ const enTree = keyTree(EN);
 const enPages = Object.fromEntries(PAGES.map(([page]) => [page, parse(read(page))]));
 for (const [page] of PAGES) { checkAlternates(page, enPages[page]); checkLd(page, read(page)); }
 
+// The translated pages are built from the English pages and the tables: each must be what builds today.
+const details = [];
+const tables = tableLanguages();
+for (const lang of LANGS) if (!tables.includes(lang)) fail(`scripts/i18n/${lang}/ is missing: ${lang} has a strings file but no tables to build its pages`);
+for (const lang of tables) if (!LANGS.includes(lang)) fail(`public/assets/js/i18n/${lang}.js is missing: scripts/i18n/${lang}/ has tables but no strings file`);
+const built = await buildAll({ langs: tables.filter(l => LANGS.includes(l)) });
+if (built.some(r => r.problems.length)) {
+  fail('the English pages and the translation tables no longer fit: add the missing translations, then run npm run i18n:build');
+  details.push(report(built));
+}
+for (const r of drift(built)) fail(`${r.file} is ${r.state}: run npm run i18n:build`);
+
 for (const lang of LANGS) {
   // script strings: same keys and kinds as English, added next to English (pick and en survive), typography of the language
   const ctx = loadEn(lang);
@@ -171,6 +185,7 @@ for (const lang of LANGS) {
 
 if (problems.length) {
   console.error(`check:i18n failed (${problems.length}):\n- ` + problems.join('\n- '));
+  if (details.length) console.error('\n' + details.join('\n'));
   if (missing.size) {
     console.error(`\nThe pages link ${[...missing].sort().join(', ')} pages that are not in public/ yet: merge the translations before shipping.`
       + '\n`npm run test:unit` runs the unit tests on their own.');

@@ -9,6 +9,8 @@
   const $ = (s, r = document) => r.querySelector(s);
   const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
   const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  // headline lines start this far below their mask: the CSS clip reaches past the line box, so 105% would let accents show
+  const LINE_FROM = 130;
   // the six-tabs scene is pinned to the scroll only where it can be read whole; phones play it once instead
   const pinTabs = window.matchMedia('(min-width: 760px)').matches;
   const wait = ms => new Promise(res => setTimeout(res, reduce ? 0 : ms));
@@ -311,7 +313,7 @@
       SplitText.create(h1, { type: 'lines', mask: 'lines', autoSplit: true, onSplit: self => {
         if (!first) return;
         first = false;
-        return gsap.from(self.lines, { yPercent: 105, rotate: 3, transformOrigin: '0 100%', duration: 1.1, stagger: .1, delay: .1, ease: 'power3.out' });
+        return gsap.from(self.lines, { yPercent: LINE_FROM, rotate: 3, transformOrigin: '0 100%', duration: 1.1, stagger: .1, delay: .1, ease: 'power3.out' });
       } });
     }
     // what IMIN carries lands under the lead; the founders fade in just before the soft link
@@ -364,7 +366,7 @@
       let played = false;
       SplitText.create(el, { type: 'lines', mask: 'lines', autoSplit: true, onSplit: self => {
         if (played) return;
-        return gsap.from(self.lines, { yPercent: 110, rotate: 2, transformOrigin: '0 100%', duration: 1.1, stagger: .08, scrollTrigger: { trigger: el, start: 'top 95%', once: true, onEnter: () => { played = true; } } });
+        return gsap.from(self.lines, { yPercent: LINE_FROM, rotate: 2, transformOrigin: '0 100%', duration: 1.1, stagger: .08, scrollTrigger: { trigger: el, start: 'top 95%', once: true, onEnter: () => { played = true; } } });
       } });
     });
     ScrollTrigger.refresh();

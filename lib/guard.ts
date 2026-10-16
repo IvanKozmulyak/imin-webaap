@@ -1,4 +1,4 @@
-// The front door of the routes that email the team (/api/pitch, /api/subscribe, /api/call-click):
+// The front door of the routes that email the team (/api/pitch, /api/call-click):
 // only this site's own pages, only JSON, and only a few times per window from one address.
 
 /** Milliseconds until `key` may try again; 0 means go ahead. */

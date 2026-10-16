@@ -29,7 +29,7 @@ window.IMIN_I18N = {
         needConsent: 'Switch on “Send me IMIN news” first.',
         badEmail: 'That email doesn’t look right.',
         failed: 'That didn’t go through. Try again, or write to ',
-        done: 'You’re on the list. See you soon.'
+        done: 'Thanks. If this address can receive news from IMIN, you’ll find a link to confirm in your inbox.'
       }
     },
     pro: {

@@ -27,7 +27,7 @@ window.IMIN_I18N.fr = {
       needConsent: 'Active d’abord « Envoie-moi les news d’IMIN ».',
       badEmail: 'Cette adresse e-mail ne semble pas correcte.',
       failed: 'Ça n’est pas passé. Réessaie, ou écris à ',
-      done: 'C’est noté, tu es sur la liste. À bientôt.'
+      done: 'Merci. Si cette adresse peut recevoir les nouvelles d’IMIN, tu trouveras un lien de confirmation dans ta boîte mail.'
     }
   },
   pro: {

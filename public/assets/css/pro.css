@@ -48,6 +48,8 @@ button{font:inherit;color:inherit;cursor:pointer}
 .label{font:600 12px/1.34 var(--text);letter-spacing:.14em;text-transform:uppercase;color:var(--haze)}
 .t-display{font:800 clamp(52px,14vw,95px)/.905 var(--display);letter-spacing:-.005em;text-transform:uppercase;text-wrap:balance}
 .t-h1{font:800 clamp(44px,10vw,61px)/.92 var(--display);text-transform:uppercase;text-wrap:balance}
+/* SplitText clips each headline line to its box. The clip reaches past it, so accents above and tails (¿ Ç Щ) below show; clip-path moves no layout. Line reveals start at 130% to stay hidden. */
+.t-display>div,.t-h1>div{overflow:visible!important;clip-path:inset(-.1em 0 -.17em)}
 .t-h2{font:800 clamp(31px,4vw,39px)/.95 var(--display);text-transform:uppercase;text-wrap:balance}
 .t-h3{font:700 clamp(20px,2.2vw,25px)/1 var(--display);text-transform:uppercase;letter-spacing:.01em;text-wrap:balance}
 .lead{font:500 clamp(17px,2.2vw,20px)/1.5 var(--text);color:var(--muted)}

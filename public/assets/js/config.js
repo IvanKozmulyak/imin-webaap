@@ -10,7 +10,7 @@ window.IMIN = {
     allNights: 'https://app.imin.wtf/events',
     instagram: 'https://www.instagram.com/imin.wtf/',
     threads: 'https://www.threads.com/@imin.wtf',
-    playlist: '',                                     // TODO: Spotify "Friday playlist" link
+    playlist: 'https://open.spotify.com/playlist/37i9dQZF1DX4dyzvuaRJ0n', // Spotify's "mint"; swap in an IMIN playlist when there is one
     privacy: 'https://app.imin.wtf/legal/privacy'
   },
 
@@ -30,8 +30,11 @@ window.IMIN = {
 
   contact: 'contact@imin.support',
 
-  /* "Keep me posted" (JSON: email, consent, source, lang, consent_text). */
-  subscribeEndpoint: '/api/subscribe',
+  /* "Keep me posted": IMIN's Audience on imin-api, double opt-in. The org must be on IMIN_FOLLOW_ORG_SLUGS. */
+  follow: {
+    endpoint: 'https://imin-api-production.up.railway.app/api/v1/public/orgs/vechirka/follow',
+    textVersion: 'site-follow-2026-10'
+  },
 
   /* Nights shown on the guest page, by their app.imin.wtf event id. Name, date, time and place
      come live from the event itself; a night that is over, cancelled or unpublished drops out,

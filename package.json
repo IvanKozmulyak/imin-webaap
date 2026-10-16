@@ -4,11 +4,16 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
+    "prebuild": "npm test",
     "build": "next build",
     "start": "next start",
     "test": "node --test && node scripts/check-i18n.mjs",
     "test:unit": "node --test",
-    "check:i18n": "node scripts/check-i18n.mjs"
+    "check:i18n": "node scripts/check-i18n.mjs",
+    "i18n:build": "node scripts/i18n/build.mjs"
+  },
+  "engines": {
+    "node": "24.x"
   },
   "dependencies": {
     "next": "^14.2.35",

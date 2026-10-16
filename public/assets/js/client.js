@@ -15,6 +15,8 @@
   const $ = (s, r = document) => r.querySelector(s);
   const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
   const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  // headline lines start this far below their mask: the CSS clip reaches past the line box, so 105% would let accents show
+  const LINE_FROM = 130;
   let lenis = null;
   const wait = ms => new Promise(res => setTimeout(res, reduce ? 0 : ms));
   const two = n => String(n).padStart(2, '0');
@@ -332,7 +334,7 @@
     }
   }
 
-  /* email: "Keep me posted" emails the team; the bubble shows only once the server took it */
+  /* email: "Keep me posted" signs up to IMIN's Audience (double opt-in); the bubble shows only once the API took it */
   const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   const CONTACT = CFG.contact || 'contact@imin.support';
   const form = $('#mail-form');
@@ -360,23 +362,24 @@
     if (!form.elements.ok.checked) { showErr(STR.mail.needConsent); form.elements.ok.focus(); return; }
     send.disabled = true;
     form.setAttribute('aria-busy', 'true');
-    let ok = false;
-    try {
-      const res = await fetch(CFG.subscribeEndpoint || '/api/subscribe', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          email,
-          consent: true,
-          consent_text: $('[data-consent-text]', form).textContent.trim(),
-          source: 'guest-stay',
-          lang: LANG,
-          // the hidden trap field: only a bot fills it, and the server then sends nothing
-          company: form.elements.trap.value
-        })
-      });
-      ok = res.ok;
-    } catch (_) { /* offline or blocked: same as a failed send */ }
+    // only a bot fills the hidden trap field: it gets the same bubble and nothing is sent
+    let ok = !!form.elements.trap.value;
+    if (!ok) {
+      try {
+        const res = await fetch(CFG.follow.endpoint, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            email,
+            consentGiven: true,
+            consentText: $('[data-consent-text]', form).textContent.trim(),
+            consentTextVersion: CFG.follow.textVersion,
+            locale: LANG
+          })
+        });
+        ok = res.ok;
+      } catch (_) { /* offline or blocked: same as a failed send */ }
+    }
     send.disabled = false;
     form.removeAttribute('aria-busy');
     if (!ok) { showErr(STR.mail.failed, CONTACT); return; }
@@ -469,7 +472,7 @@
     const h1 = $('#hero-h');
     if (window.SplitText) {
       const sp = SplitText.create(h1, { type: 'lines', mask: 'lines', linesClass: 'line' });
-      tl.from(sp.lines, { yPercent: 105, rotate: 3, transformOrigin: '0 100%', duration: 1.1, stagger: .1 }, 0);
+      tl.from(sp.lines, { yPercent: LINE_FROM, rotate: 3, transformOrigin: '0 100%', duration: 1.1, stagger: .1 }, 0);
     }
     // the button lands first, so it can be tapped while the rest settles
     tl.from('.hero .btn-door', { y: 14, autoAlpha: 0, scale: .96, duration: .5, ease: 'back.out(2)' }, .1)
@@ -519,7 +522,7 @@
   document.fonts?.ready.then(() => {
     if (window.SplitText) $$('.sec .t-h1, .room .t-display').forEach(el => {
       const sp = SplitText.create(el, { type: 'lines', mask: 'lines' });
-      gsap.from(sp.lines, { yPercent: 110, rotate: 2, transformOrigin: '0 100%', duration: 1.1, stagger: .08, scrollTrigger: { trigger: el, start: 'top 86%' } });
+      gsap.from(sp.lines, { yPercent: LINE_FROM, rotate: 2, transformOrigin: '0 100%', duration: 1.1, stagger: .08, scrollTrigger: { trigger: el, start: 'top 86%' } });
     });
     ScrollTrigger.refresh();
   });

@@ -27,7 +27,7 @@ window.IMIN_I18N.es = {
       needConsent: 'Activa primero «Envíame novedades de IMIN».',
       badEmail: 'Ese email no parece correcto.',
       failed: 'No se ha enviado. Inténtalo de nuevo o escribe a ',
-      done: 'Estás en la lista. Nos vemos pronto.'
+      done: 'Gracias. Si esta dirección puede recibir noticias de IMIN, encontrarás un enlace para confirmar en tu bandeja de entrada.'
     }
   },
   pro: {
