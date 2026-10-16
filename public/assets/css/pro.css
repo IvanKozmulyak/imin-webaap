@@ -156,7 +156,9 @@ button{font:inherit;color:inherit;cursor:pointer}
 
 /* section rhythm */
 .beat-band{position:relative;height:clamp(44px,5vw,72px);margin-top:clamp(32px,5vw,64px);overflow:hidden}
-.beat-band svg{display:block;height:100%;width:auto;overflow:visible}
+.beat-band canvas{display:block;width:100%;height:100%}
+/* the hero strip carries the animated beat (beat.js) at the size it was designed for */
+.hero > .beat-band{height:clamp(64px,7vw,112px)}
 .sec{padding-block:clamp(40px,4.5vw,64px)}
 .sec-top{display:grid;gap:16px;margin-bottom:clamp(24px,3.5vw,40px)}
 .sec-title{display:flex;flex-direction:column;gap:16px;min-width:0}

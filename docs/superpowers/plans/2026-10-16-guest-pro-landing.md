@@ -152,3 +152,7 @@ Source: proposal prototypes in the session scratchpad (`proposals/{guest,pro}`: 
 - Drift guard: `scripts/check-i18n.mjs` (stdlib) compares each translated page's tag/attribute skeleton with EN (text and translatable attributes ignored) and checks every `IMIN_I18N` key exists in EN `STR`; `npm run check:i18n`, also run by `npm test`.
 - Hand-offs stay English for now: app.imin.wtf ships only EN (`imin-public` `lib/i18n/core.ts:30` `ENABLED_LOCALES = ["en"]`) and dashboard.imin.wtf picks its own language.
 - Copy is translated for meaning and tone: short, casual, second person, informal on both pages (FR "tu", ES "tú", UK "ти") to match the brand voice, unless Ivan says otherwise. Native review recommended for FR.
+
+## Beat strip animation (Ivan, 2026-10-16)
+
+"Replace the animation with this": the beat strips (hero, footer, guest intro) now run **Neon Unfold Flicker** from the beat gallery artifact (https://claude.ai/artifact/E51ZHTrN7cuoN3sepjDeSn, `imin-beat-core.js`). Only that animation is extracted into `public/assets/js/beat.js` (12 KB of 120 KB): the gallery's drawing code, its own namespace (the gallery's global `IMIN` would overwrite the site config), a fixed 100 BPM clock instead of the audio engine (no AudioContext), transparent background, drawing only while a strip is on screen, one still frame under reduced motion. Hero strips use the artifact's height `clamp(64px,7vw,112px)`. The old SVG level meter is removed from `client.js` and `pro.js`.

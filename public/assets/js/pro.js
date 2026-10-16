@@ -187,43 +187,6 @@
     });
   });
 
-  /* ---------- the beat: I Paper · M Haze · N Doorlight; only the Paper sticks move ---------- */
-  const NS = 'http://www.w3.org/2000/svg';
-  const D_BACK = 'M292.215 52.8235C285.967 25.8047 306.486 0 334.218 0C354.056 0 371.334 13.5391 376.078 32.8025L550.268 740.176C557.762 770.606 534.728 800 503.389 800C480.916 800 461.414 784.494 456.351 762.598L292.215 52.8235Z';
-  const D_FWD = 'M877.785 52.8235C884.033 25.8047 863.514 0 835.782 0C815.944 0 798.666 13.5391 793.922 32.8025L619.732 740.176C612.238 770.606 635.272 800 666.611 800C689.084 800 708.586 784.494 713.649 762.598L877.785 52.8235Z';
-  const BAR = [['v', 0, 'p'], ['v', 140, 'h'], ['b', 0, 'h'], ['f', 0, 'h'], ['v', 930, 'h'], ['v', 1070, 'p'], ['v', 1210, 'd'], ['b', 1070, 'd'], ['v', 1675, 'd']];
-  const FILL = { p: '#F4EFE7', h: '#9C8CFF', d: '#16B877' };
-  const bands = $$('[data-beat]').map(el => ({ el, live: [], on: false }));
-  const drawBand = band => {
-    const h = band.el.clientHeight || 56;
-    const bars = Math.ceil(innerWidth * 800 / (h * 1815)) + 1;
-    const svg = document.createElementNS(NS, 'svg');
-    svg.setAttribute('viewBox', `0 0 ${bars * 1815 - 40} 800`);
-    band.live = [];
-    for (let b = 0; b < bars; b++) for (const [k, x, c] of BAR) {
-      let n;
-      if (k === 'v') { n = document.createElementNS(NS, 'rect'); n.setAttribute('x', b * 1815 + x); n.setAttribute('y', 0); n.setAttribute('width', 100); n.setAttribute('height', 800); n.setAttribute('rx', 50); }
-      else { n = document.createElementNS(NS, 'path'); n.setAttribute('d', k === 'b' ? D_BACK : D_FWD); n.setAttribute('transform', `translate(${b * 1815 + x} 0)`); }
-      n.setAttribute('fill', FILL[c]);
-      if (c === 'p') { n.style.transformBox = 'fill-box'; n.style.transformOrigin = '50% 100%'; band.live.push(n); }
-      svg.appendChild(n);
-    }
-    band.el.replaceChildren(svg);
-    band.prm = band.live.map(() => [1.8 + Math.random() * 2.6, 3.1 + Math.random() * 3.4, Math.random() * 6.28, Math.random() * 6.28]);
-  };
-  bands.forEach(drawBand);
-  let rz, lastW = innerWidth; addEventListener('resize', () => { if (innerWidth === lastW) return; lastW = innerWidth; clearTimeout(rz); rz = setTimeout(() => bands.forEach(drawBand), 200); });
-  if ('IntersectionObserver' in window) bands.forEach(band => new IntersectionObserver(([en]) => { band.on = en.isIntersecting; }).observe(band.el));
-  let lastT = 0;
-  const meter = t => { if (t - lastT < 1 / 30) return; lastT = t; bands.forEach(band => {
-    if (!band.on) return;
-    band.live.forEach((nd, i) => {
-      const [f1, f2, p1, p2] = band.prm[i];
-      const v = Math.max(.3, Math.min(1, (.78 + .22 * Math.sin(t * 1.6 - i * .6)) * (.3 + .7 * Math.abs(.6 * Math.sin(t * f1 + p1) + .4 * Math.sin(t * f2 + p2)))));
-      nd.style.transform = `scaleY(${v.toFixed(2)})`;
-    });
-  }); };
-
   /* phone dock + header button: after the hero's button scrolls away */
   const heroBtn = $('.hero .btn-door');
   const dock = $('[data-dock]');
@@ -274,10 +237,7 @@
     addEventListener('resize', fit);
   }
 
-  if (reduce || !window.gsap || !window.ScrollTrigger) {
-    if (!reduce) { const raf = t => { meter(t / 1000); requestAnimationFrame(raf); }; requestAnimationFrame(raf); }
-    return;
-  }
+  if (reduce || !window.gsap || !window.ScrollTrigger) return;
 
   /* =========================================================
      Motion
@@ -314,7 +274,6 @@
       lenis.scrollTo(t, { offset: -76 });
     }));
   }
-  gsap.ticker.add(t => meter(t));
 
   /* ---------- Hero: the night lands on both sides, the creator's questions get answered ---------- */
   const hero = $('#hero');

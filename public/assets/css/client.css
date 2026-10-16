@@ -364,7 +364,9 @@ html.lenis,html.lenis body{height:auto}
 
 /* the beat: the brand pattern, I Paper · M Haze · N Doorlight */
 .beat-band{position:relative;height:clamp(44px,5vw,72px);margin-top:clamp(48px,7vw,96px);overflow:hidden}
-.beat-band svg{display:block;height:100%;width:auto;overflow:visible}
+.beat-band canvas{display:block;width:100%;height:100%}
+/* the hero strip carries the animated beat (beat.js) at the size it was designed for */
+.hero > .beat-band{height:clamp(64px,7vw,112px)}
 .beat-band--foot{position:absolute;left:0;right:0;bottom:0;margin:0}
 .foot{position:relative;overflow:hidden;padding-bottom:calc(32px + clamp(44px,5vw,72px))}
 .foot .foot-bottom{margin-bottom:24px}
