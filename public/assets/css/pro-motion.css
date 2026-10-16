@@ -115,7 +115,7 @@
   .m1-hero{grid-template-columns:5.2em minmax(0,1fr);grid-template-areas:"p tb" "p meta" "acts acts" "figs figs";padding:.75em;gap:.55em .8em}
   .m1-title{font-size:1.5em}
   .m1-acts .m1-lit + .m1-btn{display:none}
-  .m1-acts .m1-lit{gap:.35em}
+  .m1-acts .m1-lit{flex-wrap:wrap;gap:.35em}
   .m1-acts .m1-btn{padding:0 .6em;gap:.35em}
   .m1-figs{gap:.4em 1.2em}
   .m1-kpis{grid-template-columns:1fr 1fr;gap:.5em}
@@ -126,6 +126,12 @@
   .m1-plot{height:5em;margin:0 1.4em}
   .m1-days{margin:.5em 1.4em 0}
   .m1-days > :nth-child(even){display:none}
+  /* the end labels sit inside the card: a long month name would hang over its edge */
+  .m1-days > :first-child{translate:0 0}
+  .m1-days > :last-child{translate:-100% 0}
+  /* Ukrainian month names are long: the narrow card keeps the first and the last day, on a lower plot so they stay in frame */
+  :lang(uk) .m1-days > :not(:first-child):not(:last-child){display:none}
+  :lang(uk) .m1-plot{height:4em}
 }
 /* the whole app, when there is room for it (the six-tabs scene on a wide screen) */
 @container (min-width:880px){
@@ -266,6 +272,11 @@
 .m2-ah span{font-size:1.25em;line-height:1.3;color:var(--m2-t2)}
 .m2-pv{border:1px solid var(--m2-l);border-radius:1em;overflow:hidden;background:color-mix(in srgb,var(--m2-a) 16%,var(--m2-s))}
 .m2-pv-img{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.5em;height:17em;padding:1.6em;text-align:center;background:var(--m2-a);color:#fff;border-bottom:1px solid var(--m2-l)}
+/* Ukrainian wraps two more lines in this card: the empty poster gives way and the footer tightens, so the footer stays
+   on the board (phones set their own poster height) */
+:where(:lang(uk)) .m2-pv-img{height:11em}
+:lang(uk) .m2-pv-foot{gap:.7em}
+:lang(uk) .m2-cta{padding:0 .75em}
 .m2-pv-img b{font-size:1.6em;font-weight:600}
 .m2-pv-img span{font-size:1.3em}
 .m2-pv-b{display:flex;flex-direction:column;padding:1.6em 1.5em 1.5em}
@@ -279,7 +290,7 @@
 .m2-pv-foot{display:flex;align-items:center;gap:1em;padding-top:1.1em;border-top:1px solid var(--m2-l)}
 .m2-from{display:flex;flex-direction:column;align-items:flex-start;gap:.25em}
 .m2-from small{font-size:max(1.2em,10px);color:var(--m2-t2)}
-.m2-unset{font-size:max(1.15em,10px);white-space:nowrap;padding:.1em .6em;border:1px dashed var(--m2-li);border-radius:.45em;color:var(--m2-t2)}
+.m2-unset{font-size:max(1.15em,10px);white-space:normal;padding:.1em .6em;border:1px dashed var(--m2-li);border-radius:.45em;color:var(--m2-t2)}
 .m2-cta{margin-left:auto;display:inline-flex;align-items:center;height:2.9em;padding:0 .95em;border-radius:.46em;background:var(--m2-a);color:#fff;font-size:1.3em;font-weight:600;white-space:nowrap}
 
 /* ---- 02 the poster: AI Studio's three concepts, then Poster Studio ---- */
@@ -512,6 +523,10 @@
   .m2-tagsel{font-size:max(1em,10px)}
   .m2-psf{flex-direction:column;align-items:stretch;gap:.7em;padding:1em 1.4em}
   .m2-pfb{justify-content:flex-end;gap:.5em}
+  /* Ukrainian button labels run longer: on phones the studio footer keeps the buttons one row can hold */
+  :lang(uk) .m2-psf .m2-ghost{display:none}
+  /* and the titles in the Example chip's corner wrap before it */
+  :lang(uk) .m2-capc .m2-ct,:lang(uk) .m2-pst > p:first-child{padding-right:7em}
   .m2-psf .m2-btn{font-size:max(1.05em,10px);padding:0 .75em}
 
   .m2-tix .m2-b{height:auto;gap:1.1em;padding:1.4em}
@@ -522,6 +537,14 @@
   .m2-tr{grid-template-columns:minmax(0,1fr) auto;gap:.7em 1em;min-height:0;padding:.9em 0}
   .m2-cl,.m2-act{display:none}
   .m2-th .m2-btn{font-size:max(1.15em,10px)}
+}}
+/* small phones, Ukrainian: the builder board grows for the longer preview and starts below the Example chip; the narrowest
+   keep the studio's main button, let the preview's button take two lines and put Add tier under its title */
+@media (max-width:959.98px){@container (max-width:299.98px){:lang(uk) .m2-page .m2-b{height:48.5em;padding-top:3.5em}}}
+@media (max-width:959.98px){@container (max-width:269.98px){
+  :lang(uk) .m2-psf .m2-btn:not(.m2-pri){display:none}
+  :lang(uk) .m2-cta{white-space:normal;text-align:center;line-height:1.15}
+  :lang(uk) .m2-th{flex-wrap:wrap}
 }}
 /* === end M2 === */
 
