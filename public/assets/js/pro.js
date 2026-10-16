@@ -195,14 +195,16 @@
     const s = $('summary', d), a = $('.acc-a', d);
     s.addEventListener('click', e => {
       e.preventDefault();
-      if (reduce) { d.open = !d.open; if (d.open) track('faq_open', { question_id: d.dataset.q }); return; }
+      // an answer changes the page height, so the reveals below it are re-measured
+      const relayout = () => { if (window.ScrollTrigger) ScrollTrigger.refresh(); };
+      if (reduce) { d.open = !d.open; relayout(); if (d.open) track('faq_open', { question_id: d.dataset.q }); return; }
       if (d.open) {
-        a.animate([{ height: a.offsetHeight + 'px', opacity: 1 }, { height: '0px', opacity: 0 }], { duration: 320, easing: 'cubic-bezier(.2,.7,.2,1)' }).onfinish = () => { d.open = false; };
+        a.animate([{ height: a.offsetHeight + 'px', opacity: 1 }, { height: '0px', opacity: 0 }], { duration: 320, easing: 'cubic-bezier(.2,.7,.2,1)' }).onfinish = () => { d.open = false; relayout(); };
         $('.ico', s).style.transform = 'none';
       } else {
         d.open = true;
         $('.ico', s).style.transform = '';
-        a.animate([{ height: '0px', opacity: 0 }, { height: a.offsetHeight + 'px', opacity: 1 }], { duration: 420, easing: 'cubic-bezier(.2,.7,.2,1)' });
+        a.animate([{ height: '0px', opacity: 0 }, { height: a.offsetHeight + 'px', opacity: 1 }], { duration: 420, easing: 'cubic-bezier(.2,.7,.2,1)' }).onfinish = relayout;
         track('faq_open', { question_id: d.dataset.q });
       }
     });

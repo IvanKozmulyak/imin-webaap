@@ -5,7 +5,7 @@
   --mo-fg:#F4EFE7;--mo-fg-2:#A9A2BD;--mo-fg-3:#6F6884;
   --mo-blue:#3D63FF;--mo-gold:#D8A93B;--mo-gold-2:#8C6E2A;--mo-green:#16B877;--mo-haze:#9C8CFF;--mo-red:#F06A6A;
   --mo-mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
-  position:relative;display:block;width:100%;container-type:inline-size;overflow:hidden;
+  position:relative;display:block;width:100%;container-type:inline-size;overflow:hidden;isolation:isolate;
   background:var(--mo-bg);color:var(--mo-fg);font-family:'DM Sans',system-ui,sans-serif;
   font-variant-numeric:tabular-nums;line-height:1.3;text-align:left
 }
@@ -229,7 +229,7 @@
 .mo-tonight-fs{margin-top:calc(2 * var(--u));font-size:max(10px,calc(10 * var(--u)));color:var(--mo-fg-2)}
 .mo-tonight-bar{display:block;height:calc(5 * var(--u));margin-top:calc(7 * var(--u));border-radius:9px;background:var(--mo-panel-2);overflow:hidden}
 .mo-tonight-bar i{display:block;height:100%;border-radius:inherit;background:var(--tint);transform-origin:0 50%;transform:scaleX(.7)}
-.mo-tonight-poster{align-self:start;aspect-ratio:3/4;border-radius:6px;background:var(--tint) url(/assets/img/photos/p-dj.jpg) 58% 40%/cover}
+.mo-tonight-poster{align-self:start;aspect-ratio:3/4;border-radius:6px;background:var(--tint) url(/assets/img/photos/p-dj-540.webp) 58% 40%/cover}
 .mo-tonight-acts{grid-column:1 / -1;display:flex;flex-wrap:wrap;gap:calc(6 * var(--u))}
 .mo-tonight-acts span,.mo-tonight-pa span{display:inline-flex;align-items:center;justify-content:center;border:1px solid var(--mo-line-2);border-radius:6px;font-weight:600;white-space:nowrap}
 .mo-tonight-acts span{min-height:calc(24 * var(--u));padding:0 calc(8 * var(--u));font-size:max(10px,calc(10 * var(--u)))}

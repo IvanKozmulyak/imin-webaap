@@ -130,8 +130,6 @@ button{font:inherit;color:inherit;cursor:pointer}
 .dash-dots i{width:8px;height:8px;border-radius:50%;background:var(--line-2)}
 .dash-url{flex:1;max-width:220px;padding:3px 10px;border-radius:4px;background:rgba(244,239,231,.06);font-size:11px;color:var(--quiet);overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
 .dash-shot{position:relative;overflow:hidden;border-radius:0 0 8px 8px}
-.dash-shot img{display:block;width:100%;height:auto}
-@keyframes blink{50%{opacity:.3}}
 
 .poster{position:absolute;right:0;bottom:0;width:38%;rotate:3deg;transition:rotate .6s var(--ease)}
 .poster-card{position:relative;margin:0;aspect-ratio:4/5;overflow:hidden;background:var(--midnight);color:var(--paper);box-shadow:0 44px 80px -30px rgba(0,0,0,.95),0 0 0 1px rgba(244,239,231,.1)}
@@ -218,7 +216,6 @@ button{font:inherit;color:inherit;cursor:pointer}
 .cl{position:absolute;left:50%;top:12px;width:calc(var(--W) * 1px);height:calc(var(--H) * 1px);margin-left:calc(var(--W) * -.5px);transform-origin:50% 0;scale:var(--s)}
 .brw-count{margin:0;text-align:center;font:600 12px/1 var(--text);letter-spacing:.14em;text-transform:uppercase;color:var(--haze);font-variant-numeric:tabular-nums}
 .bv-imin{position:absolute;inset:0;opacity:0;visibility:hidden;background:#0B0A14}
-.bv-imin img{width:100%;height:100%;object-fit:cover;object-position:top left}
 .bv-imin.is-on{opacity:1;visibility:visible;transition:opacity .5s,visibility .5s}
 /* the windows */
 .cw{position:absolute;left:calc(var(--x) * 1px);top:calc(var(--y) * 1px);width:calc(var(--w) * 1px);rotate:calc(var(--r) * 1deg);border-radius:10px;background:#F4F4F7;color:#1D1D24;overflow:hidden;box-shadow:0 30px 60px -18px rgba(0,0,0,.75),0 0 0 1px rgba(0,0,0,.08);font:500 14px/1.3 var(--text)}
