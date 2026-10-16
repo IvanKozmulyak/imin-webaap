@@ -135,3 +135,10 @@ The seven designer screenshots in `/pro` (`public/assets/img/app/*.webp`) are ar
 | M3 | step 04 phone: tonight → door scanner → valid scan, step 05 audience + campaign to those who said yes | `pro/index.html` (`.m-door`, `.m-crowd`), `pro-motion.*` M3 sections |
 
 When all three land: delete `public/assets/img/app/*.webp` that nothing references, re-run the claim grep, browser-check both widths.
+
+## Track P: approved design proposals (Ivan, 2026-10-16: all 21 "Apply")
+
+Source: proposal prototypes in the session scratchpad (`proposals/{guest,pro}`: `manifest.json`, `after.patch`, `after/`), reviewed in the artifact https://claude.ai/artifact/FgnBCzF4uGpKmutTyEHbn7.
+- Guest g1–g10 ported onto the built page. g2's price/date line reads the live night (`/api/nights` adds an all-in price: "Sold out" / "Free" / "From €X"). g7 was already done by Track A. g10 label is **"For organizers"** (Ivan's note), not "For creators".
+- Pro p1–p7, p9 ported outside the regions Track M owns. p8 (sideways-scroll hint for screenshots) is superseded by Track M's phone-ready mocks. p5 keeps the scroll-trigger fix and photo right-sizing, not the app-screenshot variants (those images go).
+- b1, b2 (hero states) are Track A, already in.
